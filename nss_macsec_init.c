@@ -83,7 +83,6 @@ int nss_macsec_reg_read(unsigned int dev_id, unsigned int reg_addr,
 			unsigned int *pvalue)
 {
 	if(macsec_ctx.macsec_base[dev_id] == NULL) {
-		printk("macsec[%d] doesn't exist, thus read operation is not permitted!\n", dev_id);
 		return -1;
 	}
 
@@ -97,7 +96,6 @@ int nss_macsec_reg_write(unsigned int dev_id, unsigned int reg_addr,
 			 unsigned int pvalue)
 {
 	if(macsec_ctx.macsec_base[dev_id] == NULL) {
-		printk("macsec[%d] doesn't exist, thus write operation is not permitted!\n", dev_id);
 		return -1;
 	}
 	writel(pvalue,
@@ -130,16 +128,23 @@ static void nss_macsec_netlink_recv(struct sk_buff *__skb)
 {
 	struct sk_buff *skb = NULL;
 	struct nlmsghdr *nlh = NULL;
+	struct sdk_msg_header *header = NULL;
 	void *msg_data;
-	u32 pid = 0, msg_type = 0, sync = 0, ret = 0;
+	u32 pid = 0, msg_type = 0, sync = 0, ret = 0, msg_len = 0;
 
 	if ((skb = skb_get(__skb)) != NULL) {
 		nlh = nlmsg_hdr(skb);
 		pid = nlh->nlmsg_pid;
 		msg_data = NLMSG_DATA(nlh);
 		msg_type = nlh->nlmsg_type;
+		msg_len = sizeof(struct nlmsghdr) + sizeof(struct sdk_msg_header);
+		header = (struct sdk_msg_header *)msg_data;
+		msg_len += header->buf_len;
 
-		if (msg_type == SDK_CALL_MSG) {
+		if(skb->len < msg_len) {
+			printk("Unexpected msg received! skb_len [0x%x] less than 0x%x\n",
+				skb->len, msg_len);
+		} else if (msg_type == SDK_CALL_MSG) {
 			ret = nss_macsec_msg_handle(msg_data, &sync);
 		} else {
 			printk("Unexpected msg:0x%x received!\n", msg_type);
