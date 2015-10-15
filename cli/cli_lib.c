@@ -155,7 +155,7 @@ int cli_u8_array_2_str(const sa_u8_t * array, int arrayNum, char *str,
 		return -1;
 	}
 
-	if (strlen < (arrayNum * 2 + arrayNum / 4)) {
+	if (strLen < (arrayNum * 2 + arrayNum / 4)) {
 		snprintf(str, strLen, "short buffer");
 		return -1;
 	}
