@@ -74,7 +74,7 @@ ARRAY_T *array_new(sa_u32_t max)
  * return:
  *
  ******************************************************************************/
-void array_free(ARRAY_T * pArray)
+void array_free(ARRAY_T *pArray)
 {
 	if (pArray != NULL) {
 		if (pArray->slot != NULL) {
@@ -105,7 +105,7 @@ void array_free(ARRAY_T * pArray)
  *   only copy slots, does not copy content of slot
  *
  ******************************************************************************/
-ARRAY_T *array_copy(ARRAY_T * pArray)
+ARRAY_T *array_copy(ARRAY_T *pArray)
 {
 	ARRAY_T *pNew = NULL;
 
@@ -143,7 +143,7 @@ ARRAY_T *array_copy(ARRAY_T * pArray)
  *   FALSE - inavailable
  *
  ******************************************************************************/
-static sa_bool_t _array_is_available(ARRAY_T * pArray, sa_u32_t i)
+static sa_bool_t _array_is_available(ARRAY_T *pArray, sa_u32_t i)
 {
 	void **newSlot;
 	void **oldSlot;
@@ -190,7 +190,7 @@ static sa_bool_t _array_is_available(ARRAY_T * pArray, sa_u32_t i)
  *   index of slot
  *
  ******************************************************************************/
-static sa_u32_t _array_empty_slot_index(ARRAY_T * pArray)
+static sa_u32_t _array_empty_slot_index(ARRAY_T *pArray)
 {
 	sa_u32_t i;
 
@@ -224,7 +224,7 @@ static sa_u32_t _array_empty_slot_index(ARRAY_T * pArray)
  *   one of CLI_RET_T
  *
  ******************************************************************************/
-int array_set_slot(ARRAY_T * pArray, void *data, sa_u32_t i)
+int array_set_slot(ARRAY_T *pArray, void *data, sa_u32_t i)
 {
 	if (NULL == pArray) {
 		return CLI_FAIL;
@@ -263,7 +263,7 @@ int array_set_slot(ARRAY_T * pArray, void *data, sa_u32_t i)
  *   one of CLI_RET_T
  *
  ******************************************************************************/
-int array_insert_slot(ARRAY_T * pArray, void *data)
+int array_insert_slot(ARRAY_T *pArray, void *data)
 {
 	sa_u32_t i;
 
@@ -292,7 +292,7 @@ int array_insert_slot(ARRAY_T * pArray, void *data)
  *   one of CLI_RET_T
  *
  ******************************************************************************/
-int array_unset_slot(ARRAY_T * pArray, const sa_u32_t i)
+int array_unset_slot(ARRAY_T *pArray, const sa_u32_t i)
 {
 	if (NULL == pArray) {
 		return CLI_FAIL;

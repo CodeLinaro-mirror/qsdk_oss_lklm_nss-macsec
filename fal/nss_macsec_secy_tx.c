@@ -19,7 +19,7 @@
 #include "nss_macsec_utility.h"
 #include "nss_macsec_secy_tx.h"
 
-u32 nss_macsec_secy_tx_reg_get(u32 secy_id, u32 addr, u32 * pvalue)
+u32 nss_macsec_secy_tx_reg_get(u32 secy_id, u32 addr, u32 *pvalue)
 {
 	return egress_reg_get(secy_id, addr, pvalue);
 }
@@ -29,7 +29,7 @@ u32 nss_macsec_secy_tx_reg_set(u32 secy_id, u32 addr, u32 value)
 	return egress_reg_set(secy_id, addr, value);
 }
 
-u32 nss_macsec_secy_tx_drop_sc_sa_invalid_get(u32 secy_id, bool * penable)
+u32 nss_macsec_secy_tx_drop_sc_sa_invalid_get(u32 secy_id, bool *penable)
 {
 	union egsy_l2sec_control_u ctrl;
 
@@ -57,7 +57,7 @@ u32 nss_macsec_secy_tx_drop_sc_sa_invalid_set(u32 secy_id, bool enable)
 	return ERROR_OK;
 }
 
-u32 nss_macsec_secy_tx_unmatched_use_sc_0_get(u32 secy_id, bool * penable)
+u32 nss_macsec_secy_tx_unmatched_use_sc_0_get(u32 secy_id, bool *penable)
 {
 	union egsy_l2sec_control_u ctrl;
 
@@ -85,7 +85,7 @@ u32 nss_macsec_secy_tx_unmatched_use_sc_0_set(u32 secy_id, bool enable)
 	return ERROR_OK;
 }
 
-u32 nss_macsec_secy_tx_gcm_start_get(u32 secy_id, bool * penable)
+u32 nss_macsec_secy_tx_gcm_start_get(u32 secy_id, bool *penable)
 {
 	union egsy_l2sec_control_u ctrl;
 
@@ -113,7 +113,7 @@ u32 nss_macsec_secy_tx_gcm_start_set(u32 secy_id, bool enable)
 	return ERROR_OK;
 }
 
-u32 nss_macsec_secy_tx_drop_class_miss_get(u32 secy_id, bool * penable)
+u32 nss_macsec_secy_tx_drop_class_miss_get(u32 secy_id, bool *penable)
 {
 	union egsy_l2sec_control_u ctrl;
 
@@ -141,7 +141,7 @@ u32 nss_macsec_secy_tx_drop_class_miss_set(u32 secy_id, bool enable)
 	return ERROR_OK;
 }
 
-u32 nss_macsec_secy_tx_drop_kay_pkt_get(u32 secy_id, bool * penable)
+u32 nss_macsec_secy_tx_drop_kay_pkt_get(u32 secy_id, bool *penable)
 {
 	union egsy_l2sec_control_u ctrl;
 
@@ -170,7 +170,7 @@ u32 nss_macsec_secy_tx_drop_kay_pkt_set(u32 secy_id, bool enable)
 }
 
 u32 nss_macsec_secy_tx_ctl_filt_get(u32 secy_id, u32 filt_id,
-				    fal_tx_ctl_filt_t * pfilt)
+				    fal_tx_ctl_filt_t *pfilt)
 {
 	struct eg_ctl_filt ctl_entry;
 
@@ -196,7 +196,7 @@ u32 nss_macsec_secy_tx_ctl_filt_get(u32 secy_id, u32 filt_id,
 }
 
 u32 nss_macsec_secy_tx_ctl_filt_set(u32 secy_id, u32 filt_id,
-				    fal_tx_ctl_filt_t * pfilt)
+				    fal_tx_ctl_filt_t *pfilt)
 {
 	struct eg_ctl_filt ctl_entry;
 
@@ -265,7 +265,7 @@ u32 nss_macsec_secy_tx_ctl_filt_clear_all(u32 secy_id)
 }
 
 u32 nss_macsec_secy_tx_class_lut_get(u32 secy_id, u32 index,
-				     fal_tx_class_lut_t * pentry)
+				     fal_tx_class_lut_t *pentry)
 {
 	struct eg_class_lut egc;
 
@@ -329,7 +329,7 @@ u32 nss_macsec_secy_tx_class_lut_get(u32 secy_id, u32 index,
 }
 
 u32 nss_macsec_secy_tx_class_lut_set(u32 secy_id, u32 index,
-				     fal_tx_class_lut_t * pentry)
+				     fal_tx_class_lut_t *pentry)
 {
 	struct eg_class_lut egc;
 	u8 *psci = NULL;
@@ -453,7 +453,7 @@ static u32 nss_macsec_secy_tx_class_lut_sci_update(u32 secy_id,
 
 
 u32 nss_macsec_secy_tx_sc_create(u32 secy_id, u32 channel,
-				 u8 * psci, u32 sci_len)
+				 u8 *psci, u32 sci_len)
 {
 	u32 sc_id = 0;
 	struct eg_sc sc;
@@ -483,7 +483,7 @@ u32 nss_macsec_secy_tx_sc_create(u32 secy_id, u32 channel,
 	return ERROR_OK;
 }
 
-u32 nss_macsec_secy_tx_sc_en_get(u32 secy_id, u32 channel, bool * penable)
+u32 nss_macsec_secy_tx_sc_en_get(u32 secy_id, u32 channel, bool *penable)
 {
 	u32 sc_id = 0;
 	struct eg_sc sc;
@@ -558,7 +558,7 @@ u32 nss_macsec_secy_tx_sc_del_all(u32 secy_id)
 	return ret;
 }
 
-u32 nss_macsec_secy_tx_sc_an_get(u32 secy_id, u32 channel, u32 * pan)
+u32 nss_macsec_secy_tx_sc_an_get(u32 secy_id, u32 channel, u32 *pan)
 {
 	u32 sc_id = 0;
 	struct eg_sc sc;
@@ -596,7 +596,7 @@ u32 nss_macsec_secy_tx_sc_an_set(u32 secy_id, u32 channel, u32 an)
 }
 
 u32 nss_macsec_secy_tx_sc_an_roll_over_en_get(u32 secy_id, u32 channel,
-					      bool * penable)
+					      bool *penable)
 {
 	u32 sc_id = 0;
 	struct eg_sc sc;
@@ -634,7 +634,7 @@ u32 nss_macsec_secy_tx_sc_an_roll_over_en_set(u32 secy_id, u32 channel,
 }
 
 u32 nss_macsec_secy_tx_sc_in_used_get(u32 secy_id, u32 channel,
-				      bool * p_in_used)
+				      bool *p_in_used)
 {
 	u32 sc_id = 0;
 	struct eg_sc sc;
@@ -652,7 +652,7 @@ u32 nss_macsec_secy_tx_sc_in_used_get(u32 secy_id, u32 channel,
 	return ERROR_OK;
 }
 
-u32 nss_macsec_secy_tx_sc_tci_7_2_get(u32 secy_id, u32 channel, u8 * ptci)
+u32 nss_macsec_secy_tx_sc_tci_7_2_get(u32 secy_id, u32 channel, u8 *ptci)
 {
 	u32 sc_id = 0;
 	struct eg_sc sc;
@@ -699,7 +699,7 @@ u32 nss_macsec_secy_tx_sc_tci_7_2_set(u32 secy_id, u32 channel, u8 tci)
 }
 
 u32 nss_macsec_secy_tx_sc_confidentiality_offset_get(u32 secy_id, u32 channel,
-						     u32 * poffset)
+						     u32 *poffset)
 {
 	u32 sc_id = 0;
 	struct eg_sc sc;
@@ -736,7 +736,7 @@ u32 nss_macsec_secy_tx_sc_confidentiality_offset_set(u32 secy_id, u32 channel,
 	return ERROR_OK;
 }
 
-u32 nss_macsec_secy_tx_sc_protect_get(u32 secy_id, u32 channel, bool * penable)
+u32 nss_macsec_secy_tx_sc_protect_get(u32 secy_id, u32 channel, bool *penable)
 {
 	u32 sc_id = 0;
 	struct eg_sc sc;
@@ -773,7 +773,7 @@ u32 nss_macsec_secy_tx_sc_protect_set(u32 secy_id, u32 channel, bool enable)
 }
 
 u32 nss_macsec_secy_tx_sc_sci_get(u32 secy_id, u32 channel,
-				  u8 * psci, u32 sci_len)
+				  u8 *psci, u32 sci_len)
 {
 	SHR_PARAM_CHECK((secy_id < FAL_SECY_ID_NUM) &&
 			(channel < FAL_SECY_CHANNEL_NUM(secy_id)) &&
@@ -803,8 +803,8 @@ u32 nss_macsec_secy_tx_sc_sci_set(u32 secy_id, u32 channel, u8 *psci)
 }
 */
 u32 nss_macsec_secy_tx_sc_start_stop_time_get(u32 secy_id, u32 channel,
-					      u32 * p_start_time,
-					      u32 * p_stop_time)
+					      u32 *p_start_time,
+					      u32 *p_stop_time)
 {
 	u32 sc_id = 0;
 	struct eg_sc sc;
@@ -865,7 +865,7 @@ u32 nss_macsec_secy_tx_sa_create(u32 secy_id, u32 channel, u32 an)
 }
 
 u32 nss_macsec_secy_tx_sa_en_get(u32 secy_id, u32 channel, u32 an,
-				 bool * penable)
+				 bool *penable)
 {
 	u32 sc_id = 0;
 	u32 sa_id = 0;
@@ -942,7 +942,7 @@ u32 nss_macsec_secy_tx_sa_del_all(u32 secy_id)
 }
 
 u32 nss_macsec_secy_tx_sa_next_pn_get(u32 secy_id, u32 channel,
-				      u32 an, u32 * p_next_pn)
+				      u32 an, u32 *p_next_pn)
 {
 	u32 sc_id = 0;
 	u32 sa_id = 0;
@@ -986,7 +986,7 @@ u32 nss_macsec_secy_tx_sa_next_pn_set(u32 secy_id, u32 channel,
 }
 
 u32 nss_macsec_secy_tx_sa_in_used_get(u32 secy_id, u32 channel,
-				      u32 an, bool * p_in_used)
+				      u32 an, bool *p_in_used)
 {
 	u32 sc_id = 0;
 	u32 sa_id = 0;
@@ -1008,8 +1008,8 @@ u32 nss_macsec_secy_tx_sa_in_used_get(u32 secy_id, u32 channel,
 }
 
 u32 nss_macsec_secy_tx_sa_start_stop_time_get(u32 secy_id, u32 channel, u32 an,
-					      u32 * p_start_time,
-					      u32 * p_stop_time)
+					      u32 *p_start_time,
+					      u32 *p_stop_time)
 {
 	u32 sc_id = 0;
 	u32 sa_id = 0;
@@ -1055,7 +1055,7 @@ u32 nss_macsec_secy_tx_sa_start_stop_time_set(u32 secy_id, u32 channel, u32 an,
 }
 
 u32 nss_macsec_secy_tx_sak_get(u32 secy_id, u32 channel,
-			       u32 an, fal_tx_sak_t * pentry)
+			       u32 an, fal_tx_sak_t *pentry)
 {
 	u32 sc_id = 0;
 	u32 sak_id = 0;
@@ -1077,7 +1077,7 @@ u32 nss_macsec_secy_tx_sak_get(u32 secy_id, u32 channel,
 }
 
 u32 nss_macsec_secy_tx_sak_set(u32 secy_id, u32 channel,
-			       u32 an, fal_tx_sak_t * pentry)
+			       u32 an, fal_tx_sak_t *pentry)
 {
 	u32 sc_id = 0;
 	u32 sak_id = 0;
@@ -1178,7 +1178,7 @@ u32 nss_macsec_secy_tx_stag_parse_set(u32 secy_id, fal_tx_vlan_parse_t *pentry)
 }
 
 
-u32 nss_macsec_secy_tx_pn_threshold_get(u32 secy_id, u32 * p_pn_threshold)
+u32 nss_macsec_secy_tx_pn_threshold_get(u32 secy_id, u32 *p_pn_threshold)
 {
 	union csr_egsy_pn_thr_u value;
 

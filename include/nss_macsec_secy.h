@@ -72,7 +72,7 @@ u32 nss_macsec_secy_init(u32 secy_id);
 * @param[out] pmode
 **/
 u32 nss_macsec_secy_sc_sa_mapping_mode_get(u32 secy_id,
-					   fal_sc_sa_mapping_mode_e * pmode);
+					   fal_sc_sa_mapping_mode_e *pmode);
 /**
 * @param[in] secy_id
 * @param[in] mode
@@ -84,7 +84,7 @@ u32 nss_macsec_secy_sc_sa_mapping_mode_set(u32 secy_id,
 * @param[in] secy_id
 * @param[out] penable
 **/
-u32 nss_macsec_secy_controlled_port_en_get(u32 secy_id, bool * penable);
+u32 nss_macsec_secy_controlled_port_en_get(u32 secy_id, bool *penable);
 
 /**
 * @param[in] secy_id

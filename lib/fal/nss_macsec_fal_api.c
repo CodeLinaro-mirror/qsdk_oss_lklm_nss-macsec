@@ -146,7 +146,7 @@ int nss_macsec_sdk_netlink_msg(int msg_type, unsigned char *data, int data_len,
 	return ret;
 }
 
-u32 nss_macsec_secy_interrupt_en_get(u32 secy_id, fal_interrupt_en_t * p_int_en)
+u32 nss_macsec_secy_interrupt_en_get(u32 secy_id, fal_interrupt_en_t *p_int_en)
 {
 	unsigned char
 	    buf[SDK_MSG_SIZE
@@ -175,7 +175,7 @@ u32 nss_macsec_secy_interrupt_en_get(u32 secy_id, fal_interrupt_en_t * p_int_en)
 	return ret;
 }
 
-u32 nss_macsec_secy_interrupt_en_set(u32 secy_id, fal_interrupt_en_t * p_int_en)
+u32 nss_macsec_secy_interrupt_en_set(u32 secy_id, fal_interrupt_en_t *p_int_en)
 {
 	unsigned char
 	    buf[SDK_MSG_SIZE
@@ -202,7 +202,7 @@ u32 nss_macsec_secy_interrupt_en_set(u32 secy_id, fal_interrupt_en_t * p_int_en)
 	return ret;
 }
 
-u32 nss_macsec_secy_interrupt_get(u32 secy_id, fal_interrupt_t * pint)
+u32 nss_macsec_secy_interrupt_get(u32 secy_id, fal_interrupt_t *pint)
 {
 	unsigned char
 	    buf[SDK_MSG_SIZE(sizeof(struct nss_macsec_secy_interrupt_get_cmd))]
@@ -327,7 +327,7 @@ u32 nss_macsec_emac_reset(u32 secy_id)
 }
 
 u32 nss_macsec_secy_tx_sc_mib_get(u32 secy_id, u32 channel,
-				  fal_tx_sc_mib_t * pmib)
+				  fal_tx_sc_mib_t *pmib)
 {
 	unsigned char
 	    buf[SDK_MSG_SIZE(sizeof(struct nss_macsec_secy_tx_sc_mib_get_cmd))]
@@ -357,7 +357,7 @@ u32 nss_macsec_secy_tx_sc_mib_get(u32 secy_id, u32 channel,
 }
 
 u32 nss_macsec_secy_tx_sa_mib_get(u32 secy_id, u32 channel, u32 an,
-				  fal_tx_sa_mib_t * pmib)
+				  fal_tx_sa_mib_t *pmib)
 {
 	unsigned char
 	    buf[SDK_MSG_SIZE(sizeof(struct nss_macsec_secy_tx_sa_mib_get_cmd))]
@@ -387,7 +387,7 @@ u32 nss_macsec_secy_tx_sa_mib_get(u32 secy_id, u32 channel, u32 an,
 	return ret;
 }
 
-u32 nss_macsec_secy_tx_mib_get(u32 secy_id, fal_tx_mib_t * pmib)
+u32 nss_macsec_secy_tx_mib_get(u32 secy_id, fal_tx_mib_t *pmib)
 {
 	unsigned char
 	    buf[SDK_MSG_SIZE(sizeof(struct nss_macsec_secy_tx_mib_get_cmd))] =
@@ -416,7 +416,7 @@ u32 nss_macsec_secy_tx_mib_get(u32 secy_id, fal_tx_mib_t * pmib)
 }
 
 u32 nss_macsec_secy_rx_sa_mib_get(u32 secy_id, u32 channel, u32 an,
-				  fal_rx_sa_mib_t * pmib)
+				  fal_rx_sa_mib_t *pmib)
 {
 	unsigned char
 	    buf[SDK_MSG_SIZE(sizeof(struct nss_macsec_secy_rx_sa_mib_get_cmd))]
@@ -446,7 +446,7 @@ u32 nss_macsec_secy_rx_sa_mib_get(u32 secy_id, u32 channel, u32 an,
 	return ret;
 }
 
-u32 nss_macsec_secy_rx_mib_get(u32 secy_id, fal_rx_mib_t * pmib)
+u32 nss_macsec_secy_rx_mib_get(u32 secy_id, fal_rx_mib_t *pmib)
 {
 	unsigned char
 	    buf[SDK_MSG_SIZE(sizeof(struct nss_macsec_secy_rx_mib_get_cmd))] =
@@ -607,7 +607,7 @@ u32 nss_macsec_secy_rx_sa_mib_clear(u32 secy_id, u32 channel, u32 an)
 	return ret;
 }
 
-u32 nss_macsec_secy_rx_reg_get(u32 secy_id, u32 addr, u32 * pvalue)
+u32 nss_macsec_secy_rx_reg_get(u32 secy_id, u32 addr, u32 *pvalue)
 {
 	unsigned char
 	    buf[SDK_MSG_SIZE(sizeof(struct nss_macsec_secy_rx_reg_get_cmd))] =
@@ -664,7 +664,7 @@ u32 nss_macsec_secy_rx_reg_set(u32 secy_id, u32 addr, u32 value)
 }
 
 u32 nss_macsec_secy_rx_ctl_filt_get(u32 secy_id, u32 filt_id,
-				    fal_rx_ctl_filt_t * pfilt)
+				    fal_rx_ctl_filt_t *pfilt)
 {
 	unsigned char
 	    buf[SDK_MSG_SIZE
@@ -695,7 +695,7 @@ u32 nss_macsec_secy_rx_ctl_filt_get(u32 secy_id, u32 filt_id,
 }
 
 u32 nss_macsec_secy_rx_ctl_filt_set(u32 secy_id, u32 filt_id,
-				    fal_rx_ctl_filt_t * pfilt)
+				    fal_rx_ctl_filt_t *pfilt)
 {
 	unsigned char
 	    buf[SDK_MSG_SIZE
@@ -779,7 +779,7 @@ u32 nss_macsec_secy_rx_ctl_filt_clear_all(u32 secy_id)
 }
 
 u32 nss_macsec_secy_rx_prc_lut_get(u32 secy_id, u32 index,
-				   fal_rx_prc_lut_t * pentry)
+				   fal_rx_prc_lut_t *pentry)
 {
 	unsigned char
 	    buf[SDK_MSG_SIZE(sizeof(struct nss_macsec_secy_rx_prc_lut_get_cmd))]
@@ -809,7 +809,7 @@ u32 nss_macsec_secy_rx_prc_lut_get(u32 secy_id, u32 index,
 }
 
 u32 nss_macsec_secy_rx_prc_lut_set(u32 secy_id, u32 index,
-				   fal_rx_prc_lut_t * pentry)
+				   fal_rx_prc_lut_t *pentry)
 {
 	unsigned char
 	    buf[SDK_MSG_SIZE(sizeof(struct nss_macsec_secy_rx_prc_lut_set_cmd))]
@@ -917,7 +917,7 @@ u32 nss_macsec_secy_rx_sc_create(u32 secy_id, u32 channel)
 	return ret;
 }
 
-u32 nss_macsec_secy_rx_sc_en_get(u32 secy_id, u32 channel, bool * penable)
+u32 nss_macsec_secy_rx_sc_en_get(u32 secy_id, u32 channel, bool *penable)
 {
 	unsigned char
 	    buf[SDK_MSG_SIZE(sizeof(struct nss_macsec_secy_rx_sc_en_get_cmd))] =
@@ -1025,7 +1025,7 @@ u32 nss_macsec_secy_rx_sc_del_all(u32 secy_id)
 }
 
 u32 nss_macsec_secy_rx_sc_validate_frame_get(u32 secy_id, u32 channel,
-					     fal_rx_sc_validate_frame_e * pmode)
+					     fal_rx_sc_validate_frame_e *pmode)
 {
 	unsigned char
 	    buf[SDK_MSG_SIZE
@@ -1089,7 +1089,7 @@ u32 nss_macsec_secy_rx_sc_validate_frame_set(u32 secy_id, u32 channel,
 }
 
 u32 nss_macsec_secy_rx_sc_replay_protect_get(u32 secy_id, u32 channel,
-					     bool * penable)
+					     bool *penable)
 {
 	unsigned char
 	    buf[SDK_MSG_SIZE
@@ -1153,7 +1153,7 @@ u32 nss_macsec_secy_rx_sc_replay_protect_set(u32 secy_id, u32 channel,
 }
 
 u32 nss_macsec_secy_rx_sc_anti_replay_window_get(u32 secy_id, u32 channel,
-						 u32 * pwindow)
+						 u32 *pwindow)
 {
 	unsigned char
 	    buf[SDK_MSG_SIZE
@@ -1219,7 +1219,7 @@ u32 nss_macsec_secy_rx_sc_anti_replay_window_set(u32 secy_id, u32 channel,
 }
 
 u32 nss_macsec_secy_rx_sc_in_used_get(u32 secy_id, u32 channel,
-				      bool * p_in_used)
+				      bool *p_in_used)
 {
 	unsigned char
 	    buf[SDK_MSG_SIZE
@@ -1250,7 +1250,7 @@ u32 nss_macsec_secy_rx_sc_in_used_get(u32 secy_id, u32 channel,
 }
 
 u32 nss_macsec_secy_rx_sc_an_roll_over_get(u32 secy_id, u32 channel,
-					   bool * penable)
+					   bool *penable)
 {
 	unsigned char
 	    buf[SDK_MSG_SIZE
@@ -1314,8 +1314,8 @@ u32 nss_macsec_secy_rx_sc_an_roll_over_set(u32 secy_id, u32 channel,
 }
 
 u32 nss_macsec_secy_rx_sc_start_stop_time_get(u32 secy_id, u32 channel,
-					      u32 * p_start_time,
-					      u32 * p_stop_time)
+					      u32 *p_start_time,
+					      u32 *p_stop_time)
 {
 	unsigned char
 	    buf[SDK_MSG_SIZE
@@ -1408,7 +1408,7 @@ u32 nss_macsec_secy_rx_sa_create(u32 secy_id, u32 channel, u32 an)
 }
 
 u32 nss_macsec_secy_rx_sa_en_get(u32 secy_id, u32 channel, u32 an,
-				 bool * penable)
+				 bool *penable)
 {
 	unsigned char
 	    buf[SDK_MSG_SIZE(sizeof(struct nss_macsec_secy_rx_sa_en_get_cmd))] =
@@ -1467,7 +1467,7 @@ u32 nss_macsec_secy_rx_sa_en_set(u32 secy_id, u32 channel, u32 an, bool enable)
 }
 
 u32 nss_macsec_secy_rx_sa_next_pn_get(u32 secy_id, u32 channel, u32 an,
-				      u32 * pnpn)
+				      u32 *pnpn)
 {
 	unsigned char
 	    buf[SDK_MSG_SIZE
@@ -1551,7 +1551,7 @@ u32 nss_macsec_secy_rx_sa_del_all(u32 secy_id)
 }
 
 u32 nss_macsec_secy_rx_sak_get(u32 secy_id, u32 channel, u32 an,
-			       fal_rx_sak_t * pkey)
+			       fal_rx_sak_t *pkey)
 {
 	unsigned char
 	    buf[SDK_MSG_SIZE(sizeof(struct nss_macsec_secy_rx_sak_get_cmd))] =
@@ -1582,7 +1582,7 @@ u32 nss_macsec_secy_rx_sak_get(u32 secy_id, u32 channel, u32 an,
 }
 
 u32 nss_macsec_secy_rx_sak_set(u32 secy_id, u32 channel, u32 an,
-			       fal_rx_sak_t * pkey)
+			       fal_rx_sak_t *pkey)
 {
 	unsigned char
 	    buf[SDK_MSG_SIZE(sizeof(struct nss_macsec_secy_rx_sak_set_cmd))] =
@@ -1611,7 +1611,7 @@ u32 nss_macsec_secy_rx_sak_set(u32 secy_id, u32 channel, u32 an,
 }
 
 u32 nss_macsec_secy_rx_sa_in_used_get(u32 secy_id, u32 channel, u32 an,
-				      bool * p_in_used)
+				      bool *p_in_used)
 {
 	unsigned char
 	    buf[SDK_MSG_SIZE
@@ -1643,8 +1643,8 @@ u32 nss_macsec_secy_rx_sa_in_used_get(u32 secy_id, u32 channel, u32 an,
 }
 
 u32 nss_macsec_secy_rx_sa_start_stop_time_get(u32 secy_id, u32 channel, u32 an,
-					      u32 * p_start_time,
-					      u32 * p_stop_time)
+					      u32 *p_start_time,
+					      u32 *p_stop_time)
 {
 	unsigned char
 	    buf[SDK_MSG_SIZE
@@ -1711,7 +1711,7 @@ u32 nss_macsec_secy_rx_sa_start_stop_time_set(u32 secy_id, u32 channel, u32 an,
 	return ret;
 }
 
-u32 nss_macsec_secy_rx_pn_threshold_get(u32 secy_id, u32 * p_pn_threshold)
+u32 nss_macsec_secy_rx_pn_threshold_get(u32 secy_id, u32 *p_pn_threshold)
 {
 	unsigned char
 	    buf[SDK_MSG_SIZE
@@ -1769,7 +1769,7 @@ u32 nss_macsec_secy_rx_pn_threshold_set(u32 secy_id, u32 pn_threshold)
 	return ret;
 }
 
-u32 nss_macsec_secy_rx_replay_protect_get(u32 secy_id, u32 * enable)
+u32 nss_macsec_secy_rx_replay_protect_get(u32 secy_id, u32 *enable)
 {
 	unsigned char
 	    buf[SDK_MSG_SIZE
@@ -1829,7 +1829,7 @@ u32 nss_macsec_secy_rx_replay_protect_set(u32 secy_id, u32 enable)
 	return ret;
 }
 
-u32 nss_macsec_secy_rx_validate_frame_get(u32 secy_id, u32 * mode)
+u32 nss_macsec_secy_rx_validate_frame_get(u32 secy_id, u32 *mode)
 {
 	unsigned char
 	    buf[SDK_MSG_SIZE
@@ -1889,7 +1889,7 @@ u32 nss_macsec_secy_rx_validate_frame_set(u32 secy_id, u32 mode)
 	return ret;
 }
 
-u32 nss_macsec_secy_tx_reg_get(u32 secy_id, u32 addr, u32 * pvalue)
+u32 nss_macsec_secy_tx_reg_get(u32 secy_id, u32 addr, u32 *pvalue)
 {
 	unsigned char
 	    buf[SDK_MSG_SIZE(sizeof(struct nss_macsec_secy_tx_reg_get_cmd))] =
@@ -1945,7 +1945,7 @@ u32 nss_macsec_secy_tx_reg_set(u32 secy_id, u32 addr, u32 value)
 	return ret;
 }
 
-u32 nss_macsec_secy_tx_drop_sc_sa_invalid_get(u32 secy_id, bool * penable)
+u32 nss_macsec_secy_tx_drop_sc_sa_invalid_get(u32 secy_id, bool *penable)
 {
 	unsigned char
 	    buf[SDK_MSG_SIZE
@@ -2005,7 +2005,7 @@ u32 nss_macsec_secy_tx_drop_sc_sa_invalid_set(u32 secy_id, bool enable)
 	return ret;
 }
 
-u32 nss_macsec_secy_tx_unmatched_use_sc_0_get(u32 secy_id, bool * penable)
+u32 nss_macsec_secy_tx_unmatched_use_sc_0_get(u32 secy_id, bool *penable)
 {
 	unsigned char
 	    buf[SDK_MSG_SIZE
@@ -2065,7 +2065,7 @@ u32 nss_macsec_secy_tx_unmatched_use_sc_0_set(u32 secy_id, bool enable)
 	return ret;
 }
 
-u32 nss_macsec_secy_tx_gcm_start_get(u32 secy_id, bool * penable)
+u32 nss_macsec_secy_tx_gcm_start_get(u32 secy_id, bool *penable)
 {
 	unsigned char
 	    buf[SDK_MSG_SIZE
@@ -2121,7 +2121,7 @@ u32 nss_macsec_secy_tx_gcm_start_set(u32 secy_id, bool enable)
 	return ret;
 }
 
-u32 nss_macsec_secy_tx_drop_class_miss_get(u32 secy_id, bool * penable)
+u32 nss_macsec_secy_tx_drop_class_miss_get(u32 secy_id, bool *penable)
 {
 	unsigned char
 	    buf[SDK_MSG_SIZE
@@ -2181,7 +2181,7 @@ u32 nss_macsec_secy_tx_drop_class_miss_set(u32 secy_id, bool enable)
 	return ret;
 }
 
-u32 nss_macsec_secy_tx_drop_kay_pkt_get(u32 secy_id, bool * penable)
+u32 nss_macsec_secy_tx_drop_kay_pkt_get(u32 secy_id, bool *penable)
 {
 	unsigned char
 	    buf[SDK_MSG_SIZE
@@ -2240,7 +2240,7 @@ u32 nss_macsec_secy_tx_drop_kay_pkt_set(u32 secy_id, bool enable)
 }
 
 u32 nss_macsec_secy_tx_ctl_filt_get(u32 secy_id, u32 filt_id,
-				    fal_tx_ctl_filt_t * pfilt)
+				    fal_tx_ctl_filt_t *pfilt)
 {
 	unsigned char
 	    buf[SDK_MSG_SIZE
@@ -2271,7 +2271,7 @@ u32 nss_macsec_secy_tx_ctl_filt_get(u32 secy_id, u32 filt_id,
 }
 
 u32 nss_macsec_secy_tx_ctl_filt_set(u32 secy_id, u32 filt_id,
-				    fal_tx_ctl_filt_t * pfilt)
+				    fal_tx_ctl_filt_t *pfilt)
 {
 	unsigned char
 	    buf[SDK_MSG_SIZE
@@ -2355,7 +2355,7 @@ u32 nss_macsec_secy_tx_ctl_filt_clear_all(u32 secy_id)
 }
 
 u32 nss_macsec_secy_tx_class_lut_get(u32 secy_id, u32 index,
-				     fal_tx_class_lut_t * pentry)
+				     fal_tx_class_lut_t *pentry)
 {
 	unsigned char
 	    buf[SDK_MSG_SIZE
@@ -2386,7 +2386,7 @@ u32 nss_macsec_secy_tx_class_lut_get(u32 secy_id, u32 index,
 }
 
 u32 nss_macsec_secy_tx_class_lut_set(u32 secy_id, u32 index,
-				     fal_tx_class_lut_t * pentry)
+				     fal_tx_class_lut_t *pentry)
 {
 	unsigned char
 	    buf[SDK_MSG_SIZE
@@ -2470,7 +2470,7 @@ u32 nss_macsec_secy_tx_class_lut_clear_all(u32 secy_id)
 	return ret;
 }
 
-u32 nss_macsec_secy_tx_sc_create(u32 secy_id, u32 channel, u8 * psci,
+u32 nss_macsec_secy_tx_sc_create(u32 secy_id, u32 channel, u8 *psci,
 				 u32 sci_len)
 {				/* [16] */
 	unsigned char
@@ -2499,7 +2499,7 @@ u32 nss_macsec_secy_tx_sc_create(u32 secy_id, u32 channel, u8 * psci,
 	return ret;
 }
 
-u32 nss_macsec_secy_tx_sc_en_get(u32 secy_id, u32 channel, bool * penable)
+u32 nss_macsec_secy_tx_sc_en_get(u32 secy_id, u32 channel, bool *penable)
 {
 	unsigned char
 	    buf[SDK_MSG_SIZE(sizeof(struct nss_macsec_secy_tx_sc_en_get_cmd))] =
@@ -2606,7 +2606,7 @@ u32 nss_macsec_secy_tx_sc_del_all(u32 secy_id)
 	return ret;
 }
 
-u32 nss_macsec_secy_tx_sc_an_get(u32 secy_id, u32 channel, u32 * pan)
+u32 nss_macsec_secy_tx_sc_an_get(u32 secy_id, u32 channel, u32 *pan)
 {
 	unsigned char
 	    buf[SDK_MSG_SIZE(sizeof(struct nss_macsec_secy_tx_sc_an_get_cmd))] =
@@ -2663,7 +2663,7 @@ u32 nss_macsec_secy_tx_sc_an_set(u32 secy_id, u32 channel, u32 an)
 }
 
 u32 nss_macsec_secy_tx_sc_an_roll_over_en_get(u32 secy_id, u32 channel,
-					      bool * penable)
+					      bool *penable)
 {
 	unsigned char
 	    buf[SDK_MSG_SIZE
@@ -2727,7 +2727,7 @@ u32 nss_macsec_secy_tx_sc_an_roll_over_en_set(u32 secy_id, u32 channel,
 }
 
 u32 nss_macsec_secy_tx_sc_in_used_get(u32 secy_id, u32 channel,
-				      bool * p_in_used)
+				      bool *p_in_used)
 {
 	unsigned char
 	    buf[SDK_MSG_SIZE
@@ -2757,7 +2757,7 @@ u32 nss_macsec_secy_tx_sc_in_used_get(u32 secy_id, u32 channel,
 	return ret;
 }
 
-u32 nss_macsec_secy_tx_sc_tci_7_2_get(u32 secy_id, u32 channel, u8 * ptci)
+u32 nss_macsec_secy_tx_sc_tci_7_2_get(u32 secy_id, u32 channel, u8 *ptci)
 {
 	unsigned char
 	    buf[SDK_MSG_SIZE
@@ -2816,7 +2816,7 @@ u32 nss_macsec_secy_tx_sc_tci_7_2_set(u32 secy_id, u32 channel, u8 tci)
 }
 
 u32 nss_macsec_secy_tx_sc_confidentiality_offset_get(u32 secy_id, u32 channel,
-						     u32 * poffset)
+						     u32 *poffset)
 {
 	unsigned char
 	    buf[SDK_MSG_SIZE
@@ -2884,7 +2884,7 @@ u32 nss_macsec_secy_tx_sc_confidentiality_offset_set(u32 secy_id, u32 channel,
 	return ret;
 }
 
-u32 nss_macsec_secy_tx_sc_protect_get(u32 secy_id, u32 channel, bool * penable)
+u32 nss_macsec_secy_tx_sc_protect_get(u32 secy_id, u32 channel, bool *penable)
 {
 	unsigned char
 	    buf[SDK_MSG_SIZE
@@ -2942,7 +2942,7 @@ u32 nss_macsec_secy_tx_sc_protect_set(u32 secy_id, u32 channel, bool enable)
 	return ret;
 }
 
-u32 nss_macsec_secy_tx_sc_sci_get(u32 secy_id, u32 channel, u8 * psci,
+u32 nss_macsec_secy_tx_sc_sci_get(u32 secy_id, u32 channel, u8 *psci,
 				  u32 sci_len)
 {				/* [16] */
 	unsigned char
@@ -2974,8 +2974,8 @@ u32 nss_macsec_secy_tx_sc_sci_get(u32 secy_id, u32 channel, u8 * psci,
 }
 
 u32 nss_macsec_secy_tx_sc_start_stop_time_get(u32 secy_id, u32 channel,
-					      u32 * p_start_time,
-					      u32 * p_stop_time)
+					      u32 *p_start_time,
+					      u32 *p_stop_time)
 {
 	unsigned char
 	    buf[SDK_MSG_SIZE
@@ -3068,7 +3068,7 @@ u32 nss_macsec_secy_tx_sa_create(u32 secy_id, u32 channel, u32 an)
 }
 
 u32 nss_macsec_secy_tx_sa_en_get(u32 secy_id, u32 channel, u32 an,
-				 bool * penable)
+				 bool *penable)
 {
 	unsigned char
 	    buf[SDK_MSG_SIZE(sizeof(struct nss_macsec_secy_tx_sa_en_get_cmd))] =
@@ -3179,7 +3179,7 @@ u32 nss_macsec_secy_tx_sa_del_all(u32 secy_id)
 }
 
 u32 nss_macsec_secy_tx_sa_next_pn_get(u32 secy_id, u32 channel, u32 an,
-				      u32 * p_next_pn)
+				      u32 *p_next_pn)
 {
 	unsigned char
 	    buf[SDK_MSG_SIZE
@@ -3241,7 +3241,7 @@ u32 nss_macsec_secy_tx_sa_next_pn_set(u32 secy_id, u32 channel, u32 an,
 }
 
 u32 nss_macsec_secy_tx_sa_in_used_get(u32 secy_id, u32 channel, u32 an,
-				      bool * p_in_used)
+				      bool *p_in_used)
 {
 	unsigned char
 	    buf[SDK_MSG_SIZE
@@ -3273,8 +3273,8 @@ u32 nss_macsec_secy_tx_sa_in_used_get(u32 secy_id, u32 channel, u32 an,
 }
 
 u32 nss_macsec_secy_tx_sa_start_stop_time_get(u32 secy_id, u32 channel, u32 an,
-					      u32 * p_start_time,
-					      u32 * p_stop_time)
+					      u32 *p_start_time,
+					      u32 *p_stop_time)
 {
 	unsigned char
 	    buf[SDK_MSG_SIZE
@@ -3342,7 +3342,7 @@ u32 nss_macsec_secy_tx_sa_start_stop_time_set(u32 secy_id, u32 channel, u32 an,
 }
 
 u32 nss_macsec_secy_tx_sak_get(u32 secy_id, u32 channel, u32 an,
-			       fal_tx_sak_t * pentry)
+			       fal_tx_sak_t *pentry)
 {
 	unsigned char
 	    buf[SDK_MSG_SIZE(sizeof(struct nss_macsec_secy_tx_sak_get_cmd))] =
@@ -3373,7 +3373,7 @@ u32 nss_macsec_secy_tx_sak_get(u32 secy_id, u32 channel, u32 an,
 }
 
 u32 nss_macsec_secy_tx_sak_set(u32 secy_id, u32 channel, u32 an,
-			       fal_tx_sak_t * pentry)
+			       fal_tx_sak_t *pentry)
 {
 	unsigned char
 	    buf[SDK_MSG_SIZE(sizeof(struct nss_macsec_secy_tx_sak_set_cmd))] =
@@ -3401,7 +3401,7 @@ u32 nss_macsec_secy_tx_sak_set(u32 secy_id, u32 channel, u32 an,
 	return ret;
 }
 
-u32 nss_macsec_secy_tx_qtag_parse_set(u32 secy_id, fal_tx_vlan_parse_t * pentry)
+u32 nss_macsec_secy_tx_qtag_parse_set(u32 secy_id, fal_tx_vlan_parse_t *pentry)
 {
 	unsigned char
 	    buf[SDK_MSG_SIZE
@@ -3428,7 +3428,7 @@ u32 nss_macsec_secy_tx_qtag_parse_set(u32 secy_id, fal_tx_vlan_parse_t * pentry)
 	return ret;
 }
 
-u32 nss_macsec_secy_tx_qtag_parse_get(u32 secy_id, fal_tx_vlan_parse_t * pentry)
+u32 nss_macsec_secy_tx_qtag_parse_get(u32 secy_id, fal_tx_vlan_parse_t *pentry)
 {
 	unsigned char
 	    buf[SDK_MSG_SIZE
@@ -3457,7 +3457,7 @@ u32 nss_macsec_secy_tx_qtag_parse_get(u32 secy_id, fal_tx_vlan_parse_t * pentry)
 	return ret;
 }
 
-u32 nss_macsec_secy_tx_stag_parse_set(u32 secy_id, fal_tx_vlan_parse_t * pentry)
+u32 nss_macsec_secy_tx_stag_parse_set(u32 secy_id, fal_tx_vlan_parse_t *pentry)
 {
 	unsigned char
 	    buf[SDK_MSG_SIZE
@@ -3484,7 +3484,7 @@ u32 nss_macsec_secy_tx_stag_parse_set(u32 secy_id, fal_tx_vlan_parse_t * pentry)
 	return ret;
 }
 
-u32 nss_macsec_secy_tx_stag_parse_get(u32 secy_id, fal_tx_vlan_parse_t * pentry)
+u32 nss_macsec_secy_tx_stag_parse_get(u32 secy_id, fal_tx_vlan_parse_t *pentry)
 {
 	unsigned char
 	    buf[SDK_MSG_SIZE
@@ -3513,7 +3513,7 @@ u32 nss_macsec_secy_tx_stag_parse_get(u32 secy_id, fal_tx_vlan_parse_t * pentry)
 	return ret;
 }
 
-u32 nss_macsec_secy_tx_pn_threshold_get(u32 secy_id, u32 * p_pn_threshold)
+u32 nss_macsec_secy_tx_pn_threshold_get(u32 secy_id, u32 *p_pn_threshold)
 {
 	unsigned char
 	    buf[SDK_MSG_SIZE
@@ -3643,7 +3643,7 @@ u32 nss_macsec_secy_init(u32 secy_id)
 }
 
 u32 nss_macsec_secy_sc_sa_mapping_mode_get(u32 secy_id,
-					   fal_sc_sa_mapping_mode_e * pmode)
+					   fal_sc_sa_mapping_mode_e *pmode)
 {
 	unsigned char
 	    buf[SDK_MSG_SIZE
@@ -3704,7 +3704,7 @@ u32 nss_macsec_secy_sc_sa_mapping_mode_set(u32 secy_id,
 	return ret;
 }
 
-u32 nss_macsec_secy_controlled_port_en_get(u32 secy_id, bool * penable)
+u32 nss_macsec_secy_controlled_port_en_get(u32 secy_id, bool *penable)
 {
 	unsigned char
 	    buf[SDK_MSG_SIZE
@@ -3794,7 +3794,7 @@ u32 nss_macsec_secy_ip_version_get(u32 secy_id, char *ver_str, u32 ver_str_len)
 }
 
 u32 nss_macsec_secy_cipher_suite_get(u32 secy_id,
-				     fal_cipher_suite_e * p_cipher_suite)
+				     fal_cipher_suite_e *p_cipher_suite)
 {
 	unsigned char
 	    buf[SDK_MSG_SIZE
@@ -3851,7 +3851,7 @@ u32 nss_macsec_secy_cipher_suite_set(u32 secy_id,
 	return ret;
 }
 
-u32 nss_macsec_secy_mtu_get(u32 secy_id, u32 * pmtu)
+u32 nss_macsec_secy_mtu_get(u32 secy_id, u32 *pmtu)
 {
 	unsigned char
 	    buf[SDK_MSG_SIZE(sizeof(struct nss_macsec_secy_mtu_get_cmd))] =
@@ -3905,7 +3905,7 @@ u32 nss_macsec_secy_mtu_set(u32 secy_id, u32 mtu)
 	return ret;
 }
 
-u32 nss_macsec_secy_en_get(u32 secy_id, bool * penable)
+u32 nss_macsec_secy_en_get(u32 secy_id, bool *penable)
 {
 	unsigned char
 	    buf[SDK_MSG_SIZE(sizeof(struct nss_macsec_secy_en_get_cmd))] =

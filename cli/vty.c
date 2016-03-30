@@ -44,7 +44,7 @@ typedef struct {
 "*                                                                      *\r\n"\
 "************************************************************************\r\n"
 
-void vty_write(VTY_T * pVty, sa_ch_t * buf, int nbytes)
+void vty_write(VTY_T *pVty, sa_ch_t *buf, int nbytes)
 {
 	switch (pVty->writeMode) {
 	case VTY_MODE_FORCED_FLUSH:
@@ -65,7 +65,7 @@ void vty_write(VTY_T * pVty, sa_ch_t * buf, int nbytes)
 	}
 }
 
-static void _vty_putchar(VTY_T * pVty, sa_ch_t ch, int times)
+static void _vty_putchar(VTY_T *pVty, sa_ch_t ch, int times)
 {
 	sa_ch_t *pt = NULL;
 
@@ -85,7 +85,7 @@ static void _vty_putchar(VTY_T * pVty, sa_ch_t ch, int times)
 	osal_free(pt);
 }
 
-int vty_output(VTY_T * pVty, sa_ch_t * format, ...)
+int vty_output(VTY_T *pVty, sa_ch_t *format, ...)
 {
 	va_list args;
 	int size, ptLen;
@@ -110,24 +110,24 @@ int vty_output(VTY_T * pVty, sa_ch_t * format, ...)
 	return size;
 }
 
-void _vty_welcome(VTY_T * pVty)
+void _vty_welcome(VTY_T *pVty)
 {
 	vty_output(pVty, VTY_WELCOME_MESSAGE);
 }
 
-static void _vty_prompt(VTY_T * pVty)
+static void _vty_prompt(VTY_T *pVty)
 {
 	vty_output(pVty, "%s ", pVty->prompt);
 }
 
-static void _vty_redraw_line(VTY_T * pVty)
+static void _vty_redraw_line(VTY_T *pVty)
 {
 	vty_write(pVty, pVty->line.data, pVty->line.len);
 
 	pVty->line.cp = pVty->line.len;
 }
 
-static void _vty_cmd_insert_char(VTY_T * pVty, sa_ch_t c)
+static void _vty_cmd_insert_char(VTY_T *pVty, sa_ch_t c)
 {
 	int length;
 	VTY_BUF_T *pBuf = &pVty->line;
@@ -165,7 +165,7 @@ static void _vty_cmd_insert_char(VTY_T * pVty, sa_ch_t c)
 	pBuf->len++;
 }
 
-static void _vty_cmd_forward_char(VTY_T * pVty)
+static void _vty_cmd_forward_char(VTY_T *pVty)
 {
 	VTY_BUF_T *pBuf = &pVty->line;
 
@@ -176,7 +176,7 @@ static void _vty_cmd_forward_char(VTY_T * pVty)
 	}
 }
 
-static void _vty_cmd_backward_char(VTY_T * pVty)
+static void _vty_cmd_backward_char(VTY_T *pVty)
 {
 	VTY_BUF_T *pBuf = &pVty->line;
 
@@ -187,7 +187,7 @@ static void _vty_cmd_backward_char(VTY_T * pVty)
 	}
 }
 
-static void _vty_cmd_delete_char(VTY_T * pVty)
+static void _vty_cmd_delete_char(VTY_T *pVty)
 {
 	int size;
 	VTY_BUF_T *pBuf = &pVty->line;
@@ -214,7 +214,7 @@ static void _vty_cmd_delete_char(VTY_T * pVty)
 	_vty_putchar(pVty, CHAR_BS, size);
 }
 
-static void _vty_cmd_backspace_char(VTY_T * pVty)
+static void _vty_cmd_backspace_char(VTY_T *pVty)
 {
 	VTY_BUF_T *pBuf = &pVty->line;
 
@@ -226,7 +226,7 @@ static void _vty_cmd_backspace_char(VTY_T * pVty)
 	_vty_cmd_delete_char(pVty);
 }
 
-static void _vty_cmd_line_begin(VTY_T * pVty)
+static void _vty_cmd_line_begin(VTY_T *pVty)
 {
 	VTY_BUF_T *pBuf = &pVty->line;
 
@@ -235,7 +235,7 @@ static void _vty_cmd_line_begin(VTY_T * pVty)
 	pVty->line.cp = 0;
 }
 
-static void _vty_cmd_line_end(VTY_T * pVty)
+static void _vty_cmd_line_end(VTY_T *pVty)
 {
 	VTY_BUF_T *pBuf = &pVty->line;
 
@@ -244,7 +244,7 @@ static void _vty_cmd_line_end(VTY_T * pVty)
 	pBuf->cp = pBuf->len;
 }
 
-static void _vty_cmd_kill_line(VTY_T * pVty)
+static void _vty_cmd_kill_line(VTY_T *pVty)
 {
 	VTY_BUF_T *pBuf = &pVty->line;
 
@@ -256,7 +256,7 @@ static void _vty_cmd_kill_line(VTY_T * pVty)
 	VTY_BUF_ZERO(pBuf);
 }
 
-static void _vty_print_history(VTY_T * pVty)
+static void _vty_print_history(VTY_T *pVty)
 {
 	VTY_HIST_T *pHist = &pVty->hist;
 	VTY_BUF_T *pBuf = &pVty->line;
@@ -273,7 +273,7 @@ static void _vty_print_history(VTY_T * pVty)
 	_vty_redraw_line(pVty);
 }
 
-static void _vty_cmd_next_history(VTY_T * pVty)
+static void _vty_cmd_next_history(VTY_T *pVty)
 {
 	VTY_HIST_T *pHist = &pVty->hist;
 	int next;
@@ -291,7 +291,7 @@ static void _vty_cmd_next_history(VTY_T * pVty)
 	}
 }
 
-static void _vty_cmd_prev_history(VTY_T * pVty)
+static void _vty_cmd_prev_history(VTY_T *pVty)
 {
 	VTY_HIST_T *pHist = &pVty->hist;
 	int prev;
@@ -309,7 +309,7 @@ static void _vty_cmd_prev_history(VTY_T * pVty)
 	}
 }
 
-sa_ch_t *__vty_trim_left(sa_ch_t * s)
+sa_ch_t *__vty_trim_left(sa_ch_t *s)
 {
 	sa_ch_t *start = NULL;
 	sa_ch_t *end = NULL;
@@ -331,7 +331,7 @@ sa_ch_t *__vty_trim_left(sa_ch_t * s)
 	return s;
 }
 
-void _vty_cmd_add_history(VTY_T * pVty)
+void _vty_cmd_add_history(VTY_T *pVty)
 {
 	VTY_HIST_T *pHist = &pVty->hist;
 	VTY_BUF_T *pBuf = &pVty->line;
@@ -365,7 +365,7 @@ void _vty_cmd_add_history(VTY_T * pVty)
 	pHist->cp = pHist->insert;
 }
 
-static void _vty_cmd_exit(VTY_T * pVty)
+static void _vty_cmd_exit(VTY_T *pVty)
 {
 	VTY_BUF_ZERO(&pVty->line);
 
@@ -376,7 +376,7 @@ static void _vty_cmd_exit(VTY_T * pVty)
 	pVty->hist.cp = pVty->hist.insert;
 }
 
-static void _vty_cmd_output_error(VTY_T * pVty)
+static void _vty_cmd_output_error(VTY_T *pVty)
 {
 	/* point out first error position */
 	if (pVty->errPosition != -1) {
@@ -399,7 +399,7 @@ static void _vty_cmd_output_error(VTY_T * pVty)
 	return;
 }
 
-static void _vty_cmd_execute(VTY_T * pVty)
+static void _vty_cmd_execute(VTY_T *pVty)
 {
 	vty_output(pVty, VTY_LINEBREAK);
 
@@ -418,7 +418,7 @@ static void _vty_cmd_execute(VTY_T * pVty)
 	_vty_prompt(pVty);
 }
 
-static void _vty_cmd_describe(VTY_T * pVty)
+static void _vty_cmd_describe(VTY_T *pVty)
 {
 	vty_output(pVty, VTY_LINEBREAK);
 
@@ -435,7 +435,7 @@ static void _vty_cmd_describe(VTY_T * pVty)
 	_vty_redraw_line(pVty);
 }
 
-static void _vty_cmd_complete(VTY_T * pVty)
+static void _vty_cmd_complete(VTY_T *pVty)
 {
 	vty_output(pVty, VTY_LINEBREAK);
 
@@ -475,7 +475,7 @@ static VTY_KET_BIND_T gKeyBindNorm[] = {
 };
 static int gKeyBindNormLen = sizeof(gKeyBindNorm) / sizeof(gKeyBindNorm[0]);
 
-static sa_bool_t _vty_traverse_keybind(VTY_T * pVty, VTY_KET_BIND_T * keyBind,
+static sa_bool_t _vty_traverse_keybind(VTY_T *pVty, VTY_KET_BIND_T *keyBind,
 				       int keyBindLen, sa_u8_t ch)
 {
 	sa_bool_t flag = 0;
@@ -492,14 +492,14 @@ static sa_bool_t _vty_traverse_keybind(VTY_T * pVty, VTY_KET_BIND_T * keyBind,
 	return flag;
 }
 
-static void _vty_input_esc(VTY_T * pVty, sa_ch_t ch)
+static void _vty_input_esc(VTY_T *pVty, sa_ch_t ch)
 {
 	_vty_traverse_keybind(pVty, gKeyBindEsc, gKeyBindEscLen, ch);
 
 	pVty->esc = VTY_ESC_NONE;
 }
 
-void _vty_input_normal(VTY_T * pVty, sa_u8_t ch)
+void _vty_input_normal(VTY_T *pVty, sa_u8_t ch)
 {
 	if (!_vty_traverse_keybind(pVty, gKeyBindNorm, gKeyBindNormLen, ch)) {
 		if (CHAR_PRINTABLE(ch)) {
@@ -525,7 +525,7 @@ void _vty_input_normal(VTY_T * pVty, sa_u8_t ch)
  *   int - 0 success else failure
  *
  ******************************************************************************/
-int vty_input(VTY_T * pVty, sa_u8_t * buf, int nbytes)
+int vty_input(VTY_T *pVty, sa_u8_t *buf, int nbytes)
 {
 	int i = 0;
 
@@ -577,7 +577,7 @@ int vty_input(VTY_T * pVty, sa_u8_t * buf, int nbytes)
  * return:
  *
  ******************************************************************************/
-void vty_close(VTY_T * pVty)
+void vty_close(VTY_T *pVty)
 {
 	int i;
 
@@ -616,7 +616,7 @@ void vty_close(VTY_T * pVty)
  *   int - 0 success else failure
  *
  ******************************************************************************/
-int vty_complete_cmd(VTY_T * pVty, const char *subCmdStr, sa_bool_t addSpace)
+int vty_complete_cmd(VTY_T *pVty, const char *subCmdStr, sa_bool_t addSpace)
 {
 	VTY_BUF_T *pBuf = &(pVty->line);
 	int subCmdStrLen = strlen(subCmdStr);

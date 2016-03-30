@@ -96,7 +96,7 @@ typedef struct {
  *   one of CLI_RET_T
  *
  ******************************************************************************/
-int cli_install_mode(CLI_MODE_T * pMode)
+int cli_install_mode(CLI_MODE_T *pMode)
 {
 	if (NULL == pMode) {
 		return CLI_FAIL;
@@ -272,7 +272,7 @@ int cli_init(void)
 	return CLI_OK;
 }
 
-int _cli_free_subcmd(CLI_SUBCMD_T * pSubCmd)
+int _cli_free_subcmd(CLI_SUBCMD_T *pSubCmd)
 {
 	int i;
 	CLI_SUBCMD_T *pInnerSubcmd;
@@ -316,7 +316,7 @@ int _cli_free_subcmd(CLI_SUBCMD_T * pSubCmd)
 	return 0;
 }
 
-int _cli_free_cmd(CLI_CMD_T * pCmd)
+int _cli_free_cmd(CLI_CMD_T *pCmd)
 {
 	int i;
 	CLI_SUBCMD_T *pSubCmd;
@@ -350,7 +350,7 @@ int _cli_free_cmd(CLI_CMD_T * pCmd)
 	return 0;
 }
 
-int _cli_free_mode(CLI_MODE_T * pMode)
+int _cli_free_mode(CLI_MODE_T *pMode)
 {
 	int i;
 	CLI_CMD_T *pCmd;
@@ -628,8 +628,8 @@ static sa_bool_t _cli_is_key(char *key)
  *   SUBCMD_TYPE_VAR_LIST
  *
  ******************************************************************************/
-static int _cli_subcmd_list_range_check(const char *str, sa_u32_t * pMin,
-					sa_u32_t * pMax)
+static int _cli_subcmd_list_range_check(const char *str, sa_u32_t *pMin,
+					sa_u32_t *pMax)
 {
 #define CLI_RANGE_LIST_STR_CHARS "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ.-_<>"
 #define CLI_MIN_MAX_FUNCTION_NAME_LEN_MAX   31
@@ -744,7 +744,7 @@ static int _cli_subcmd_list_range_check(const char *str, sa_u32_t * pMin,
  *   the caller must make sure pSubCmd != NULL
  *
  ******************************************************************************/
-static int _cli_subcmd_type(CLI_SUBCMD_T * pSubCmd)
+static int _cli_subcmd_type(CLI_SUBCMD_T *pSubCmd)
 {
 	int type = SUBCMD_TYPE_NONE;
 	char *key = pSubCmd->key;
@@ -830,7 +830,7 @@ static int _cli_subcmd_type(CLI_SUBCMD_T * pSubCmd)
  *   one of CLI_RET_T
  *
  ******************************************************************************/
-static int _cli_cmd_analysis(CLI_CMD_T * pCmd)
+static int _cli_cmd_analysis(CLI_CMD_T *pCmd)
 {
 	const char *cp;		/* floating pointer in command string */
 	const char *dp;		/* floating pointer in description string */
@@ -962,7 +962,7 @@ static int _cli_cmd_analysis(CLI_CMD_T * pCmd)
  *   one of CLI_RET_T
  *
  ******************************************************************************/
-int cli_install_simple_cmd(int modeId, CLI_CMD_T * pCmd)
+int cli_install_simple_cmd(int modeId, CLI_CMD_T *pCmd)
 {
 	CLI_MODE_T *pMode;
 
@@ -1018,7 +1018,7 @@ int cli_install_simple_cmd(int modeId, CLI_CMD_T * pCmd)
  *   one of CLI_RET_T
  *
  ******************************************************************************/
-int cli_install_cmd(int modeId, CLI_CMD_T * pCmd)
+int cli_install_cmd(int modeId, CLI_CMD_T *pCmd)
 {
 	/* the default command is normal and visible */
 	pCmd->invisible = SA_FALSE;
@@ -1042,7 +1042,7 @@ int cli_install_cmd(int modeId, CLI_CMD_T * pCmd)
  *   one of CLI_RET_T
  *
  ******************************************************************************/
-int cli_install_invisible_cmd(int modeId, CLI_CMD_T * pCmd)
+int cli_install_invisible_cmd(int modeId, CLI_CMD_T *pCmd)
 {
 	/* set command as invisible */
 	pCmd->invisible = SA_TRUE;
@@ -1065,7 +1065,7 @@ int cli_install_invisible_cmd(int modeId, CLI_CMD_T * pCmd)
  *   always CLI_OK
  *
  ******************************************************************************/
-static int _cli_free_line_array(ARRAY_T * pLine)
+static int _cli_free_line_array(ARRAY_T *pLine)
 {
 	int i;
 	char *token;
@@ -1097,7 +1097,7 @@ static int _cli_free_line_array(ARRAY_T * pLine)
  *   one of CLI_RET_T
  *
  ******************************************************************************/
-static int _cli_split_line(const char *lineStr, ARRAY_T ** ppArray)
+static int _cli_split_line(const char *lineStr, ARRAY_T **ppArray)
 {
 	const char *cp;
 	char *token;
@@ -1464,7 +1464,7 @@ static int _cli_token_match_word(const char *token)
  *
  ******************************************************************************/
 static int _cli_token_match_subcmd_array(const char *token,
-					 ARRAY_T * pSubCmdArray)
+					 ARRAY_T *pSubCmdArray)
 {
 	CLI_SUBCMD_T *pSubCmd;
 	int i;
@@ -1553,7 +1553,7 @@ static int _cli_token_match_subcmd_array(const char *token,
  *   one of SUBCMD_MATCH_T
  *
  ******************************************************************************/
-static int _cli_token_match_subcmd(const char *token, CLI_SUBCMD_T * pSubCmd)
+static int _cli_token_match_subcmd(const char *token, CLI_SUBCMD_T *pSubCmd)
 {
 	int match = SUBCMD_MATCH_NO;
 
@@ -1624,7 +1624,7 @@ static int _cli_token_match_subcmd(const char *token, CLI_SUBCMD_T * pSubCmd)
  *   biggest match type.
  *
  ******************************************************************************/
-static int _cli_token_match_cmd_array(const char *token, ARRAY_T * pCmdArray,
+static int _cli_token_match_cmd_array(const char *token, ARRAY_T *pCmdArray,
 				      int index)
 {
 	CLI_CMD_T *pCmd;
@@ -1689,7 +1689,7 @@ static int _cli_token_match_cmd_array(const char *token, ARRAY_T * pCmdArray,
  *   one of SUBCMD_AMBIGUOUS_T
  *
  ******************************************************************************/
-static int _cli_token_is_ambiguous(char *token, ARRAY_T * pCmdArray, int index,
+static int _cli_token_is_ambiguous(char *token, ARRAY_T *pCmdArray, int index,
 				   int match)
 {
 	CLI_CMD_T *pCmd;
@@ -1897,7 +1897,7 @@ static int _cli_get_err_position(const char *lineStr, const int index)
 	return errPosition;
 }
 
-static void _cli_set_err_str(VTY_T * pVty, int errId)
+static void _cli_set_err_str(VTY_T *pVty, int errId)
 {
 	switch (errId) {
 	case CLI_FAIL:
@@ -1945,7 +1945,7 @@ static void _cli_set_err_str(VTY_T * pVty, int errId)
  *   one of CLI_RET_T
  *
  ******************************************************************************/
-int cli_execute_cmd(VTY_T * pVty)
+int cli_execute_cmd(VTY_T *pVty)
 {
 	ARRAY_T *pLine = NULL;
 	ARRAY_T *pCmdArray = NULL;
@@ -2078,8 +2078,8 @@ static CLI_SUBCMD_T gCrSubCmd = {
  *   one of CLI_RET_T
  *
  ******************************************************************************/
-static int _cli_insert_desc_array(ARRAY_T * pDescArray,
-				  CLI_SUBCMD_T * pNewSubCmd)
+static int _cli_insert_desc_array(ARRAY_T *pDescArray,
+				  CLI_SUBCMD_T *pNewSubCmd)
 {
 	int i;
 	CLI_SUBCMD_T *pSubCmd;
@@ -2109,7 +2109,7 @@ static int _cli_insert_desc_array(ARRAY_T * pDescArray,
  *   one of CLI_RET_T
  *
  ******************************************************************************/
-static int _cli_print_desc_array(VTY_T * pVty, ARRAY_T * pDescArray)
+static int _cli_print_desc_array(VTY_T *pVty, ARRAY_T *pDescArray)
 {
 	int i;
 	CLI_SUBCMD_T *pSubCmd;
@@ -2161,7 +2161,7 @@ static int _cli_print_desc_array(VTY_T * pVty, ARRAY_T * pDescArray)
  *   one of CLI_RET_T
  *
  ******************************************************************************/
-int cli_describe_cmd(VTY_T * pVty)
+int cli_describe_cmd(VTY_T *pVty)
 {
 	ARRAY_T *pLine = NULL;
 	ARRAY_T *pCmdArray = NULL;
@@ -2360,7 +2360,7 @@ int cli_describe_cmd(VTY_T * pVty)
  *   one of SUBCMD_MATCH_T
  *
  ******************************************************************************/
-static int _cli_token_complete_subcmd(const char *token, CLI_SUBCMD_T * pSubCmd)
+static int _cli_token_complete_subcmd(const char *token, CLI_SUBCMD_T *pSubCmd)
 {
 	if (SUBCMD_TYPE_KEY == pSubCmd->type) {
 		return _cli_token_match_key(token, pSubCmd->key);
@@ -2384,7 +2384,7 @@ static int _cli_token_complete_subcmd(const char *token, CLI_SUBCMD_T * pSubCmd)
  *   complete string len
  *
  ******************************************************************************/
-static int _cli_get_complete_str(ARRAY_T * pDescArray, char *completeStr)
+static int _cli_get_complete_str(ARRAY_T *pDescArray, char *completeStr)
 {
 	int i, j;
 	int index;
@@ -2442,7 +2442,7 @@ static int _cli_get_complete_str(ARRAY_T * pDescArray, char *completeStr)
  *   one of CLI_RET_T
  *
  ******************************************************************************/
-int cli_complete_cmd(VTY_T * pVty)
+int cli_complete_cmd(VTY_T *pVty)
 {
 	ARRAY_T *pLine = NULL;
 	ARRAY_T *pCmdArray = NULL;
@@ -2643,7 +2643,7 @@ int cli_complete_cmd(VTY_T * pVty)
  *   always 0
  *
  ******************************************************************************/
-int cli_display_arguments(VTY_T * pVty, const int argc, const char **argv)
+int cli_display_arguments(VTY_T *pVty, const int argc, const char **argv)
 {
 	int i, j;
 	CLI_CMD_T *pCmd = (CLI_CMD_T *) (pVty->pExecCmd);

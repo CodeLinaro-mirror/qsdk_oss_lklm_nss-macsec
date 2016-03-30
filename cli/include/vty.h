@@ -133,7 +133,7 @@ typedef struct vty {
 
 VTY_T *vty_create(int fd);
 
-void vty_close(VTY_T * pVty);
+void vty_close(VTY_T *pVty);
 
 int vty_complete_cmd(VTY_T *, const char *, sa_bool_t);
 

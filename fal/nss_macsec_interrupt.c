@@ -17,17 +17,17 @@
 #include "nss_macsec_register_api.h"
 #include "nss_macsec_interrupt.h"
 
-u32 nss_macsec_secy_interrupt_en_get(u32 secy_id, fal_interrupt_en_t * p_int_en)
+u32 nss_macsec_secy_interrupt_en_get(u32 secy_id, fal_interrupt_en_t *p_int_en)
 {
 	return ERROR_OK;
 }
 
-u32 nss_macsec_secy_interrupt_en_set(u32 secy_id, fal_interrupt_en_t * p_int_en)
+u32 nss_macsec_secy_interrupt_en_set(u32 secy_id, fal_interrupt_en_t *p_int_en)
 {
 	return ERROR_OK;
 }
 
-u32 nss_macsec_secy_interrupt_get(u32 secy_id, fal_interrupt_t * pint)
+u32 nss_macsec_secy_interrupt_get(u32 secy_id, fal_interrupt_t *pint)
 {
 	return ERROR_OK;
 }

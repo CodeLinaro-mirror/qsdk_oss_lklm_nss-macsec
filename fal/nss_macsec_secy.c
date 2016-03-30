@@ -140,7 +140,7 @@ u32 nss_macsec_secy_init(u32 secy_id)
 }
 
 u32 nss_macsec_secy_sc_sa_mapping_mode_get(u32 secy_id,
-					   fal_sc_sa_mapping_mode_e * pmode)
+					   fal_sc_sa_mapping_mode_e *pmode)
 {
 	SHR_PARAM_CHECK((secy_id < FAL_SECY_ID_NUM)&& (pmode != NULL));
 
@@ -163,7 +163,7 @@ u32 nss_macsec_secy_sc_sa_mapping_mode_set(u32 secy_id,
 	return ERROR_OK;
 }
 
-u32 nss_macsec_secy_controlled_port_en_get(u32 secy_id, bool * penable)
+u32 nss_macsec_secy_controlled_port_en_get(u32 secy_id, bool *penable)
 {
 	SHR_PARAM_CHECK((secy_id < FAL_SECY_ID_NUM));
 
@@ -199,7 +199,7 @@ u32 nss_macsec_secy_ip_version_get(u32 secy_id, char *ver_str, u32 ver_str_len)
 }
 
 u32 nss_macsec_secy_cipher_suite_get(u32 secy_id,
-				     fal_cipher_suite_e * p_cipher_suite)
+				     fal_cipher_suite_e *p_cipher_suite)
 {
 	SHR_PARAM_CHECK((secy_id < FAL_SECY_ID_NUM)&& (p_cipher_suite != NULL));
 
@@ -220,7 +220,7 @@ u32 nss_macsec_secy_cipher_suite_set(u32 secy_id,
 	return ERROR_OK;
 }
 
-u32 nss_macsec_secy_mtu_get(u32 secy_id, u32 * pmtu)
+u32 nss_macsec_secy_mtu_get(u32 secy_id, u32 *pmtu)
 {
 	SHR_PARAM_CHECK((secy_id < FAL_SECY_ID_NUM)&& (pmtu != NULL));
 
@@ -252,7 +252,7 @@ u32 nss_macsec_secy_mtu_set(u32 secy_id, u32 mtu)
 	return ERROR_OK;
 }
 
-u32 nss_macsec_secy_en_get(u32 secy_id, bool * penable)
+u32 nss_macsec_secy_en_get(u32 secy_id, bool *penable)
 {
 	SHR_PARAM_CHECK((secy_id < FAL_SECY_ID_NUM)&& (penable != NULL));
 

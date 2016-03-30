@@ -67,7 +67,7 @@ ARRAY_T *array_new(sa_u32_t max);
  * return:
  *
  ******************************************************************************/
-void array_free(ARRAY_T * pArray);
+void array_free(ARRAY_T *pArray);
 
 /******************************************************************************
  *
@@ -87,7 +87,7 @@ void array_free(ARRAY_T * pArray);
  *   only copy slots, does not copy content of slot
  *
  ******************************************************************************/
-ARRAY_T *array_copy(ARRAY_T * pArray);
+ARRAY_T *array_copy(ARRAY_T *pArray);
 
 /******************************************************************************
  *
@@ -106,7 +106,7 @@ ARRAY_T *array_copy(ARRAY_T * pArray);
  *   one of SHELL_ERROR_T
  *
  ******************************************************************************/
-int array_set_slot(ARRAY_T * pArray, void *data, sa_u32_t i);
+int array_set_slot(ARRAY_T *pArray, void *data, sa_u32_t i);
 
 /******************************************************************************
  *
@@ -124,7 +124,7 @@ int array_set_slot(ARRAY_T * pArray, void *data, sa_u32_t i);
  *   one of SHELL_ERROR_T
  *
  ******************************************************************************/
-int array_insert_slot(ARRAY_T * pArray, void *data);
+int array_insert_slot(ARRAY_T *pArray, void *data);
 
 /******************************************************************************
  *
@@ -142,6 +142,6 @@ int array_insert_slot(ARRAY_T * pArray, void *data);
  *   one of SHELL_ERROR_T
  *
  ******************************************************************************/
-int array_unset_slot(ARRAY_T * pArray, const sa_u32_t i);
+int array_unset_slot(ARRAY_T *pArray, const sa_u32_t i);
 
 #endif /* _ARRAY_H */

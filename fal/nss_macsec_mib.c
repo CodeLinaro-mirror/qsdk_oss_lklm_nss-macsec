@@ -19,7 +19,7 @@
 #include "nss_macsec_mib.h"
 #include <linux/delay.h>
 u32 nss_macsec_secy_tx_sc_mib_get(u32 secy_id, u32 channel,
-				  fal_tx_sc_mib_t * pmib)
+				  fal_tx_sc_mib_t *pmib)
 {
 	u32 sc_id = 0;
 	struct eg_smib_sc_sa mib;
@@ -44,7 +44,7 @@ u32 nss_macsec_secy_tx_sc_mib_get(u32 secy_id, u32 channel,
 }
 
 u32 nss_macsec_secy_tx_sa_mib_get(u32 secy_id, u32 channel,
-				  u32 an, fal_tx_sa_mib_t * pmib)
+				  u32 an, fal_tx_sa_mib_t *pmib)
 {
 	u32 sa_id = 0;
 	struct eg_smib_sc_sa mib;
@@ -69,7 +69,7 @@ u32 nss_macsec_secy_tx_sa_mib_get(u32 secy_id, u32 channel,
 	return ERROR_OK;
 }
 
-u32 nss_macsec_secy_tx_mib_get(u32 secy_id, fal_tx_mib_t * pmib)
+u32 nss_macsec_secy_tx_mib_get(u32 secy_id, fal_tx_mib_t *pmib)
 {
 	struct eg_smib_common mib;
 
@@ -100,7 +100,7 @@ u32 nss_macsec_secy_tx_mib_get(u32 secy_id, fal_tx_mib_t * pmib)
 }
 
 u32 nss_macsec_secy_rx_sa_mib_get(u32 secy_id, u32 channel,
-				  u32 an, fal_rx_sa_mib_t * pmib)
+				  u32 an, fal_rx_sa_mib_t *pmib)
 {
 	u32 sa_id = 0;
 	struct ig_smib_sc_sa mib;
@@ -142,7 +142,7 @@ u32 nss_macsec_secy_rx_sa_mib_get(u32 secy_id, u32 channel,
 	return ERROR_OK;
 }
 
-u32 nss_macsec_secy_rx_mib_get(u32 secy_id, fal_rx_mib_t * pmib)
+u32 nss_macsec_secy_rx_mib_get(u32 secy_id, fal_rx_mib_t *pmib)
 {
 	struct ig_smib_common mib;
 

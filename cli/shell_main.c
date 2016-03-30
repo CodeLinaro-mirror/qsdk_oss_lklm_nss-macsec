@@ -124,7 +124,7 @@ static void _shell_sig_fini(void)
 	return;
 }
 
-int main(int argc, sa_ch_t * argv[])
+int main(int argc, sa_ch_t *argv[])
 {
 	_shell_sig_init();
 

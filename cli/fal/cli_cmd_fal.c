@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014, The Linux Foundation. All rights reserved.
+ * Copyright (c) 2014, 2016, The Linux Foundation. All rights reserved.
  * Permission to use, copy, modify, and/or distribute this software for
  * any purpose with or without fee is hereby granted, provided that the
  * above copyright notice and this permission notice appear in all copies.
@@ -44,7 +44,7 @@ DEFCMD(g_fal_tx_sak_t_init_func,
 	return CLI_OK;
 }
 
-void _dump_g_fal_tx_sak_t(VTY_T * pVty, fal_tx_sak_t * value)
+void _dump_g_fal_tx_sak_t(VTY_T *pVty, fal_tx_sak_t *value)
 {
 	char str[64] = { 0 };
 
@@ -70,14 +70,14 @@ DEFCMD(g_fal_rx_ctl_filt_t_init_func,
 	return CLI_OK;
 }
 
-void _dump_g_fal_rx_ctl_filt_t(VTY_T * pVty, fal_rx_ctl_filt_t * value)
+void _dump_g_fal_rx_ctl_filt_t(VTY_T *pVty, fal_rx_ctl_filt_t *value)
 {
 	char mac_str[32] = { 0 };
 
 	vty_print("match_type : 0x%x\n", value->match_type);
 	vty_print("match_mask : 0x%x\n", value->match_mask);
 	vty_print("bypass : 0x%x\n", value->bypass);
-	cli_mac_2_str(value->sa_da_addr, mac_str);
+	cli_mac_2_str(value->sa_da_addr, mac_str, sizeof(mac_str));
 	vty_print("sa_da_addr : %s\n", mac_str);
 	vty_print("ether_type_da_range : 0x%x\n", value->ether_type_da_range);
 	vty_print("\n");
@@ -150,7 +150,7 @@ DEFCMD(g_fal_rx_prc_lut_t_init_func,
 	return CLI_OK;
 }
 
-void _dump_g_fal_rx_prc_lut_t(VTY_T * pVty, fal_rx_prc_lut_t * value)
+void _dump_g_fal_rx_prc_lut_t(VTY_T *pVty, fal_rx_prc_lut_t *value)
 {
 	char mac_str[32] = { 0 };
 
@@ -159,16 +159,16 @@ void _dump_g_fal_rx_prc_lut_t(VTY_T * pVty, fal_rx_prc_lut_t * value)
 	vty_print("da_mask : 0x%x\n", value->da_mask);
 	vty_print("sci_mask : 0x%x\n", value->sci_mask);
 	vty_print("ether_type : 0x%x\n", value->ether_type);
-	cli_mac_2_str(value->da, mac_str);
+	cli_mac_2_str(value->da, mac_str, sizeof(mac_str));
 	vty_print("da : %s\n", mac_str);
 	vty_print("channel : 0x%x\n", value->channel);
 	vty_print("uncontrolled_port : 0x%x\n", value->uncontrolled_port);
 	vty_print("valid : 0x%x\n", value->valid);
 	vty_print("tci_mask : 0x%x\n", value->tci_mask);
-	cli_sci_2_str(value->sci, mac_str);
+	cli_sci_2_str(value->sci, mac_str, sizeof(mac_str));
 	vty_print("sci : %s\n", mac_str);
 	vty_print("tci : 0x%x\n", value->tci);
-	cli_mac_2_str(value->sa, mac_str);
+	cli_mac_2_str(value->sa, mac_str, sizeof(mac_str));
 	vty_print("sa : %s\n", mac_str);
 	vty_print("action : 0x%x\n", value->action);
 	vty_print("offset : 0x%x\n", value->offset);
@@ -356,14 +356,14 @@ DEFCMD(g_fal_tx_ctl_filt_t_init_func,
 	return CLI_OK;
 }
 
-void _dump_g_fal_tx_ctl_filt_t(VTY_T * pVty, fal_tx_ctl_filt_t * value)
+void _dump_g_fal_tx_ctl_filt_t(VTY_T *pVty, fal_tx_ctl_filt_t *value)
 {
 	char mac_str[32] = { 0 };
 
 	vty_print("match_type : 0x%x\n", value->match_type);
 	vty_print("match_mask : 0x%x\n", value->match_mask);
 	vty_print("bypass : 0x%x\n", value->bypass);
-	cli_mac_2_str(value->sa_da_addr, mac_str);
+	cli_mac_2_str(value->sa_da_addr, mac_str, sizeof(mac_str));
 	vty_print("sa_da_addr : %s\n", mac_str);
 	vty_print("ether_type_da_range : 0x%x\n", value->ether_type_da_range);
 	vty_print("\n");
@@ -436,7 +436,7 @@ DEFCMD(g_fal_tx_mib_t_init_func,
 	return CLI_OK;
 }
 
-void _dump_g_fal_tx_mib_t(VTY_T * pVty, fal_tx_mib_t * value)
+void _dump_g_fal_tx_mib_t(VTY_T *pVty, fal_tx_mib_t *value)
 {
 
 	vty_print("untagged_pkts : 0x%llx\n", value->untagged_pkts);
@@ -518,7 +518,7 @@ DEFCMD(g_fal_rx_mib_t_init_func,
 	return CLI_OK;
 }
 
-void _dump_g_fal_rx_mib_t(VTY_T * pVty, fal_rx_mib_t * value)
+void _dump_g_fal_rx_mib_t(VTY_T *pVty, fal_rx_mib_t *value)
 {
 
 	vty_print("ctrl_prt_fail_pkts : 0x%llx\n", value->ctrl_prt_fail_pkts);
@@ -734,7 +734,7 @@ DEFCMD(g_fal_rx_sa_mib_t_init_func,
 	return CLI_OK;
 }
 
-void _dump_g_fal_rx_sa_mib_t(VTY_T * pVty, fal_rx_sa_mib_t * value)
+void _dump_g_fal_rx_sa_mib_t(VTY_T *pVty, fal_rx_sa_mib_t *value)
 {
 
 	vty_print("ok_pkts : 0x%llx\n", value->ok_pkts);
@@ -906,7 +906,7 @@ DEFCMD(g_fal_rx_sak_t_init_func,
 	return CLI_OK;
 }
 
-void _dump_g_fal_rx_sak_t(VTY_T * pVty, fal_rx_sak_t * value)
+void _dump_g_fal_rx_sak_t(VTY_T *pVty, fal_rx_sak_t *value)
 {
 	char str[64] = { 0 };
 
@@ -932,7 +932,7 @@ DEFCMD(g_fal_tx_class_lut_t_init_func,
 	return CLI_OK;
 }
 
-void _dump_g_fal_tx_class_lut_t(VTY_T * pVty, fal_tx_class_lut_t * value)
+void _dump_g_fal_tx_class_lut_t(VTY_T *pVty, fal_tx_class_lut_t *value)
 {
 	char mac_str[32] = { 0 };
 
@@ -941,7 +941,7 @@ void _dump_g_fal_tx_class_lut_t(VTY_T * pVty, fal_tx_class_lut_t * value)
 	vty_print("vlan_id_mask : 0x%x\n", value->vlan_id_mask);
 	vty_print("udf1_valid : 0x%x\n", value->udf1_valid);
 	vty_print("ether_type : 0x%x\n", value->ether_type);
-	cli_mac_2_str(value->da, mac_str);
+	cli_mac_2_str(value->da, mac_str, sizeof(mac_str));
 	vty_print("da : %s\n", mac_str);
 	vty_print("udf0_valid : 0x%x\n", value->udf0_valid);
 	vty_print("channel : 0x%x\n", value->channel);
@@ -949,7 +949,7 @@ void _dump_g_fal_tx_class_lut_t(VTY_T * pVty, fal_tx_class_lut_t * value)
 	vty_print("valid : 0x%x\n", value->valid);
 	vty_print("vlan_valid : 0x%x\n", value->vlan_valid);
 	vty_print("udf1_location : 0x%x\n", value->udf1_location);
-	cli_mac_2_str(value->sa, mac_str);
+	cli_mac_2_str(value->sa, mac_str, sizeof(mac_str));
 	vty_print("sa : %s\n", mac_str);
 	vty_print("vlan_valid_mask : 0x%x\n", value->vlan_valid_mask);
 	vty_print("udf2_location : 0x%x\n", value->udf2_location);
@@ -1295,7 +1295,7 @@ DEFCMD(g_fal_tx_sa_mib_t_init_func,
 	return CLI_OK;
 }
 
-void _dump_g_fal_tx_sa_mib_t(VTY_T * pVty, fal_tx_sa_mib_t * value)
+void _dump_g_fal_tx_sa_mib_t(VTY_T *pVty, fal_tx_sa_mib_t *value)
 {
 
 	vty_print("encrypted_pkts : 0x%x\n", value->encrypted_pkts);
@@ -1362,7 +1362,7 @@ DEFCMD(g_fal_tx_sc_mib_t_init_func,
 	return CLI_OK;
 }
 
-void _dump_g_fal_tx_sc_mib_t(VTY_T * pVty, fal_tx_sc_mib_t * value)
+void _dump_g_fal_tx_sc_mib_t(VTY_T *pVty, fal_tx_sc_mib_t *value)
 {
 
 	vty_print("protected_octets : 0x%llx\n", value->protected_octets);
@@ -2067,7 +2067,7 @@ DEFCMD(nss_macsec_secy_tx_sc_sci_get_func,
 
 	CLI_EXEC_API(nss_macsec_secy_tx_sc_sci_get
 		     (secy_id, channel, sci, sci_len));
-	cli_sci_2_str(sci, str);
+	cli_sci_2_str(sci, str, sizeof(str));
 	vty_print("sci : %s\n", str);
 
 	return CLI_OK;

@@ -46,7 +46,7 @@ static CLI_VALUE_STR_FUN_T gCliValueStrFunArray[] = {
 	{"max_unit_id", max_unit_id},
 };
 
-int cli_get_value_by_fun_name(const char *funcName, sa_u32_t * pValue)
+int cli_get_value_by_fun_name(const char *funcName, sa_u32_t *pValue)
 {
 	int i;
 	int arraySize =

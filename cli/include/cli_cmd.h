@@ -42,7 +42,7 @@ int cli_cmd_basic_mode_init(void);
 
 int cli_cmd_basic_init(void);
 
-int cli_get_value_by_fun_name(const char *funcName, sa_u32_t * pValue);
+int cli_get_value_by_fun_name(const char *funcName, sa_u32_t *pValue);
 
 int cli_install_mode_basic_cmds(int mode);
 

@@ -124,7 +124,7 @@ typedef enum {
  *   one of CLI_RET_T
  *
  ******************************************************************************/
-int cli_install_mode(CLI_MODE_T * pMode);
+int cli_install_mode(CLI_MODE_T *pMode);
 
 /******************************************************************************
  *
@@ -172,7 +172,7 @@ int cli_exit(void);
  *   one of CLI_RET_T
  *
  ******************************************************************************/
-int cli_install_simple_cmd(int modeId, CLI_CMD_T * pCmd);
+int cli_install_simple_cmd(int modeId, CLI_CMD_T *pCmd);
 
 /******************************************************************************
  *
@@ -204,7 +204,7 @@ int cli_install_simple_cmd(int modeId, CLI_CMD_T * pCmd);
  *   one of CLI_RET_T
  *
  ******************************************************************************/
-int cli_install_cmd(int modeId, CLI_CMD_T * pCmd);
+int cli_install_cmd(int modeId, CLI_CMD_T *pCmd);
 
 /******************************************************************************
  *
@@ -221,7 +221,7 @@ int cli_install_cmd(int modeId, CLI_CMD_T * pCmd);
  *   one of CLI_RET_T
  *
  ******************************************************************************/
-int cli_install_invisible_cmd(int modeId, CLI_CMD_T * pCmd);
+int cli_install_invisible_cmd(int modeId, CLI_CMD_T *pCmd);
 
 CLI_MODE_FUN_T cli_mode_exit_func(int modeId);
 
@@ -239,7 +239,7 @@ CLI_MODE_FUN_T cli_mode_exit_func(int modeId);
  *   one of CMD_EXECUTE_T
  *
  ******************************************************************************/
-int cli_execute_cmd(VTY_T * pVty);
+int cli_execute_cmd(VTY_T *pVty);
 
 /******************************************************************************
  *
@@ -256,7 +256,7 @@ int cli_execute_cmd(VTY_T * pVty);
  *   one of CLI_RET_T
  *
  ******************************************************************************/
-int cli_describe_cmd(VTY_T * pVty);
+int cli_describe_cmd(VTY_T *pVty);
 
 /******************************************************************************
  *
@@ -275,7 +275,7 @@ int cli_describe_cmd(VTY_T * pVty);
  *   one of CLI_RET_T
  *
  ******************************************************************************/
-int cli_complete_cmd(VTY_T * pVty);
+int cli_complete_cmd(VTY_T *pVty);
 
 /******************************************************************************
  *
@@ -293,6 +293,6 @@ int cli_complete_cmd(VTY_T * pVty);
  *   always 0
  *
  ******************************************************************************/
-int cli_display_arguments(VTY_T * pVty, const int argc, const char **argv);
+int cli_display_arguments(VTY_T *pVty, const int argc, const char **argv);
 
 #endif /* _CLI_H */

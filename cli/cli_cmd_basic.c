@@ -18,7 +18,7 @@
 #include "cli.h"
 #include "cli_cmd.h"
 
-static int cli_mode_exit_enable(VTY_T * pVty)
+static int cli_mode_exit_enable(VTY_T *pVty)
 {
 	pVty->state = VTY_STATE_CLOSE;
 	return CLI_OK;
