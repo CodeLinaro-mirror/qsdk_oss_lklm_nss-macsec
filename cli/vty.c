@@ -666,6 +666,8 @@ VTY_T *vty_create(int fd)
 	osal_strcpy(pVty->prompt, PROMPT_BASE ">");
 
 	pVty->line.data = osal_malloc(VTY_CMDBUF_MAX_SIZE);
+	if (pVty->line.data == NULL)
+		return NULL;
 
 	pVty->line.max = VTY_CMDBUF_MAX_SIZE;
 	VTY_BUF_ZERO(&pVty->line);
