@@ -807,7 +807,7 @@ static int _cli_subcmd_type(CLI_SUBCMD_T *pSubCmd)
       EXIT:
 	pSubCmd->type = type;
 
-	if (SUBCMD_TYPE_NONE == type) {
+	if (SUBCMD_TYPE_NONE == type && pSubCmd->key != NULL) {
 		CLI_DEBUG("Unknown type of sub command \"%s\"\r\n",
 			  pSubCmd->key);
 	}
@@ -2185,6 +2185,10 @@ int cli_describe_cmd(VTY_T *pVty)
 		 */
 		pLine = array_new(ARRAY_SLOT_MIN);
 		array_insert_slot(pLine, NULL);
+		if (pLine == NULL) {
+			executeRet = CLI_FAIL;
+			goto EXIT;
+		}
 	} else if (array_num(pLine) > CLI_COMMAND_WORDS_MAX) {
 		executeRet = CLI_EXEED_ARGC_MAX;
 		goto EXIT;
@@ -2391,6 +2395,7 @@ static int _cli_get_complete_str(ARRAY_T *pDescArray, char *completeStr)
 	int commonCharCount;
 	char *lastKey;
 	char *thisKey;
+	CLI_SUBCMD_T *pSubCmd;
 
 	completeStr[0] = '\0';
 
@@ -2398,7 +2403,10 @@ static int _cli_get_complete_str(ARRAY_T *pDescArray, char *completeStr)
 		return 0;
 	}
 
-	lastKey = ((CLI_SUBCMD_T *) array_slot(pDescArray, 0))->key;
+	pSubCmd = (CLI_SUBCMD_T *) array_slot(pDescArray, 0);
+	if (pSubCmd == NULL)
+		return 0;
+	lastKey = pSubCmd->key;
 	commonCharCount = strlen(lastKey);
 
 	for (i = 1; i < array_index(pDescArray); i++) {
@@ -2586,6 +2594,10 @@ int cli_complete_cmd(VTY_T *pVty)
 	else if (array_num(pDescArray) == 1) {
 		execRet = CLI_COMPLETE_FULL_MATCH;
 		pSubCmd = array_slot(pDescArray, 0);
+		if (pSubCmd == NULL) {
+			execRet = CLI_FAIL;
+			goto EXIT;
+		}
 		vty_complete_cmd(pVty, pSubCmd->key, SA_TRUE);
 		goto EXIT;
 	}
@@ -2660,6 +2672,8 @@ int cli_display_arguments(VTY_T *pVty, const int argc, const char **argv)
 
 	for (i = 0; i < argc; i++) {
 		pSubCmd = array_slot(pCmd->pSubCmdArray, i);
+		if (pSubCmd == NULL)
+			continue;
 
 		switch (pSubCmd->type) {
 		case SUBCMD_TYPE_KEY:
