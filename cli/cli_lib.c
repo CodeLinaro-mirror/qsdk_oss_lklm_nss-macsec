@@ -172,14 +172,14 @@ int cli_u8_array_2_str(const sa_u8_t *array, int arrayNum, char *str,
 		len += 2;
 
 		if (((i % 4) == 3) && (i != (arrayNum - 1))) {
-			strncat(tempStr, ".", 1);
+			strlcat(tempStr, ".", 1);
 		}
 
 		slen = strLen - len;
 		if (slen < strlen(tempStr))
 			slen = strlen(tempStr);
 
-		strncat(str, tempStr, slen);
+		strlcat(str, tempStr, slen);
 	}
 
 	return 0;
