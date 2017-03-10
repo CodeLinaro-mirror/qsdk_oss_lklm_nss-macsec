@@ -151,15 +151,19 @@ static void nss_macsec_netlink_recv(struct sk_buff *__skb)
 		msg_type = nlh->nlmsg_type;
 		msg_len = sizeof(struct nlmsghdr) + sizeof(struct sdk_msg_header);
 		header = (struct sdk_msg_header *)msg_data;
+		if(header->buf_len > (U32_MAX-msg_len))
+			return;
 		msg_len += header->buf_len;
 
 		if(skb->len < msg_len) {
 			printk("Unexpected msg received! skb_len [0x%x] less than 0x%x\n",
 				skb->len, msg_len);
+			return;
 		} else if (msg_type == SDK_CALL_MSG) {
 			ret = nss_macsec_msg_handle(msg_data, &sync);
 		} else {
 			printk("Unexpected msg:0x%x received!\n", msg_type);
+			return;
 		}
 
 #if (LINUX_VERSION_CODE >= KERNEL_VERSION(3, 14, 0))
