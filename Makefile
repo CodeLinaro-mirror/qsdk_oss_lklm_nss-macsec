@@ -33,6 +33,6 @@ qca-nss-macsec-objs +=	nss_macsec_init.o \
 			fal/nss_macsec_secy_tx.o \
 			fal/nss_macsec_utility.o
 
-NSS_MACSEC_INCLUDE = -I$(obj)/include -I$(obj)/include/dal -I$(obj)/include/fali -I$(obj)/dal -I$(obj)/fal
+NSS_MACSEC_INCLUDE = -I$(obj)/include -I$(obj)/dal -I$(obj)/fal
 
 ccflags-y += $(NSS_MACSEC_INCLUDE)
