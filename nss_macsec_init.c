@@ -16,6 +16,7 @@
 #include <linux/kernel.h>
 #include <linux/init.h>
 #include <linux/kernel.h>
+#include <linux/phy.h>
 #include <net/sock.h>
 #include <asm/io.h>
 #include <linux/version.h>
@@ -23,6 +24,7 @@
 #include <mach/msm_iomap.h>
 #else
 #include <linux/of.h>
+#include <linux/of_mdio.h>
 #include <soc/qcom/socinfo.h>
 #endif
 
@@ -205,6 +207,47 @@ static int nss_macsec_netlink_init(void)
 	if (sdk_nl_sk == NULL) {
 		printk("Create netlink socket fail\n");
 		return -ENODEV;
+	}
+
+	return 0;
+}
+
+static struct mii_bus *nss_macsec_miibus = NULL;
+
+int nss_macsec_phy_mdio_write(u32 phy_addr, u32 reg_addr, u16 val)
+{
+	if (!nss_macsec_miibus)
+		return -EIO;
+
+	mdiobus_write(nss_macsec_miibus, phy_addr, reg_addr, val);
+
+	return 0;
+}
+
+int nss_macsec_phy_mdio_read(u32 phy_addr, u32 reg_addr, u16 *val)
+{
+	if (!nss_macsec_miibus)
+		return -EIO;
+
+	*val = mdiobus_read(nss_macsec_miibus, phy_addr, reg_addr);
+
+	return 0;
+}
+
+
+static int nss_macsec_mdiobus_init(void)
+{
+	struct device_node *mdio_node = NULL;
+
+	mdio_node = of_find_compatible_node(NULL, NULL, "qcom,qca-mdio");
+	if (!mdio_node) {
+		macsec_warning("Failed to find mdio node!\n");
+		return -EINVAL;
+	}
+	nss_macsec_miibus = of_mdio_find_bus(mdio_node);
+	if (!nss_macsec_miibus) {
+		macsec_warning("Failed to find mdio bus!\n");
+		return -EIO;
 	}
 
 	return 0;
@@ -399,6 +442,8 @@ static int __init nss_macsec_init(void)
 	nss_macsec_netlink_init();
 
 	nss_macsec_mutex_init();
+
+	nss_macsec_mdiobus_init();
 
 	nss_macsec_init_module();
 
