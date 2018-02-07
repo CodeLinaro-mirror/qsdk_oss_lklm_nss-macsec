@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014, The Linux Foundation. All rights reserved.
+ * Copyright (c) 2014, 2018, The Linux Foundation. All rights reserved.
  * Permission to use, copy, modify, and/or distribute this software for
  * any purpose with or without fee is hereby granted, provided that the
  * above copyright notice and this permission notice appear in all copies.
@@ -153,7 +153,29 @@ unsigned int nss_macsec_cmd_len[] = {
 	sizeof(struct nss_macsec_secy_mtu_get_cmd),
 	sizeof(struct nss_macsec_secy_mtu_set_cmd),
 	sizeof(struct nss_macsec_secy_en_get_cmd),
-	sizeof(struct nss_macsec_secy_en_set_cmd)
+	sizeof(struct nss_macsec_secy_en_set_cmd),
+	sizeof(struct nss_macsec_secy_xpn_en_get_cmd),
+	sizeof(struct nss_macsec_secy_xpn_en_set_cmd),
+	sizeof(struct nss_macsec_secy_rx_sa_next_xpn_get_cmd),
+	sizeof(struct nss_macsec_secy_rx_sa_next_xpn_set_cmd),
+	sizeof(struct nss_macsec_secy_tx_sa_next_xpn_get_cmd),
+	sizeof(struct nss_macsec_secy_tx_sa_next_xpn_set_cmd),
+	sizeof(struct nss_macsec_secy_rx_sc_ssci_get_cmd),
+	sizeof(struct nss_macsec_secy_rx_sc_ssci_set_cmd),
+	sizeof(struct nss_macsec_secy_tx_sc_ssci_get_cmd),
+	sizeof(struct nss_macsec_secy_tx_sc_ssci_get_cmd),
+	sizeof(struct nss_macsec_secy_rx_sa_ki_get_cmd),
+	sizeof(struct nss_macsec_secy_rx_sa_ki_set_cmd),
+	sizeof(struct nss_macsec_secy_tx_sa_ki_get_cmd),
+	sizeof(struct nss_macsec_secy_tx_sa_ki_set_cmd),
+	sizeof(struct nss_macsec_secy_flow_control_en_get_cmd),
+	sizeof(struct nss_macsec_secy_flow_control_en_set_cmd),
+	sizeof(struct nss_macsec_secy_special_pkt_ctrl_get_cmd),
+	sizeof(struct nss_macsec_secy_special_pkt_ctrl_set_cmd),
+	sizeof(struct nss_macsec_secy_udf_ethtype_get_cmd),
+	sizeof(struct nss_macsec_secy_udf_ethtype_set_cmd),
+	sizeof(struct nss_macsec_secy_loopback_get_cmd),
+	sizeof(struct nss_macsec_secy_loopback_set_cmd)
 };
 
 unsigned int nss_macsec_fal_msg_handle(struct sdk_msg_header *header)
@@ -1561,6 +1583,236 @@ unsigned int nss_macsec_fal_msg_handle(struct sdk_msg_header *header)
 			ret =
 			    nss_macsec_secy_en_set(param->secy_id,
 						   param->enable);
+		}
+		break;
+	case NSS_MACSEC_SECY_XPN_EN_GET_CMD:{
+			struct nss_macsec_secy_xpn_en_get_cmd *param =
+			(struct nss_macsec_secy_xpn_en_get_cmd *)(header + 1);
+			ret =
+			    nss_macsec_secy_xpn_en_get(param->secy_id,
+						   &param->penable);
+		}
+		break;
+	case NSS_MACSEC_SECY_XPN_EN_SET_CMD:{
+			struct nss_macsec_secy_xpn_en_set_cmd *param =
+			(struct nss_macsec_secy_xpn_en_set_cmd *)(header + 1);
+			ret =
+			    nss_macsec_secy_xpn_en_set(param->secy_id,
+						   param->enable);
+		}
+		break;
+	case NSS_MACSEC_SECY_RX_SA_NEXT_XPN_GET_CMD:{
+			struct nss_macsec_secy_rx_sa_next_xpn_get_cmd *param =
+			    (struct nss_macsec_secy_rx_sa_next_xpn_get_cmd
+			     *)(header + 1);
+			ret =
+			    nss_macsec_secy_rx_sa_next_xpn_get(param->secy_id,
+							      param->channel,
+							      param->an,
+							      &param->
+							      p_next_xpn);
+		}
+		break;
+	case NSS_MACSEC_SECY_RX_SA_NEXT_XPN_SET_CMD:{
+			struct nss_macsec_secy_rx_sa_next_xpn_set_cmd *param =
+			    (struct nss_macsec_secy_rx_sa_next_xpn_set_cmd
+			     *)(header + 1);
+			ret =
+			    nss_macsec_secy_rx_sa_next_xpn_set(param->secy_id,
+							      param->channel,
+							      param->an,
+							      param->next_xpn);
+		}
+		break;
+	case NSS_MACSEC_SECY_TX_SA_NEXT_XPN_GET_CMD:{
+			struct nss_macsec_secy_tx_sa_next_xpn_get_cmd *param =
+			    (struct nss_macsec_secy_tx_sa_next_xpn_get_cmd
+			     *)(header + 1);
+			ret =
+			    nss_macsec_secy_tx_sa_next_xpn_get(param->secy_id,
+							      param->channel,
+							      param->an,
+							      &param->
+							      p_next_xpn);
+		}
+		break;
+	case NSS_MACSEC_SECY_TX_SA_NEXT_XPN_SET_CMD:{
+			struct nss_macsec_secy_tx_sa_next_xpn_set_cmd *param =
+			    (struct nss_macsec_secy_tx_sa_next_xpn_set_cmd
+			     *)(header + 1);
+			ret =
+			    nss_macsec_secy_tx_sa_next_xpn_set(param->secy_id,
+							      param->channel,
+							      param->an,
+							      param->next_xpn);
+		}
+		break;
+	case NSS_MACSEC_SECY_RX_SC_SSCI_GET_CMD:{
+			struct nss_macsec_secy_rx_sc_ssci_get_cmd *param =
+			    (struct nss_macsec_secy_rx_sc_ssci_get_cmd
+			     *)(header + 1);
+			ret =
+			    nss_macsec_secy_rx_sc_ssci_get(param->secy_id,
+							      param->channel,
+							      &param->ssci);
+		}
+		break;
+	case NSS_MACSEC_SECY_RX_SC_SSCI_SET_CMD:{
+			struct nss_macsec_secy_rx_sc_ssci_set_cmd *param =
+			    (struct nss_macsec_secy_rx_sc_ssci_set_cmd
+			     *)(header + 1);
+			ret =
+			    nss_macsec_secy_rx_sc_ssci_set(param->secy_id,
+							      param->channel,
+							      param->ssci);
+		}
+		break;
+	case NSS_MACSEC_SECY_TX_SC_SSCI_GET_CMD:{
+			struct nss_macsec_secy_tx_sc_ssci_get_cmd *param =
+			    (struct nss_macsec_secy_tx_sc_ssci_get_cmd
+			     *)(header + 1);
+			ret =
+			    nss_macsec_secy_tx_sc_ssci_get(param->secy_id,
+							      param->channel,
+							      &param->ssci);
+		}
+		break;
+	case NSS_MACSEC_SECY_TX_SC_SSCI_SET_CMD:{
+			struct nss_macsec_secy_tx_sc_ssci_set_cmd *param =
+			    (struct nss_macsec_secy_tx_sc_ssci_set_cmd
+			     *)(header + 1);
+			ret =
+			    nss_macsec_secy_tx_sc_ssci_set(param->secy_id,
+							      param->channel,
+							      param->ssci);
+		}
+		break;
+	case NSS_MACSEC_SECY_TX_SA_KI_GET_CMD:{
+			struct nss_macsec_secy_tx_sa_ki_get_cmd *param =
+			    (struct nss_macsec_secy_tx_sa_ki_get_cmd
+			     *)(header + 1);
+			ret =
+			    nss_macsec_secy_tx_sa_ki_get(param->secy_id,
+							      param->channel,
+							      param->an,
+							      &param->pki);
+		}
+		break;
+	case NSS_MACSEC_SECY_TX_SA_KI_SET_CMD:{
+			struct nss_macsec_secy_tx_sa_ki_set_cmd *param =
+			    (struct nss_macsec_secy_tx_sa_ki_set_cmd
+			     *)(header + 1);
+			ret =
+			    nss_macsec_secy_tx_sa_ki_set(param->secy_id,
+							      param->channel,
+							      param->an,
+							      &param->pki);
+		}
+		break;
+	case NSS_MACSEC_SECY_RX_SA_KI_GET_CMD:{
+			struct nss_macsec_secy_rx_sa_ki_get_cmd *param =
+			    (struct nss_macsec_secy_rx_sa_ki_get_cmd
+			     *)(header + 1);
+			ret =
+			    nss_macsec_secy_rx_sa_ki_get(param->secy_id,
+							      param->channel,
+							      param->an,
+							      &param->pki);
+		}
+		break;
+	case NSS_MACSEC_SECY_RX_SA_KI_SET_CMD:{
+			struct nss_macsec_secy_rx_sa_ki_set_cmd *param =
+			    (struct nss_macsec_secy_rx_sa_ki_set_cmd
+			     *)(header + 1);
+			ret =
+			    nss_macsec_secy_rx_sa_ki_set(param->secy_id,
+							      param->channel,
+							      param->an,
+							      &param->pki);
+		}
+		break;
+	case NSS_MACSEC_SECY_FLOW_CONTROL_EN_GET_CMD:{
+			struct nss_macsec_secy_flow_control_en_get_cmd *param =
+			    (struct nss_macsec_secy_flow_control_en_get_cmd
+			     *)(header + 1);
+			ret =
+			    nss_macsec_secy_flow_control_en_get(param->secy_id,
+							      &param->penable
+							      );
+		}
+		break;
+	case NSS_MACSEC_SECY_FLOW_CONTROL_EN_SET_CMD:{
+			struct nss_macsec_secy_flow_control_en_set_cmd *param =
+			    (struct nss_macsec_secy_flow_control_en_set_cmd
+			     *)(header + 1);
+			ret =
+			    nss_macsec_secy_flow_control_en_set(param->secy_id,
+							      param->enable
+							      );
+		}
+		break;
+	case NSS_MACSEC_SECY_SPECIAL_PKT_CTRL_GET_CMD:{
+			struct nss_macsec_secy_special_pkt_ctrl_get_cmd *param =
+			    (struct nss_macsec_secy_special_pkt_ctrl_get_cmd
+			     *)(header + 1);
+			ret =
+			    nss_macsec_secy_special_pkt_ctrl_get(param->secy_id,
+							      param->type,
+							      &param->action
+							      );
+		}
+		break;
+	case NSS_MACSEC_SECY_SPECIAL_PKT_CTRL_SET_CMD:{
+			struct nss_macsec_secy_special_pkt_ctrl_set_cmd *param =
+			    (struct nss_macsec_secy_special_pkt_ctrl_set_cmd
+			     *)(header + 1);
+			ret =
+			    nss_macsec_secy_special_pkt_ctrl_set(param->secy_id,
+							      param->type,
+							      param->action
+							      );
+		}
+		break;
+	case NSS_MACSEC_SECY_UDF_ETHTYPE_GET_CMD:{
+			struct nss_macsec_secy_udf_ethtype_get_cmd *param =
+			    (struct nss_macsec_secy_udf_ethtype_get_cmd
+			     *)(header + 1);
+			ret =
+			    nss_macsec_secy_udf_ethtype_get(param->secy_id,
+							      &param->enable,
+							      &param->type
+							      );
+		}
+		break;
+	case NSS_MACSEC_SECY_UDF_ETHTYPE_SET_CMD:{
+			struct nss_macsec_secy_udf_ethtype_set_cmd *param =
+			    (struct nss_macsec_secy_udf_ethtype_set_cmd
+			     *)(header + 1);
+			ret =
+			    nss_macsec_secy_udf_ethtype_set(param->secy_id,
+							      param->enable,
+							      param->type
+							      );
+		}
+		break;
+	case NSS_MACSEC_SECY_LOOPBACK_GET_CMD:{
+			struct nss_macsec_secy_loopback_get_cmd *param =
+			    (struct nss_macsec_secy_loopback_get_cmd
+			     *)(header + 1);
+			ret =
+			    nss_macsec_secy_loopback_get(param->secy_id,
+							      &param->type
+							      );
+		}
+		break;
+	case NSS_MACSEC_SECY_LOOPBACK_SET_CMD:{
+			struct nss_macsec_secy_loopback_set_cmd *param =
+			    (struct nss_macsec_secy_loopback_set_cmd
+			     *)(header + 1);
+			ret =
+			    nss_macsec_secy_loopback_set(param->secy_id,
+							      param->type
+							      );
 		}
 		break;
 	default:

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014, The Linux Foundation. All rights reserved.
+ * Copyright (c) 2014, 2018, The Linux Foundation. All rights reserved.
  * Permission to use, copy, modify, and/or distribute this software for
  * any purpose with or without fee is hereby granted, provided that the
  * above copyright notice and this permission notice appear in all copies.
@@ -34,7 +34,11 @@ typedef enum {
 } fal_sc_sa_mapping_mode_e;
 
 typedef enum {
-	FAL_CIPHER_SUITE_AES_GCM_128 = 0
+	FAL_CIPHER_SUITE_AES_GCM_128 = 0,
+	FAL_CIPHER_SUITE_AES_GCM_256,
+	FAL_CIPHER_SUITE_AES_GCM_XPN_128,
+	FAL_CIPHER_SUITE_AES_GCM_XPN_256,
+	FAL_CIPHER_SUITE_MAX
 } fal_cipher_suite_e;
 
 typedef struct {
@@ -51,6 +55,26 @@ typedef struct {
 } fal_secy_cfg_t;
 
 extern fal_secy_cfg_t g_secy_cfg[];
+
+enum fal_packet_type_t {
+	FAL_PACKET_STP   = 0,   /**< Spanning Tree Protocol Packet */
+	FAL_PACKET_CDP   = 1,   /**< Cisco Discovery Protocol Packet */
+	FAL_PACKET_LLDP  = 2   /**< Link Layer Discovery Protocol Packet */
+};
+
+enum fal_packet_action_t {
+	FAL_PACKET_CRYPTO_OR_DISCARD = 0X0,
+	FAL_PACKET_CRYPTO_OR_UPLOAD  = 0X1,
+	FAL_PACKET_PLAIN_OR_DISCARD  = 0X2,
+	FAL_PACKET_PLAIN_OR_UPLOAD   = 0X3
+};
+
+enum fal_loopback_type_t {
+	FAL_MACSEC_NORMAL     = 0x0,    /**< MACsec works normally */
+	FAL_MACSEC_PHY_LB     = 0x1,    /**< Phy side loopback */
+	FAL_MACSEC_SWITCH_LB  = 0x2,    /**< Switch side loopback */
+	FAL_MACSEC_BYPASS     = 0x3    /**< MACsec bypassed */
+};
 
 /**
 * @param[in] secy_id
@@ -136,5 +160,32 @@ u32 nss_macsec_secy_en_get(u32 secy_id, bool *penable);
 * @param[in] enable
 **/
 u32 nss_macsec_secy_en_set(u32 secy_id, bool enable);
+
+u32 nss_macsec_secy_xpn_en_get(u32 secy_id, bool *penable);
+
+u32 nss_macsec_secy_xpn_en_set(u32 secy_id, bool enable);
+
+u32 nss_macsec_secy_flow_control_en_get(u32 secy_id, bool *penable);
+
+u32 nss_macsec_secy_flow_control_en_set(u32 secy_id, bool enable);
+
+u32 nss_macsec_secy_special_pkt_ctrl_get(u32 secy_id,
+	enum fal_packet_type_t packet_type,
+	enum fal_packet_action_t *packet_action);
+
+u32 nss_macsec_secy_special_pkt_ctrl_set(u32 secy_id,
+	enum fal_packet_type_t packet_type,
+	enum fal_packet_action_t packet_action);
+
+u32 nss_macsec_secy_udf_ethtype_get(u32 secy_id, bool *penable, u16 *type);
+
+u32 nss_macsec_secy_udf_ethtype_set(u32 secy_id, bool enable, u16 type);
+
+u32 nss_macsec_secy_loopback_get(u32 secy_id,
+	enum fal_loopback_type_t *type);
+
+u32 nss_macsec_secy_loopback_set(u32 secy_id,
+	enum fal_loopback_type_t type);
+
 
 #endif /* _NSS_MACSEC_SECY_H_ */

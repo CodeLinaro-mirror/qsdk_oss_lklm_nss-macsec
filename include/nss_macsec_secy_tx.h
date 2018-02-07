@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014, The Linux Foundation. All rights reserved.
+ * Copyright (c) 2014, 2018, The Linux Foundation. All rights reserved.
  * Permission to use, copy, modify, and/or distribute this software for
  * any purpose with or without fee is hereby granted, provided that the
  * above copyright notice and this permission notice appear in all copies.
@@ -16,6 +16,10 @@
 #define _NSS_MACSEC_SECY_TX_H_
 
 #include "nss_macsec_types.h"
+
+#define NSS_SECY_CONFIDENTIALITY_OFFSET_00 0
+#define NSS_SECY_CONFIDENTIALITY_OFFSET_30 30
+#define NSS_SECY_CONFIDENTIALITY_OFFSET_50 50
 
 typedef enum {
 	EG_CTL_COMPARE_NO,
@@ -75,18 +79,32 @@ typedef struct {
 	u8 vlan_up_mask;	/* first bit is useful */
 	u16 vlan_id;
 	u8 vlan_id_mask;	/* first 2 bits are useful */
+	/*add for NAPA PHY*/
+	u16 outer_vlanid;
+	u8 sci[8];
+	u8 tci;
+	u8 offset;
+	bool bc_flag;
+	u32 rule_mask;
 } fal_tx_class_lut_t;
 
 #define FAL_TX_CLASS_LUT_NUM  48
 
 typedef struct {
 	u8 sak[16];
+	u8 sak1[16];
+	u32 sak_len;
 } fal_tx_sak_t;
 
 typedef struct {
 	bool parse_en;
 	u16 tpid;
 } fal_tx_vlan_parse_t;
+
+struct fal_tx_sa_ki_t {
+	u8 ki[16];
+};
+
 
 /**
 * @param[in] secy_id
@@ -493,5 +511,17 @@ u32 nss_macsec_secy_tx_pn_threshold_get(u32 secy_id, u32 *p_pn_threshold);
 * @param[in] pn_threshold
 **/
 u32 nss_macsec_secy_tx_pn_threshold_set(u32 secy_id, u32 pn_threshold);
+
+u32 nss_macsec_secy_tx_sa_next_xpn_get(u32 secy_id, u32 channel,
+u32 an, u32 *p_next_xpn);
+u32 nss_macsec_secy_tx_sa_next_xpn_set(u32 secy_id, u32 channel,
+u32 an, u32 next_xpn);
+u32 nss_macsec_secy_tx_sc_ssci_get(u32 secy_id, u32 channel, u32 *pssci);
+u32 nss_macsec_secy_tx_sc_ssci_set(u32 secy_id, u32 channel, u32 ssci);
+u32 nss_macsec_secy_tx_sa_ki_get(u32 secy_id, u32 channel, u32 an,
+	struct fal_tx_sa_ki_t *ki);
+u32 nss_macsec_secy_tx_sa_ki_set(u32 secy_id, u32 channel, u32 an,
+	struct fal_tx_sa_ki_t *ki);
+
 
 #endif /* _NSS_MACSEC_SECY_TX_H_ */

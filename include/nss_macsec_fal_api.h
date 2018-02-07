@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014, The Linux Foundation. All rights reserved.
+ * Copyright (c) 2014, 2018, The Linux Foundation. All rights reserved.
  * Permission to use, copy, modify, and/or distribute this software for
  * any purpose with or without fee is hereby granted, provided that the
  * above copyright notice and this permission notice appear in all copies.
@@ -155,6 +155,28 @@ enum {
 	NSS_MACSEC_SECY_MTU_SET_CMD,
 	NSS_MACSEC_SECY_EN_GET_CMD,
 	NSS_MACSEC_SECY_EN_SET_CMD,
+	NSS_MACSEC_SECY_XPN_EN_GET_CMD,
+	NSS_MACSEC_SECY_XPN_EN_SET_CMD,
+	NSS_MACSEC_SECY_RX_SA_NEXT_XPN_GET_CMD,
+	NSS_MACSEC_SECY_RX_SA_NEXT_XPN_SET_CMD,
+	NSS_MACSEC_SECY_TX_SA_NEXT_XPN_GET_CMD,
+	NSS_MACSEC_SECY_TX_SA_NEXT_XPN_SET_CMD,
+	NSS_MACSEC_SECY_RX_SC_SSCI_GET_CMD,
+	NSS_MACSEC_SECY_RX_SC_SSCI_SET_CMD,
+	NSS_MACSEC_SECY_TX_SC_SSCI_GET_CMD,
+	NSS_MACSEC_SECY_TX_SC_SSCI_SET_CMD,
+	NSS_MACSEC_SECY_RX_SA_KI_GET_CMD,
+	NSS_MACSEC_SECY_RX_SA_KI_SET_CMD,
+	NSS_MACSEC_SECY_TX_SA_KI_GET_CMD,
+	NSS_MACSEC_SECY_TX_SA_KI_SET_CMD,
+	NSS_MACSEC_SECY_FLOW_CONTROL_EN_GET_CMD,
+	NSS_MACSEC_SECY_FLOW_CONTROL_EN_SET_CMD,
+	NSS_MACSEC_SECY_SPECIAL_PKT_CTRL_GET_CMD,
+	NSS_MACSEC_SECY_SPECIAL_PKT_CTRL_SET_CMD,
+	NSS_MACSEC_SECY_UDF_ETHTYPE_GET_CMD,
+	NSS_MACSEC_SECY_UDF_ETHTYPE_SET_CMD,
+	NSS_MACSEC_SECY_LOOPBACK_GET_CMD,
+	NSS_MACSEC_SECY_LOOPBACK_SET_CMD,
 };
 
 struct nss_macsec_secy_interrupt_en_get_cmd {
@@ -893,6 +915,140 @@ struct nss_macsec_secy_en_get_cmd {
 struct nss_macsec_secy_en_set_cmd {
 	u32 secy_id;
 	bool enable;
+};
+struct nss_macsec_secy_xpn_en_get_cmd {
+	u32 secy_id;
+	bool penable;
+};
+
+struct nss_macsec_secy_xpn_en_set_cmd {
+	u32 secy_id;
+	bool enable;
+};
+
+struct nss_macsec_secy_rx_sa_next_xpn_get_cmd {
+	u32 secy_id;
+	u32 channel;
+	u32 an;
+	u32 p_next_xpn;
+};
+
+struct nss_macsec_secy_rx_sa_next_xpn_set_cmd {
+	u32 secy_id;
+	u32 channel;
+	u32 an;
+	u32 next_xpn;
+};
+
+struct nss_macsec_secy_tx_sa_next_xpn_get_cmd {
+	u32 secy_id;
+	u32 channel;
+	u32 an;
+	u32 p_next_xpn;
+};
+
+struct nss_macsec_secy_tx_sa_next_xpn_set_cmd {
+	u32 secy_id;
+	u32 channel;
+	u32 an;
+	u32 next_xpn;
+};
+
+struct nss_macsec_secy_rx_sc_ssci_get_cmd {
+	u32 secy_id;
+	u32 channel;
+	u32 ssci;
+};
+
+struct nss_macsec_secy_rx_sc_ssci_set_cmd {
+	u32 secy_id;
+	u32 channel;
+	u32 ssci;
+};
+
+struct nss_macsec_secy_tx_sc_ssci_get_cmd {
+	u32 secy_id;
+	u32 channel;
+	u32 ssci;
+};
+
+struct nss_macsec_secy_tx_sc_ssci_set_cmd {
+	u32 secy_id;
+	u32 channel;
+	u32 ssci;
+};
+
+struct nss_macsec_secy_rx_sa_ki_get_cmd {
+	u32 secy_id;
+	u32 channel;
+	u32 an;
+	struct fal_rx_sa_ki_t pki;
+};
+
+struct nss_macsec_secy_rx_sa_ki_set_cmd {
+	u32 secy_id;
+	u32 channel;
+	u32 an;
+	struct fal_rx_sa_ki_t pki;
+};
+
+struct nss_macsec_secy_tx_sa_ki_get_cmd {
+	u32 secy_id;
+	u32 channel;
+	u32 an;
+	struct fal_tx_sa_ki_t pki;
+};
+
+struct nss_macsec_secy_tx_sa_ki_set_cmd {
+	u32 secy_id;
+	u32 channel;
+	u32 an;
+	struct fal_tx_sa_ki_t pki;
+};
+
+struct nss_macsec_secy_flow_control_en_get_cmd {
+	u32 secy_id;
+	bool penable;
+};
+
+struct nss_macsec_secy_flow_control_en_set_cmd {
+	u32 secy_id;
+	bool enable;
+};
+
+struct nss_macsec_secy_special_pkt_ctrl_get_cmd {
+	u32 secy_id;
+	enum fal_packet_type_t type;
+	enum fal_packet_action_t action;
+};
+
+struct nss_macsec_secy_special_pkt_ctrl_set_cmd {
+	u32 secy_id;
+	enum fal_packet_type_t type;
+	enum fal_packet_action_t action;
+
+};
+
+struct nss_macsec_secy_udf_ethtype_get_cmd {
+	u32 secy_id;
+	bool enable;
+	u16 type;
+};
+
+struct nss_macsec_secy_udf_ethtype_set_cmd {
+	u32 secy_id;
+	bool enable;
+	u16 type;
+};
+
+struct nss_macsec_secy_loopback_get_cmd {
+	u32 secy_id;
+	enum fal_loopback_type_t type;
+};
+
+struct nss_macsec_secy_loopback_set_cmd {
+	u32 secy_id;
+	enum fal_loopback_type_t type;
 };
 
 unsigned int nss_macsec_fal_msg_handle(struct sdk_msg_header *header);

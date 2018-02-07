@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014, The Linux Foundation. All rights reserved.
+ * Copyright (c) 2014, 2018, The Linux Foundation. All rights reserved.
  * Permission to use, copy, modify, and/or distribute this software for
  * any purpose with or without fee is hereby granted, provided that the
  * above copyright notice and this permission notice appear in all copies.
@@ -3958,3 +3958,622 @@ u32 nss_macsec_secy_en_set(u32 secy_id, bool enable)
 				       NETLINK_SDK);
 	return ret;
 }
+u32 nss_macsec_secy_xpn_en_get(u32 secy_id, bool *penable)
+{
+	unsigned char
+	buf[SDK_MSG_SIZE(sizeof(struct nss_macsec_secy_xpn_en_get_cmd))] = {0};
+	struct sdk_msg_header *msg_header =
+	    (struct sdk_msg_header *)SDK_MSG_HEADER(buf);
+	struct nss_macsec_secy_xpn_en_get_cmd *param =
+	    (struct nss_macsec_secy_xpn_en_get_cmd *)SDK_MSG_DATA(buf);
+	int ret = 0;
+
+	msg_header->version = SDK_MSG_VER;
+	msg_header->cmd_type = SDK_FAL_CMD;
+	msg_header->sub_type = NSS_MACSEC_SECY_XPN_EN_GET_CMD;
+	msg_header->buf_len = sizeof(struct nss_macsec_secy_xpn_en_get_cmd);
+	param->secy_id = secy_id;
+
+	ret =
+	    nss_macsec_sdk_netlink_msg(SDK_CALL_MSG, buf,
+		sizeof(struct nss_macsec_secy_xpn_en_get_cmd), NETLINK_SDK);
+	if (ret == SDK_RET_SUCCESS)
+		*penable = param->penable;
+
+	return ret;
+}
+
+u32 nss_macsec_secy_xpn_en_set(u32 secy_id, bool enable)
+{
+	unsigned char
+	buf[SDK_MSG_SIZE(sizeof(struct nss_macsec_secy_xpn_en_set_cmd))] = {0};
+	struct sdk_msg_header *msg_header =
+	    (struct sdk_msg_header *)SDK_MSG_HEADER(buf);
+	struct nss_macsec_secy_xpn_en_set_cmd *param =
+	    (struct nss_macsec_secy_xpn_en_set_cmd *)SDK_MSG_DATA(buf);
+	int ret = 0;
+
+	msg_header->version = SDK_MSG_VER;
+	msg_header->cmd_type = SDK_FAL_CMD;
+	msg_header->sub_type = NSS_MACSEC_SECY_XPN_EN_SET_CMD;
+	msg_header->buf_len = sizeof(struct nss_macsec_secy_xpn_en_set_cmd);
+	param->secy_id = secy_id;
+	param->enable = enable;
+
+	ret =
+	    nss_macsec_sdk_netlink_msg(SDK_CALL_MSG, buf,
+		sizeof(struct nss_macsec_secy_xpn_en_set_cmd), NETLINK_SDK);
+	return ret;
+}
+u32 nss_macsec_secy_rx_sa_next_xpn_get(u32 secy_id, u32 channel, u32 an,
+				      u32 *p_next_xpn)
+{
+	unsigned char
+	buf[SDK_MSG_SIZE(sizeof(
+		struct nss_macsec_secy_rx_sa_next_xpn_get_cmd))] = {0};
+	struct sdk_msg_header *msg_header =
+	    (struct sdk_msg_header *)SDK_MSG_HEADER(buf);
+	struct nss_macsec_secy_rx_sa_next_xpn_get_cmd *param =
+	    (struct nss_macsec_secy_rx_sa_next_xpn_get_cmd *)SDK_MSG_DATA(buf);
+	int ret = 0;
+
+	msg_header->version = SDK_MSG_VER;
+	msg_header->cmd_type = SDK_FAL_CMD;
+	msg_header->sub_type = NSS_MACSEC_SECY_RX_SA_NEXT_XPN_GET_CMD;
+	msg_header->buf_len =
+	    sizeof(struct nss_macsec_secy_rx_sa_next_xpn_get_cmd);
+	param->secy_id = secy_id;
+	param->channel = channel;
+	param->an = an;
+
+	ret =
+	    nss_macsec_sdk_netlink_msg(SDK_CALL_MSG, buf,
+		sizeof(struct nss_macsec_secy_rx_sa_next_xpn_get_cmd),
+			NETLINK_SDK);
+	if (ret == SDK_RET_SUCCESS)
+		*p_next_xpn = param->p_next_xpn;
+
+	return ret;
+}
+
+u32 nss_macsec_secy_rx_sa_next_xpn_set(u32 secy_id, u32 channel, u32 an,
+				      u32 next_xpn)
+{
+	unsigned char
+	buf[SDK_MSG_SIZE(sizeof(
+		struct nss_macsec_secy_rx_sa_next_xpn_set_cmd))] = {0};
+	struct sdk_msg_header *msg_header =
+	    (struct sdk_msg_header *)SDK_MSG_HEADER(buf);
+	struct nss_macsec_secy_rx_sa_next_xpn_set_cmd *param =
+	    (struct nss_macsec_secy_rx_sa_next_xpn_set_cmd *)SDK_MSG_DATA(buf);
+	int ret = 0;
+
+	msg_header->version = SDK_MSG_VER;
+	msg_header->cmd_type = SDK_FAL_CMD;
+	msg_header->sub_type = NSS_MACSEC_SECY_RX_SA_NEXT_XPN_SET_CMD;
+	msg_header->buf_len =
+	    sizeof(struct nss_macsec_secy_rx_sa_next_xpn_set_cmd);
+	param->secy_id = secy_id;
+	param->channel = channel;
+	param->an = an;
+	param->next_xpn = next_xpn;
+
+	ret =
+	    nss_macsec_sdk_netlink_msg(SDK_CALL_MSG, buf,
+		sizeof(struct nss_macsec_secy_rx_sa_next_xpn_set_cmd),
+			NETLINK_SDK);
+	return ret;
+}
+
+u32 nss_macsec_secy_tx_sa_next_xpn_get(u32 secy_id, u32 channel, u32 an,
+				      u32 *p_next_xpn)
+{
+	unsigned char
+	buf[SDK_MSG_SIZE(sizeof(
+		struct nss_macsec_secy_tx_sa_next_xpn_get_cmd))] = {0};
+	struct sdk_msg_header *msg_header =
+	    (struct sdk_msg_header *)SDK_MSG_HEADER(buf);
+	struct nss_macsec_secy_tx_sa_next_xpn_get_cmd *param =
+	    (struct nss_macsec_secy_tx_sa_next_xpn_get_cmd *)SDK_MSG_DATA(buf);
+	int ret = 0;
+
+	msg_header->version = SDK_MSG_VER;
+	msg_header->cmd_type = SDK_FAL_CMD;
+	msg_header->sub_type = NSS_MACSEC_SECY_TX_SA_NEXT_XPN_GET_CMD;
+	msg_header->buf_len =
+	    sizeof(struct nss_macsec_secy_tx_sa_next_xpn_get_cmd);
+	param->secy_id = secy_id;
+	param->channel = channel;
+	param->an = an;
+
+	ret =
+	    nss_macsec_sdk_netlink_msg(SDK_CALL_MSG, buf,
+		sizeof(struct nss_macsec_secy_tx_sa_next_xpn_get_cmd),
+			NETLINK_SDK);
+	if (ret == SDK_RET_SUCCESS)
+		*p_next_xpn = param->p_next_xpn;
+
+	return ret;
+}
+
+u32 nss_macsec_secy_tx_sa_next_xpn_set(u32 secy_id, u32 channel, u32 an,
+				      u32 next_xpn)
+{
+	unsigned char
+	buf[SDK_MSG_SIZE(sizeof(
+		struct nss_macsec_secy_tx_sa_next_xpn_set_cmd))] = {0};
+	struct sdk_msg_header *msg_header =
+	    (struct sdk_msg_header *)SDK_MSG_HEADER(buf);
+	struct nss_macsec_secy_tx_sa_next_xpn_set_cmd *param =
+	    (struct nss_macsec_secy_tx_sa_next_xpn_set_cmd *)SDK_MSG_DATA(buf);
+	int ret = 0;
+
+	msg_header->version = SDK_MSG_VER;
+	msg_header->cmd_type = SDK_FAL_CMD;
+	msg_header->sub_type = NSS_MACSEC_SECY_TX_SA_NEXT_XPN_SET_CMD;
+	msg_header->buf_len =
+	    sizeof(struct nss_macsec_secy_tx_sa_next_xpn_set_cmd);
+	param->secy_id = secy_id;
+	param->channel = channel;
+	param->an = an;
+	param->next_xpn = next_xpn;
+
+	ret =
+	    nss_macsec_sdk_netlink_msg(SDK_CALL_MSG, buf,
+		sizeof(struct nss_macsec_secy_tx_sa_next_xpn_set_cmd),
+			NETLINK_SDK);
+	return ret;
+}
+
+u32 nss_macsec_secy_rx_sc_ssci_get(u32 secy_id, u32 channel, u32 *pssci)
+{
+	unsigned char
+	buf[SDK_MSG_SIZE(sizeof(
+		struct nss_macsec_secy_rx_sc_ssci_get_cmd))] = { 0 };
+	struct sdk_msg_header *msg_header =
+	    (struct sdk_msg_header *)SDK_MSG_HEADER(buf);
+	struct nss_macsec_secy_rx_sc_ssci_get_cmd *param =
+	    (struct nss_macsec_secy_rx_sc_ssci_get_cmd *)SDK_MSG_DATA(buf);
+	int ret = 0;
+
+	msg_header->version = SDK_MSG_VER;
+	msg_header->cmd_type = SDK_FAL_CMD;
+	msg_header->sub_type = NSS_MACSEC_SECY_RX_SC_SSCI_GET_CMD;
+	msg_header->buf_len = sizeof(struct nss_macsec_secy_rx_sc_ssci_get_cmd);
+	param->secy_id = secy_id;
+	param->channel = channel;
+
+	ret =
+	    nss_macsec_sdk_netlink_msg(SDK_CALL_MSG, buf,
+		sizeof(struct nss_macsec_secy_rx_sc_ssci_get_cmd),
+			NETLINK_SDK);
+	if (ret == SDK_RET_SUCCESS)
+		*pssci = param->ssci;
+
+	return ret;
+}
+
+u32 nss_macsec_secy_rx_sc_ssci_set(u32 secy_id, u32 channel, u32 ssci)
+{
+	unsigned char
+	buf[SDK_MSG_SIZE(sizeof(
+			struct nss_macsec_secy_rx_sc_ssci_set_cmd))] = { 0 };
+	struct sdk_msg_header *msg_header =
+	    (struct sdk_msg_header *)SDK_MSG_HEADER(buf);
+	struct nss_macsec_secy_rx_sc_ssci_set_cmd *param =
+	    (struct nss_macsec_secy_rx_sc_ssci_set_cmd *)SDK_MSG_DATA(buf);
+	int ret = 0;
+
+	msg_header->version = SDK_MSG_VER;
+	msg_header->cmd_type = SDK_FAL_CMD;
+	msg_header->sub_type = NSS_MACSEC_SECY_RX_SC_SSCI_SET_CMD;
+	msg_header->buf_len = sizeof(struct nss_macsec_secy_rx_sc_ssci_set_cmd);
+	param->secy_id = secy_id;
+	param->channel = channel;
+	param->ssci = ssci;
+
+	ret =
+	    nss_macsec_sdk_netlink_msg(SDK_CALL_MSG, buf,
+		sizeof(struct nss_macsec_secy_rx_sc_ssci_set_cmd),
+			NETLINK_SDK);
+	return ret;
+}
+
+u32 nss_macsec_secy_tx_sc_ssci_get(u32 secy_id, u32 channel, u32 *pssci)
+{
+	unsigned char
+	buf[SDK_MSG_SIZE(sizeof(
+			struct nss_macsec_secy_tx_sc_ssci_get_cmd))] = { 0 };
+	struct sdk_msg_header *msg_header =
+	    (struct sdk_msg_header *)SDK_MSG_HEADER(buf);
+	struct nss_macsec_secy_tx_sc_ssci_get_cmd *param =
+	    (struct nss_macsec_secy_tx_sc_ssci_get_cmd *)SDK_MSG_DATA(buf);
+	int ret = 0;
+
+	msg_header->version = SDK_MSG_VER;
+	msg_header->cmd_type = SDK_FAL_CMD;
+	msg_header->sub_type = NSS_MACSEC_SECY_TX_SC_SSCI_GET_CMD;
+	msg_header->buf_len = sizeof(struct nss_macsec_secy_tx_sc_ssci_get_cmd);
+	param->secy_id = secy_id;
+	param->channel = channel;
+
+	ret =
+	    nss_macsec_sdk_netlink_msg(SDK_CALL_MSG, buf,
+		sizeof(struct nss_macsec_secy_tx_sc_ssci_get_cmd),
+			NETLINK_SDK);
+	if (ret == SDK_RET_SUCCESS)
+		*pssci = param->ssci;
+
+	return ret;
+}
+
+u32 nss_macsec_secy_tx_sc_ssci_set(u32 secy_id, u32 channel, u32 ssci)
+{
+	unsigned char
+	buf[SDK_MSG_SIZE(sizeof(
+			struct nss_macsec_secy_tx_sc_ssci_set_cmd))] = { 0 };
+	struct sdk_msg_header *msg_header =
+	    (struct sdk_msg_header *)SDK_MSG_HEADER(buf);
+	struct nss_macsec_secy_tx_sc_ssci_set_cmd *param =
+	    (struct nss_macsec_secy_tx_sc_ssci_set_cmd *)SDK_MSG_DATA(buf);
+	int ret = 0;
+
+	msg_header->version = SDK_MSG_VER;
+	msg_header->cmd_type = SDK_FAL_CMD;
+	msg_header->sub_type = NSS_MACSEC_SECY_TX_SC_SSCI_SET_CMD;
+	msg_header->buf_len = sizeof(struct nss_macsec_secy_tx_sc_ssci_set_cmd);
+	param->secy_id = secy_id;
+	param->channel = channel;
+	param->ssci = ssci;
+
+	ret =
+	    nss_macsec_sdk_netlink_msg(SDK_CALL_MSG, buf,
+		sizeof(struct nss_macsec_secy_tx_sc_ssci_set_cmd),
+			NETLINK_SDK);
+	return ret;
+}
+
+u32 nss_macsec_secy_tx_sa_ki_get(u32 secy_id, u32 channel, u32 an,
+			       struct fal_tx_sa_ki_t *pentry)
+{
+	unsigned char
+	buf[SDK_MSG_SIZE(sizeof(struct nss_macsec_secy_tx_sa_ki_get_cmd))] = {
+		0 };
+	struct sdk_msg_header *msg_header =
+	    (struct sdk_msg_header *)SDK_MSG_HEADER(buf);
+	struct nss_macsec_secy_tx_sa_ki_get_cmd *param =
+	    (struct nss_macsec_secy_tx_sa_ki_get_cmd *)SDK_MSG_DATA(buf);
+	int ret = 0;
+
+	msg_header->version = SDK_MSG_VER;
+	msg_header->cmd_type = SDK_FAL_CMD;
+	msg_header->sub_type = NSS_MACSEC_SECY_TX_SA_KI_GET_CMD;
+	msg_header->buf_len = sizeof(struct nss_macsec_secy_tx_sa_ki_get_cmd);
+	param->secy_id = secy_id;
+	param->channel = channel;
+	param->an = an;
+
+	ret =
+	    nss_macsec_sdk_netlink_msg(SDK_CALL_MSG, buf,
+		sizeof(struct nss_macsec_secy_tx_sa_ki_get_cmd),
+			NETLINK_SDK);
+	if (ret == SDK_RET_SUCCESS)
+		*pentry = param->pki;
+
+	return ret;
+}
+
+u32 nss_macsec_secy_tx_sa_ki_set(u32 secy_id, u32 channel, u32 an,
+			       struct fal_tx_sa_ki_t *pentry)
+{
+	unsigned char
+	buf[SDK_MSG_SIZE(sizeof(struct nss_macsec_secy_tx_sa_ki_set_cmd))] = {
+		0 };
+	struct sdk_msg_header *msg_header =
+	    (struct sdk_msg_header *)SDK_MSG_HEADER(buf);
+	struct nss_macsec_secy_tx_sa_ki_get_cmd *param =
+	    (struct nss_macsec_secy_tx_sa_ki_get_cmd *)SDK_MSG_DATA(buf);
+	int ret = 0;
+
+	msg_header->version = SDK_MSG_VER;
+	msg_header->cmd_type = SDK_FAL_CMD;
+	msg_header->sub_type = NSS_MACSEC_SECY_TX_SA_KI_SET_CMD;
+	msg_header->buf_len = sizeof(struct nss_macsec_secy_tx_sa_ki_get_cmd);
+	param->secy_id = secy_id;
+	param->channel = channel;
+	param->an = an;
+	param->pki = *pentry;
+
+	ret =
+	    nss_macsec_sdk_netlink_msg(SDK_CALL_MSG, buf,
+		sizeof(struct nss_macsec_secy_tx_sa_ki_get_cmd),
+			NETLINK_SDK);
+	return ret;
+}
+u32 nss_macsec_secy_rx_sa_ki_get(u32 secy_id, u32 channel, u32 an,
+			       struct fal_rx_sa_ki_t *pentry)
+{
+	unsigned char
+	buf[SDK_MSG_SIZE(sizeof(struct nss_macsec_secy_rx_sa_ki_get_cmd))] = {
+		0 };
+	struct sdk_msg_header *msg_header =
+	    (struct sdk_msg_header *)SDK_MSG_HEADER(buf);
+	struct nss_macsec_secy_rx_sa_ki_get_cmd *param =
+	    (struct nss_macsec_secy_rx_sa_ki_get_cmd *)SDK_MSG_DATA(buf);
+	int ret = 0;
+
+	msg_header->version = SDK_MSG_VER;
+	msg_header->cmd_type = SDK_FAL_CMD;
+	msg_header->sub_type = NSS_MACSEC_SECY_RX_SA_KI_GET_CMD;
+	msg_header->buf_len = sizeof(struct nss_macsec_secy_rx_sa_ki_get_cmd);
+	param->secy_id = secy_id;
+	param->channel = channel;
+	param->an = an;
+
+	ret =
+	    nss_macsec_sdk_netlink_msg(SDK_CALL_MSG, buf,
+		sizeof(struct nss_macsec_secy_rx_sa_ki_get_cmd),
+			NETLINK_SDK);
+	if (ret == SDK_RET_SUCCESS)
+		*pentry = param->pki;
+
+	return ret;
+}
+
+u32 nss_macsec_secy_rx_sa_ki_set(u32 secy_id, u32 channel, u32 an,
+			       struct fal_rx_sa_ki_t *pentry)
+{
+	unsigned char
+	buf[SDK_MSG_SIZE(sizeof(struct nss_macsec_secy_rx_sa_ki_set_cmd))] = {
+		0 };
+	struct sdk_msg_header *msg_header =
+	    (struct sdk_msg_header *)SDK_MSG_HEADER(buf);
+	struct nss_macsec_secy_rx_sa_ki_set_cmd *param =
+	    (struct nss_macsec_secy_rx_sa_ki_set_cmd *)SDK_MSG_DATA(buf);
+	int ret = 0;
+
+	msg_header->version = SDK_MSG_VER;
+	msg_header->cmd_type = SDK_FAL_CMD;
+	msg_header->sub_type = NSS_MACSEC_SECY_RX_SA_KI_SET_CMD;
+	msg_header->buf_len = sizeof(struct nss_macsec_secy_rx_sa_ki_set_cmd);
+	param->secy_id = secy_id;
+	param->channel = channel;
+	param->an = an;
+	param->pki = *pentry;
+
+	ret =
+	    nss_macsec_sdk_netlink_msg(SDK_CALL_MSG, buf,
+		sizeof(struct nss_macsec_secy_rx_sa_ki_set_cmd),
+			NETLINK_SDK);
+	return ret;
+}
+u32 nss_macsec_secy_flow_control_en_get(u32 secy_id, bool *penable)
+{
+	unsigned char
+	buf[SDK_MSG_SIZE(sizeof(
+		struct nss_macsec_secy_flow_control_en_get_cmd))] = { 0 };
+	struct sdk_msg_header *msg_header =
+	    (struct sdk_msg_header *)SDK_MSG_HEADER(buf);
+	struct nss_macsec_secy_flow_control_en_get_cmd *param =
+	    (struct nss_macsec_secy_flow_control_en_get_cmd *)SDK_MSG_DATA(buf);
+	int ret = 0;
+
+	msg_header->version = SDK_MSG_VER;
+	msg_header->cmd_type = SDK_FAL_CMD;
+	msg_header->sub_type = NSS_MACSEC_SECY_FLOW_CONTROL_EN_GET_CMD;
+	msg_header->buf_len =
+			sizeof(struct nss_macsec_secy_flow_control_en_get_cmd);
+	param->secy_id = secy_id;
+
+	ret =
+	    nss_macsec_sdk_netlink_msg(SDK_CALL_MSG, buf,
+		sizeof(struct nss_macsec_secy_flow_control_en_get_cmd),
+			NETLINK_SDK);
+	if (ret == SDK_RET_SUCCESS)
+		*penable = param->penable;
+
+	return ret;
+}
+
+u32 nss_macsec_secy_flow_control_en_set(u32 secy_id, bool enable)
+{
+	unsigned char
+	buf[SDK_MSG_SIZE(sizeof(
+		struct nss_macsec_secy_flow_control_en_set_cmd))] = { 0 };
+	struct sdk_msg_header *msg_header =
+	    (struct sdk_msg_header *)SDK_MSG_HEADER(buf);
+	struct nss_macsec_secy_flow_control_en_set_cmd *param =
+	    (struct nss_macsec_secy_flow_control_en_set_cmd *)SDK_MSG_DATA(buf);
+	int ret = 0;
+
+	msg_header->version = SDK_MSG_VER;
+	msg_header->cmd_type = SDK_FAL_CMD;
+	msg_header->sub_type = NSS_MACSEC_SECY_FLOW_CONTROL_EN_SET_CMD;
+	msg_header->buf_len =
+			sizeof(struct nss_macsec_secy_flow_control_en_set_cmd);
+	param->secy_id = secy_id;
+	param->enable = enable;
+
+	ret =
+	    nss_macsec_sdk_netlink_msg(SDK_CALL_MSG, buf,
+		sizeof(struct nss_macsec_secy_flow_control_en_set_cmd),
+			NETLINK_SDK);
+	return ret;
+}
+u32 nss_macsec_secy_special_pkt_ctrl_get(u32 secy_id,
+	enum fal_packet_type_t packet_type,
+	enum fal_packet_action_t *packet_action)
+{
+	unsigned char
+	buf[SDK_MSG_SIZE(sizeof(
+		struct nss_macsec_secy_special_pkt_ctrl_get_cmd))] = { 0 };
+	struct sdk_msg_header *msg_header =
+	    (struct sdk_msg_header *)SDK_MSG_HEADER(buf);
+	struct nss_macsec_secy_special_pkt_ctrl_get_cmd *param =
+	    (struct nss_macsec_secy_special_pkt_ctrl_get_cmd *)
+	    SDK_MSG_DATA(buf);
+	int ret = 0;
+
+	msg_header->version = SDK_MSG_VER;
+	msg_header->cmd_type = SDK_FAL_CMD;
+	msg_header->sub_type = NSS_MACSEC_SECY_SPECIAL_PKT_CTRL_GET_CMD;
+	msg_header->buf_len =
+	    sizeof(struct nss_macsec_secy_special_pkt_ctrl_get_cmd);
+	param->secy_id = secy_id;
+	param->type = packet_type;
+
+	ret =
+	    nss_macsec_sdk_netlink_msg(SDK_CALL_MSG, buf,
+		sizeof(struct nss_macsec_secy_special_pkt_ctrl_get_cmd),
+			NETLINK_SDK);
+	if (ret == SDK_RET_SUCCESS)
+		*packet_action = param->action;
+
+	return ret;
+}
+
+u32 nss_macsec_secy_special_pkt_ctrl_set(u32 secy_id,
+	enum fal_packet_type_t packet_type,
+	enum fal_packet_action_t packet_action)
+{
+	unsigned char
+	buf[SDK_MSG_SIZE(sizeof(
+		struct nss_macsec_secy_special_pkt_ctrl_set_cmd))] = { 0 };
+	struct sdk_msg_header *msg_header =
+	    (struct sdk_msg_header *)SDK_MSG_HEADER(buf);
+	struct nss_macsec_secy_special_pkt_ctrl_set_cmd *param =
+	    (struct nss_macsec_secy_special_pkt_ctrl_set_cmd *)
+	    SDK_MSG_DATA(buf);
+	int ret = 0;
+
+	msg_header->version = SDK_MSG_VER;
+	msg_header->cmd_type = SDK_FAL_CMD;
+	msg_header->sub_type = NSS_MACSEC_SECY_SPECIAL_PKT_CTRL_SET_CMD;
+	msg_header->buf_len =
+	    sizeof(struct nss_macsec_secy_special_pkt_ctrl_set_cmd);
+	param->secy_id = secy_id;
+	param->type = packet_type;
+	param->action = packet_action;
+
+	ret =
+	    nss_macsec_sdk_netlink_msg(SDK_CALL_MSG, buf,
+		sizeof(struct nss_macsec_secy_special_pkt_ctrl_set_cmd),
+			NETLINK_SDK);
+	return ret;
+}
+u32 nss_macsec_secy_udf_ethtype_get(u32 secy_id,
+	bool *enable, u16 *type)
+{
+	unsigned char
+	buf[SDK_MSG_SIZE(sizeof(
+		struct nss_macsec_secy_udf_ethtype_get_cmd))] = { 0 };
+	struct sdk_msg_header *msg_header =
+	    (struct sdk_msg_header *)SDK_MSG_HEADER(buf);
+	struct nss_macsec_secy_udf_ethtype_get_cmd *param =
+	    (struct nss_macsec_secy_udf_ethtype_get_cmd *)
+	    SDK_MSG_DATA(buf);
+	int ret = 0;
+
+	msg_header->version = SDK_MSG_VER;
+	msg_header->cmd_type = SDK_FAL_CMD;
+	msg_header->sub_type = NSS_MACSEC_SECY_UDF_ETHTYPE_GET_CMD;
+	msg_header->buf_len =
+	    sizeof(struct nss_macsec_secy_udf_ethtype_get_cmd);
+	param->secy_id = secy_id;
+
+	ret =
+	    nss_macsec_sdk_netlink_msg(SDK_CALL_MSG, buf,
+		sizeof(struct nss_macsec_secy_udf_ethtype_get_cmd),
+			NETLINK_SDK);
+	if (ret == SDK_RET_SUCCESS) {
+		*enable = param->enable;
+		*type = param->type;
+	}
+	return ret;
+}
+
+u32 nss_macsec_secy_udf_ethtype_set(u32 secy_id,
+	bool enable, u16 type)
+{
+	unsigned char
+	buf[SDK_MSG_SIZE(sizeof(
+		struct nss_macsec_secy_udf_ethtype_set_cmd))] = { 0 };
+	struct sdk_msg_header *msg_header =
+	    (struct sdk_msg_header *)SDK_MSG_HEADER(buf);
+	struct nss_macsec_secy_udf_ethtype_set_cmd *param =
+	    (struct nss_macsec_secy_udf_ethtype_set_cmd *)
+	    SDK_MSG_DATA(buf);
+	int ret = 0;
+
+	msg_header->version = SDK_MSG_VER;
+	msg_header->cmd_type = SDK_FAL_CMD;
+	msg_header->sub_type = NSS_MACSEC_SECY_UDF_ETHTYPE_SET_CMD;
+	msg_header->buf_len =
+	    sizeof(struct nss_macsec_secy_udf_ethtype_set_cmd);
+	param->secy_id = secy_id;
+	param->enable = enable;
+	param->type = type;
+
+	ret =
+	    nss_macsec_sdk_netlink_msg(SDK_CALL_MSG, buf,
+		sizeof(struct nss_macsec_secy_udf_ethtype_set_cmd),
+			NETLINK_SDK);
+	return ret;
+}
+u32 nss_macsec_secy_loopback_get(u32 secy_id, enum fal_loopback_type_t *type)
+{
+
+	unsigned char
+	buf[SDK_MSG_SIZE(sizeof(
+		struct nss_macsec_secy_loopback_get_cmd))] = { 0 };
+	struct sdk_msg_header *msg_header =
+	    (struct sdk_msg_header *)SDK_MSG_HEADER(buf);
+	struct nss_macsec_secy_loopback_get_cmd *param =
+	    (struct nss_macsec_secy_loopback_get_cmd *)
+	    SDK_MSG_DATA(buf);
+	int ret = 0;
+
+	msg_header->version = SDK_MSG_VER;
+	msg_header->cmd_type = SDK_FAL_CMD;
+	msg_header->sub_type = NSS_MACSEC_SECY_LOOPBACK_GET_CMD;
+	msg_header->buf_len =
+	    sizeof(struct nss_macsec_secy_loopback_get_cmd);
+	param->secy_id = secy_id;
+
+	ret =
+	    nss_macsec_sdk_netlink_msg(SDK_CALL_MSG, buf,
+		sizeof(struct nss_macsec_secy_loopback_get_cmd),
+			NETLINK_SDK);
+	if (ret == SDK_RET_SUCCESS)
+		*type = param->type;
+
+	return ret;
+}
+
+u32 nss_macsec_secy_loopback_set(u32 secy_id, enum fal_loopback_type_t type)
+{
+	unsigned char
+	buf[SDK_MSG_SIZE(sizeof(
+		struct nss_macsec_secy_loopback_set_cmd))] = { 0 };
+	struct sdk_msg_header *msg_header =
+	    (struct sdk_msg_header *)SDK_MSG_HEADER(buf);
+	struct nss_macsec_secy_loopback_set_cmd *param =
+	    (struct nss_macsec_secy_loopback_set_cmd *)
+	    SDK_MSG_DATA(buf);
+	int ret = 0;
+
+	msg_header->version = SDK_MSG_VER;
+	msg_header->cmd_type = SDK_FAL_CMD;
+	msg_header->sub_type = NSS_MACSEC_SECY_LOOPBACK_SET_CMD;
+	msg_header->buf_len =
+	    sizeof(struct nss_macsec_secy_loopback_set_cmd);
+	param->secy_id = secy_id;
+	param->type = type;
+
+	ret =
+	    nss_macsec_sdk_netlink_msg(SDK_CALL_MSG, buf,
+		sizeof(struct nss_macsec_secy_loopback_set_cmd),
+			NETLINK_SDK);
+	return ret;
+}
+

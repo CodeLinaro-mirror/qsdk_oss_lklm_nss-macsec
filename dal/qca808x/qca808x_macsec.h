@@ -1,0 +1,817 @@
+/*
+ * Copyright (c) 2018, The Linux Foundation. All rights reserved.
+ * Permission to use, copy, modify, and/or distribute this software for
+ * any purpose with or without fee is hereby granted, provided that the
+ * above copyright notice and this permission notice appear in all copies.
+ * THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
+ * WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
+ * MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
+ * ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
+ * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
+ * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT
+ * OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
+ */
+
+
+#ifndef __QCA808X_MACSECY_H
+#define __QCA808X_MACSECY_H
+
+#include "nss_macsec_types.h"
+
+#define BIT_15S                 (1U << 15)
+#define BIT_14S                 (1 << 14)
+#define BIT_13S                 (1 << 13)
+#define BIT_12S                 (1 << 12)
+#define BIT_11S                 (1 << 11)
+#define BIT_10S                 (1 << 10)
+#define BIT_9S                  (1 << 9)
+#define BIT_8S                  (1 << 8)
+#define BIT_7S                  (1 << 7)
+#define BIT_6S                  (1 << 6)
+#define BIT_5S                  (1 << 5)
+#define BIT_4S                  (1 << 4)
+#define BIT_3S                  (1 << 3)
+#define BIT_2S                  (1 << 2)
+#define BIT_1S                  (1 << 1)
+#define BIT_0S                   1
+#define BIT_NULL                 0x00
+
+#define BIT_15                   15
+#define BIT_14                   14
+#define BIT_13                   13
+#define BIT_12                   12
+#define BIT_11                   11
+#define BIT_10                   10
+#define BIT_9                    9
+#define BIT_8                    8
+#define BIT_7                    7
+#define BIT_6                    6
+#define BIT_5                    5
+#define BIT_4                    4
+#define BIT_3                    3
+#define BIT_2                    2
+#define BIT_1                    1
+#define BIT_0                    0
+
+
+#define SECY_SC_IDX_MAX           15
+#define SECY_SA_IDX_MAX           1
+#define SECY_POLICY_IDX_MAX       15
+#define SAK_LEN_128BITS	16
+#define SAK_LEN_256BITS	32
+
+#define SC_BIND_MASK_DA           0x00000001
+#define SC_BIND_MASK_SA           0x00000002
+#define SC_BIND_MASK_ETHERTYPE    0x00000004
+#define SC_BIND_MASK_OUTER_VLAN   0x00000008
+#define SC_BIND_MASK_INNER_VLAN   0x00000010
+#define SC_BIND_MASK_BCAST        0x00000020
+#define SC_BIND_MASK_TCI          0x00000040
+#define SC_BIND_MASK_SCI          0x00000080
+#define SC_BIND_MASK_VALID        0x00008000
+
+#define MACSEC_SCB_EN     0x10
+#define MACSEC_INCLUDE_SCI_EN     0x20
+#define MACSEC_ES_EN     0x40
+#define MACSEC_AES256_ENABLE     0x1
+#define MACSEC_XPN_ENABLE     0x1
+
+
+/**********************MMD3********************************/
+/* MACsec register base address definition in PHY */
+#define MACSEC_SYS_BASE             0xC000
+#define MACSEC_EPR_BASE             0xC080
+#define MACSEC_SA_CONTROL_BASE      0xC0A0
+#define MACSEC_TX_AN_BASE           0xC0A8
+#define MACSEC_RX_AN_BASE           0xC0AC
+#define MACSEC_TX_NPN_BASE          0xC100
+#define MACSEC_RX_NPN_BASE          0xC300
+#define MACSEC_SC_BIND_BASE         0xC500
+#define MACSEC_TX_MIB_BASE          0xC700
+#define MACSEC_RX_MIB_BASE          0xCA00
+#define MACSEC_TX_SAK_BASE          0xD000
+#define MACSEC_RX_SAK_BASE          0xD200
+#define MACSEC_DEBUG_BASE           0xF000
+#define MACSEC_TX_EXTENDED_SAK_BASE          0xD400
+#define MACSEC_RX_EXTENDED_SAK_BASE          0xD600
+#define MACSEC_TX_SSCI_BASE	0xCD00
+#define MACSEC_RX_SSCI_BASE	0xCD02
+#define MACSEC_RX_KI_BASE          0xDA00
+#define MACSEC_TX_KI_BASE          0xD800
+#define MACSEC_TX_XPN_BASE          0xC180
+#define MACSEC_RX_XPN_BASE          0xC380
+
+
+/* system registers*/
+
+#define MACSEC_SYS_EPR_CONFIG       (MACSEC_SYS_BASE + 0x01)
+#define MACSEC_SYS_UIEPR_CONFIG     (MACSEC_SYS_BASE + 0x02)
+#define MACSEC_SYS_PORTNUM          (MACSEC_SYS_BASE + 0x03)
+#define MACSEC_SYS_MAC_ADDR_BASE    (MACSEC_SYS_BASE + 0x04)
+#define MACSEC_SYS_FRAME_LEN        (MACSEC_SYS_BASE + 0x07)
+#define MACSEC_SYS_ID_BASE          (MACSEC_SYS_BASE + 0x08)
+
+#define MACSEC_SYS_TX_SCI_BASE      (MACSEC_SYS_BASE + 0x0C)
+#define MACSEC_SYS_REPLAY_WIN_BASE  (MACSEC_SYS_BASE + 0x10)
+#define MACSEC_SYS_TX_ETHTYPE       (MACSEC_SYS_BASE + 0x12)
+#define MACSEC_SYS_RX_ETHTYPE       (MACSEC_SYS_BASE + 0x13)
+#define MACSEC_SYS_RX_SCI_BASE      (MACSEC_SYS_BASE + 0x14)
+#define MACSEC_SYS_PAUSE_BASE       (MACSEC_SYS_BASE + 0x18)
+
+
+
+/* system configure register */
+#define MACSEC_SYS_CONFIG           (MACSEC_SYS_BASE + 0x00)
+
+#define SYS_IN_PHY_EN                    BIT_15
+#define SYS_IN_PHY_EN_OFFSET             15
+#define SYS_IN_PHY_EN_LEN                1
+
+#define SYS_TLSEC_MOD_EN                 BIT_14
+#define SYS_TLSEC_MOD_EN_OFFSET          14
+#define SYS_TLSEC_MOD_EN_LEN             1
+
+#define SYS_INCLUDED_SCI_EN              BIT_13
+#define SYS_INCLUDED_SCI_EN_OFFSET       13
+#define SYS_INCLUDED_SCI_EN_LEN          1
+
+#define SYS_CEPR_EN                      BIT_12
+#define SYS_CEPR_EN_OFFSET               12
+#define SYS_CEPR_EN_LEN                  1
+
+#define SYS_UEPR_EN                      BIT_11
+#define SYS_UEPR_EN_OFFSET               11
+#define SYS_UEPR_EN_LEN                  1
+
+#define SYS_UIER_EN                      BIT_10
+#define SYS_UIER_EN_OFFSET               10
+#define SYS_UIER_EN_LEN                  1
+
+#define SYS_BIND_EN                      BIT_9
+#define SYS_BIND_EN_OFFSET               9
+#define SYS_BIND_EN_LEN                  1
+
+#define SYS_REPLAY_PROTECT_EN            BIT_8
+#define SYS_REPLAY_PROTECT_EN_OFFSET     8
+#define SYS_REPLAY_PROTECT_EN_LEN        1
+
+#define SYS_SRAM_DEBUG_EN                BIT_7
+#define SYS_SRAM_DEBUG_EN_OFFSET         7
+#define SYS_SRAM_DEBUG_EN_LEN            1
+
+#define SYS_TX_UDEF_ETH_TYPE_EN          BIT_6
+#define SYS_TX_UDEF_ETH_TYPE_EN_OFFSET   6
+#define SYS_TX_UDEF_ETH_TYPE_EN_LEN      1
+
+#define SYS_RX_UDEF_ETH_TYPE_EN          BIT_5
+#define SYS_RX_UDEF_ETH_TYPE_EN_OFFSET   5
+#define SYS_RX_UDEF_ETH_TYPE_EN_LEN      1
+
+#define SYS_SHORT_FRM_DROP_EN            BIT_4
+#define SYS_SHORT_FRM_DROP_EN_OFFSET     4
+#define SYS_SHORT_FRM_DROP_EN_LEN        1
+
+#define SYS_SA_SELECT_EN                 BIT_3
+#define SYS_SA_SELECT_EN_OFFSET          3
+#define SYS_SA_SELECT_EN_LEN             1
+
+#define SYS_USED_MAC_ADDR_REG            BIT_2
+#define SYS_USED_MAC_ADDR_REG_OFFSET     2
+#define SYS_USED_MAC_ADDR_REG_LEN        1
+
+#define SYS_USE_ES_EN                    BIT_1
+#define SYS_USE_ES_EN_OFFSET             1
+#define SYS_USE_ES_EN_LEN                1
+
+#define SYS_USE_SCB_EN                   BIT_0
+#define SYS_USE_SCB_EN_OFFSET            0
+#define SYS_USE_SCB_EN_LEN               1
+
+
+/* frame control register */
+#define MACSEC_SYS_FRAME_CTRL       (MACSEC_SYS_BASE + 0x0B)
+
+#define SYS_FRAME_BYPASS_LOOP          BIT_15
+#define SYS_FRAME_BYPASS_LOOP_OFFSET   15
+#define SYS_FRAME_BYPASS_LOOP_LEN      1
+
+#define SYS_AES256_ENABLE          BIT_7
+#define SYS_AES256_ENABLE_OFFSET   7
+#define SYS_AES256_ENABLE_LEN      1
+
+#define SYS_XPN_ENABLE          BIT_6
+#define SYS_XPN_ENABLE_OFFSET   6
+#define SYS_XPN_ENABLE_LEN      1
+
+#define SYS_FRAME_PROTECT_EN           BIT_2
+#define SYS_FRAME_PROTECT_EN_OFFSET    2
+#define SYS_FRAME_PROTECT_EN_LEN       1
+
+#define SYS_FRAME_VALIDATE             BIT_0
+#define SYS_FRAME_VALIDATE_OFFSET      0
+#define SYS_FRAME_VALIDATE_LEN         2
+       #define SYS_FRAME_VALIDATE_STRICT      BIT_NULL
+       #define SYS_FRAME_VALIDATE_CHECK       BIT_0S
+       #define SYS_FRAME_VALIDATE_DIS         BIT_1S
+
+
+/* packet control register */
+#define MACSEC_SYS_PACKET_CTRL      (MACSEC_SYS_BASE + 0x1F)
+
+#define SYS_SECY_LPBK               BIT_14
+#define SYS_SECY_LPBK_OFFSET        14
+#define SYS_SECY_LPBK_LEN           2
+       #define SYS_MACSEC_EN               BIT_NULL
+       #define SYS_PHY_LB                  BIT_0S
+       #define SYS_SWITCH_LB               BIT_1S
+       #define SYS_BYPASS                  0x3
+
+#define SYS_FILTER_LPBK_EN          BIT_13
+#define SYS_FILTER_LPBK_EN_OFFSET   2
+#define SYS_FILTER_LPBK_EN_LEN      1
+
+#define SYS_LLDP_SW                 BIT_4
+#define SYS_LLDP_SW_OFFSET          4
+#define SYS_LLDP_SW_LEN             2
+       #define MSB_CRYPTO_LSB_DISCARD      0x0
+       #define MSB_CRYPTO_LSB_UPLOAD       0x1
+       #define MSB_PLAIN_LSB_DISCARD       0x2
+       #define MSB_PLAIN_LSB_UPLOAD        0x3
+
+#define SYS_CDP_SW                  BIT_2
+#define SYS_CDP_SW_OFFSET           2
+#define SYS_CDP_SW_LEN              2
+       #define MSB_CRYPTO_LSB_DISCARD      0x0
+       #define MSB_CRYPTO_LSB_UPLOAD       0x1
+       #define MSB_PLAIN_LSB_DISCARD       0x2
+       #define MSB_PLAIN_LSB_UPLOAD        0x3
+
+#define SYS_STP_SW                  BIT_0
+#define SYS_STP_SW_OFFSET           0
+#define SYS_STP_SW_LEN              2
+       #define MSB_CRYPTO_LSB_DISCARD      0x0
+       #define MSB_CRYPTO_LSB_UPLOAD       0x1
+       #define MSB_PLAIN_LSB_DISCARD       0x2
+       #define MSB_PLAIN_LSB_UPLOAD        0x3
+
+
+/* controlled port status */
+#define MACSEC_SYS_PORT_CTRL        (MACSEC_SYS_BASE + 0x20)
+
+#define SYS_PORT_EN                 BIT_15
+#define SYS_PORT_EN_OFFSET          15
+#define SYS_PORT_EN_LEN             1
+
+
+#define SYS_MAC_EN_MASK             0x4000
+#define SYS_MAC_OP_MASK             0x2000
+#define SYS_PTP_MASK                0x1000
+
+
+/* pause control register */
+#define MACSEC_SYS_PAUSE_CTRL_BASE  (MACSEC_SYS_BASE + 0x28)
+
+#define SYS_E_PAUSE_EN               BIT_3
+#define SYS_E_PAUSE_EN_OFFSET        3
+#define SYS_E_PAUSE_EN_LEN           1
+
+#define SYS_E_PAUSE_FWD              BIT_2
+#define SYS_E_PAUSE_FWD_OFFSET       2
+#define SYS_E_PAUSE_FWD_LEN          1
+
+#define SYS_I_PAUSE_EN               BIT_1
+#define SYS_I_PAUSE_EN_OFFSET        1
+#define SYS_I_PAUSE_EN_LEN           1
+
+#define SYS_I_PAUSE_FWD              BIT_0
+#define SYS_I_PAUSE_FWD_OFFSET       0
+#define SYS_I_PAUSE_FWD_LEN          1
+
+/* macsec sofware control register */
+#define MACSEC_SOFTWARE_EN_CTRL      0xA200
+
+#define SYS_SECY_SOFTWARE_EN               BIT_14
+#define SYS_SECY_SOFTWARE_EN_OFFSET        14
+#define SYS_SECY_SOFTWARE_EN_LEN           2
+#define SOFTWARE_BYPASS               BIT_NULL
+#define SOFTWARE_EN               0x3
+
+
+/* EPR block */
+
+
+/* SA TX/RX control registers */
+#define MACSEC_TX_SA_CONTROL        (MACSEC_SA_CONTROL_BASE + 0x00)
+#define MACSEC_RX_SA_CONTROL        (MACSEC_SA_CONTROL_BASE + 0x02)
+
+/* SA control register */
+#define SA0_SAK0_ENABLE             BIT_0S
+#define SA0_SAK1_ENABLE             BIT_1S
+#define SA1_SAK0_ENABLE             BIT_2S
+#define SA1_SAK1_ENABLE             BIT_3S
+#define SA2_SAK0_ENABLE             BIT_4S
+#define SA2_SAK1_ENABLE             BIT_5S
+#define SA3_SAK0_ENABLE             BIT_6S
+#define SA3_SAK1_ENABLE             BIT_7S
+#define SA4_SAK0_ENABLE             BIT_8S
+#define SA4_SAK1_ENABLE             BIT_9S
+#define SA5_SAK0_ENABLE             BIT_10S
+#define SA5_SAK1_ENABLE             BIT_11S
+#define SA6_SAK0_ENABLE             BIT_12S
+#define SA6_SAK1_ENABLE             BIT_13S
+#define SA7_SAK0_ENABLE             BIT_14S
+#define SA7_SAK1_ENABLE             BIT_15S
+
+#define SA0_SAK0_DIS                ~BIT_0S
+#define SA0_SAK1_DIS                ~BIT_1S
+#define SA1_SAK0_DIS                ~BIT_2S
+#define SA1_SAK1_DIS                ~BIT_3S
+#define SA2_SAK0_DIS                ~BIT_4S
+#define SA2_SAK1_DIS                ~BIT_5S
+#define SA3_SAK0_DIS                ~BIT_6S
+#define SA3_SAK1_DIS                ~BIT_7S
+#define SA4_SAK0_DIS                ~BIT_8S
+#define SA4_SAK1_DIS                ~BIT_9S
+#define SA5_SAK0_DIS                ~BIT_10S
+#define SA5_SAK1_DIS                ~BIT_11S
+#define SA6_SAK0_DIS                ~BIT_12S
+#define SA6_SAK1_DIS                ~BIT_13S
+#define SA7_SAK0_DIS                ~BIT_14S
+#define SA7_SAK1_DIS                ~BIT_15S
+
+
+
+
+/* TX Next PN register */
+#define MACSEC_TX_NPN(channel)          (MACSEC_TX_NPN_BASE + channel * 4)
+
+/* RX Next PN register */
+#define MACSEC_RX_NPN(channel)           (MACSEC_RX_NPN_BASE + channel * 4)
+
+/* SA Bind block */
+/* destination address bind for tx */
+#define MACSEC_SC_BIND_TXDA_BASE(channel)  \
+((MACSEC_SC_BIND_BASE + channel * 0x20) + 0x00)
+/* source address bind for tx */
+#define MACSEC_SC_BIND_TXSA_BASE(channel)  \
+((MACSEC_SC_BIND_BASE + channel * 0x20) + 0x03)
+/* ethernet type bind for tx */
+#define MACSEC_SC_BIND_TXETHERTYPE(channel) \
+((MACSEC_SC_BIND_BASE + channel * 0x20) + 0x06)
+/* vtag bind for tx */
+#define MACSEC_SC_BIND_TXOUTVTAG(channel) \
+((MACSEC_SC_BIND_BASE + channel * 0x20) + 0x07)
+#define MACSEC_SC_BIND_TXINVTAG(channel) \
+((MACSEC_SC_BIND_BASE + channel * 0x20) + 0x08)
+/* sci bind for tx */
+#define MACSEC_SC_BIND_TXSCI_BASE(channel) \
+((MACSEC_SC_BIND_BASE + channel * 0x20) + 0x09)
+/* tci bind for tx */
+#define MACSEC_SC_BIND_TXTCI(channel) \
+((MACSEC_SC_BIND_BASE + channel * 0x20) + 0x0d)
+
+#define SC_BIND_TXOFFSET               BIT_8
+#define SC_BIND_TXOFFSET_OFFSET        8
+#define SC_BIND_TXOFFSET_LEN           6
+
+#define SC_BIND_TXTCI                  BIT_0
+#define SC_BIND_TXTCI_OFFSET           0
+#define SC_BIND_TXTCI_LEN              8
+/* bind context for  tx */
+#define MACSEC_SC_BIND_TXCTX(channel) \
+((MACSEC_SC_BIND_BASE + channel * 0x20) + 0x0e)
+
+#define SC_BIND_TX_IFBC                BIT_15
+#define SC_BIND_TX_IFBC_OFFSET         15
+#define SC_BIND_TX_IFBC_LEN            1
+
+#define SC_BIND_TXCTX                  BIT_0
+#define SC_BIND_TXCTX_OFFSET           0
+#define SC_BIND_TXCTX_LEN              4
+
+
+/* bind mask for tx */
+#define MACSEC_SC_BIND_TXMASK(channel) \
+((MACSEC_SC_BIND_BASE + channel * 0x20) + 0x0f)
+
+/* destination address bind for rx */
+#define MACSEC_SC_BIND_RXDA_BASE(channel) \
+((MACSEC_SC_BIND_BASE + channel * 0x20) + 0x10)
+/* source address bind for rx */
+#define MACSEC_SC_BIND_RXSA_BASE(channel) \
+((MACSEC_SC_BIND_BASE + channel * 0x20) + 0x13)
+/* ethernet type bind for rx */
+#define MACSEC_SC_BIND_RXETHERTYPE(channel) \
+((MACSEC_SC_BIND_BASE + channel * 0x20) + 0x16)
+/* vtag bind for rx */
+#define MACSEC_SC_BIND_RXOUTVTAG(channel) \
+((MACSEC_SC_BIND_BASE + channel * 0x20) + 0x17)
+#define MACSEC_SC_BIND_RXINVTAG(channel) \
+((MACSEC_SC_BIND_BASE + channel * 0x20) + 0x18)
+/* sci bind for rx */
+#define MACSEC_SC_BIND_RXSCI_BASE(channel) \
+((MACSEC_SC_BIND_BASE + channel * 0x20) + 0x19)
+/* tci bind for rx */
+#define MACSEC_SC_BIND_RXTCI(channel) \
+((MACSEC_SC_BIND_BASE + channel * 0x20) + 0x1D)
+
+#define SC_BIND_RXOFFSET               BIT_8
+#define SC_BIND_RXOFFSET_OFFSET        8
+#define SC_BIND_RXOFFSET_LEN           6
+
+#define SC_BIND_RXTCI                  BIT_0
+#define SC_BIND_RXTCI_OFFSET           0
+#define SC_BIND_RXTCI_LEN              8
+
+
+/* bind context for rx */
+#define MACSEC_SC_BIND_RXCTX(channel) \
+((MACSEC_SC_BIND_BASE + channel * 0x20) + 0x1E)
+
+#define SC_BIND_RX_IFBC                BIT_15
+#define SC_BIND_RX_IFBC_OFFSET         15
+#define SC_BIND_RX_IFBC_LEN            1
+
+#define SC_BIND_RXCTX                  BIT_0
+#define SC_BIND_RXCTX_OFFSET           0
+#define SC_BIND_RXCTX_LEN              4
+
+/* bind mask for rx */
+#define MACSEC_SC_BIND_RXMASK(channel) \
+((MACSEC_SC_BIND_BASE + channel * 0x20) + 0x1F)
+
+
+/* TX SAK block */
+#define MACSEC_TX_SAK_KEY0(channel) \
+((MACSEC_TX_SAK_BASE + channel * 0x10) + 0x00)
+#define MACSEC_TX_SAK_KEY1(channel) \
+((MACSEC_TX_SAK_BASE + channel * 0x10) + 0x01)
+#define MACSEC_TX_SAK_KEY2(channel) \
+((MACSEC_TX_SAK_BASE + channel * 0x10) + 0x02)
+#define MACSEC_TX_SAK_KEY3(channel) \
+((MACSEC_TX_SAK_BASE + channel * 0x10) + 0x03)
+#define MACSEC_TX_SAK_KEY4(channel) \
+((MACSEC_TX_SAK_BASE + channel * 0x10) + 0x04)
+#define MACSEC_TX_SAK_KEY5(channel) \
+((MACSEC_TX_SAK_BASE + channel * 0x10) + 0x05)
+#define MACSEC_TX_SAK_KEY6(channel) \
+((MACSEC_TX_SAK_BASE + channel * 0x10) + 0x06)
+#define MACSEC_TX_SAK_KEY7(channel) \
+((MACSEC_TX_SAK_BASE + channel * 0x10) + 0x07)
+
+
+/* RX SAK block */
+#define MACSEC_RX_SAK_KEY0(channel) \
+((MACSEC_RX_SAK_BASE + channel * 0x10) + 0x00)
+#define MACSEC_RX_SAK_KEY1(channel) \
+((MACSEC_RX_SAK_BASE + channel * 0x10) + 0x01)
+#define MACSEC_RX_SAK_KEY2(channel) \
+((MACSEC_RX_SAK_BASE + channel * 0x10) + 0x02)
+#define MACSEC_RX_SAK_KEY3(channel) \
+((MACSEC_RX_SAK_BASE + channel * 0x10) + 0x03)
+#define MACSEC_RX_SAK_KEY4(channel) \
+((MACSEC_RX_SAK_BASE + channel * 0x10) + 0x04)
+#define MACSEC_RX_SAK_KEY5(channel) \
+((MACSEC_RX_SAK_BASE + channel * 0x10) + 0x05)
+#define MACSEC_RX_SAK_KEY6(channel) \
+((MACSEC_RX_SAK_BASE + channel * 0x10) + 0x06)
+#define MACSEC_RX_SAK_KEY7(channel) \
+((MACSEC_RX_SAK_BASE + channel * 0x10) + 0x07)
+
+/* TX Extended SAK block */
+#define MACSEC_TX_EXTENDED_SAK_KEY0(channel) \
+((MACSEC_TX_EXTENDED_SAK_BASE + channel * 0x10) + 0x00)
+
+/* RX Extended SAK block */
+#define MACSEC_RX_EXTENDED_SAK_KEY0(channel) \
+((MACSEC_RX_EXTENDED_SAK_BASE + channel * 0x10) + 0x00)
+
+/* TX SSCI block */
+#define MACSEC_SC_TX_SSCI0(channel) \
+((MACSEC_TX_SSCI_BASE + channel * 0x4) + 0x00)
+
+/* RX SSCI block */
+#define MACSEC_SC_RX_SSCI0(channel) \
+((MACSEC_RX_SSCI_BASE + channel * 0x4) + 0x00)
+
+/* TX Key Identifier block */
+#define MACSEC_TX_KI_KEY0(channel) \
+((MACSEC_TX_KI_BASE + channel * 0x10) + 0x00)
+
+/* RX Key Identifier block */
+#define MACSEC_RX_KI_KEY0(channel) \
+((MACSEC_RX_KI_BASE + channel * 0x10) + 0x00)
+
+	/* TX Next PN register */
+#define MACSEC_TX_XPN(channel) \
+(MACSEC_TX_XPN_BASE + channel * 4)
+
+	/* RX Next PN register */
+#define MACSEC_RX_XPN(channel) \
+(MACSEC_RX_XPN_BASE + channel * 4)
+
+
+/* sak value */
+#define SAK_AN_MASK                 0x03
+#define SAK_TCI_C                   BIT_2S
+#define SAK_TCI_E                   BIT_3S
+#define SAK_TCI_SCB                 BIT_4S
+#define SAK_TCI_SC                  BIT_5S
+#define SAK_TCI_ES                  BIT_6S
+#define SAK_TCI_VER                 BIT_7S
+
+#define SAK_OFFSET_MASK            0x03
+#define SAK_OFFSET0                0x00
+#define SAK_OFFSET30               0x01
+#define SAK_OFFSET50               0x02
+#define SAK_OFFSET128              0x03
+
+
+/* Tx MIB register */
+#define TX_SA_PROTECTED_PKTS_BASE       MACSEC_TX_MIB_BASE
+#define TX_SA_ENCRYPTED_PKTS_BASE       (MACSEC_TX_MIB_BASE + 64)
+#define TX_SC_PROTECTED_OCTETS_BASE     (MACSEC_TX_MIB_BASE + 128)
+#define TX_SC_ENCRYPTED_OCTETS_BASE     (MACSEC_TX_MIB_BASE + 160)
+#define TX_UNTAGGED_PKTS                (MACSEC_TX_MIB_BASE + 192)
+#define TX_TOO_LONG_PKTS                (MACSEC_TX_MIB_BASE + 194)
+#define TX_SA_PROTECTED_PKTS_HIGH_BASE      (MACSEC_TX_MIB_BASE + 0x100)
+#define TX_SA_ENCRYPTED_PKTS_HIGH_BASE      (MACSEC_TX_MIB_BASE + 0x140)
+
+/* Rx MIB register */
+#define RX_SA_UNUSED_PKTS_BASE          (MACSEC_RX_MIB_BASE + 0)
+#define RX_SA_NOUSING_PKTS_BASE         (MACSEC_RX_MIB_BASE + 64)
+#define RX_SA_NOTVALID_PKTS_BASE        (MACSEC_RX_MIB_BASE + 128)
+#define RX_SA_INVALID_PKTS_BASE         (MACSEC_RX_MIB_BASE + 192)
+#define RX_SA_OK_PKTS_BASE              (MACSEC_RX_MIB_BASE + 256)
+#define RX_SC_LATE_PKTS_BASE            (MACSEC_RX_MIB_BASE + 320)
+#define RX_SC_DELAYED_PKTS_BASE         (MACSEC_RX_MIB_BASE + 352)
+#define RX_SC_UNCHECKED_PKTS_BASE       (MACSEC_RX_MIB_BASE + 384)
+#define RX_SC_VALIDATED_PKTS_BASE       (MACSEC_RX_MIB_BASE + 416)
+#define RX_SC_DECRYPTED_PKTS_BASE       (MACSEC_RX_MIB_BASE + 448)
+#define RX_UNTAGGED_PKTS                (MACSEC_RX_MIB_BASE + 480)
+#define RX_NO_TAG_PKTS                  (MACSEC_RX_MIB_BASE + 482)
+#define RX_BAD_TAG_PKTS                 (MACSEC_RX_MIB_BASE + 484)
+#define RX_UNKNOWN_SCI_PKTS             (MACSEC_RX_MIB_BASE + 486)
+#define RX_NO_SCI_PKTS                  (MACSEC_RX_MIB_BASE + 488)
+#define RX_OVERRUN_PKTS                 (MACSEC_RX_MIB_BASE + 490)
+#define RX_SA_UNUSED_PKTS_HIGH_BASE        (MACSEC_RX_MIB_BASE + 0x400)
+#define RX_SA_NOUSING_PKTS_HIGH_BASE         (MACSEC_RX_MIB_BASE + 0x440)
+#define RX_SA_NOTVALID_PKTS_HIGH_BASE        (MACSEC_RX_MIB_BASE + 0x480)
+#define RX_SA_INVALID_PKTS_HIGH_BASE         (MACSEC_RX_MIB_BASE + 0x4c0)
+#define RX_SA_OK_PKTS_HIGH_BASE              (MACSEC_RX_MIB_BASE + 0x500)
+
+#define AN_MASK                     0x3
+
+
+#define PHY_REG_MAX_LEN         16
+#define MII_ADDR_C45  (1<<30)
+#define PHY_DBG_CTRL_REG         0x1d    /* Debug Access Control register*/
+#define PHY_DBG_DATA_REG         0x1e    /* Debug Access Data register */
+
+enum phy_layer_t {
+	PHY_MII          = 0,
+	PHY_MMD3         = 1,
+	PHY_MMD7         = 2,
+	PHY_DEBUG        = 3,
+};
+
+/*********** mii extension register ****************/
+/* MMD device address, 0, 8-28: Reserved */
+#define MMD_PMA_PMD_ADDR        1
+#define MMD_WIS_ADDR            2
+#define MMD_PCS_ADDR            3
+#define MMD_PHY_XS_ADDR         4
+#define MMD_DTE_XS_ADDR         5
+#define MMD_TC_ADDR             6
+#define MMD_AUTONE_ADDR         7
+#define MMD_CLAUSE22_EXT_ADDR   29
+#define MMD_VENDOR1_ADDR        30
+#define MMD_VENDOR2_ADDR        31
+
+struct secy_sci_t {
+	u8  addr[6];
+	u16 port;
+
+};
+struct secy_mac_t {
+	u8   addr[6];
+};
+struct secy_rx_sc_policy_action_t {
+	u32   rx_sc_index;
+	u8    decryption_offset;
+
+};
+struct secy_rx_sc_policy_rule_t {
+	bool  rule_valid;
+	u32   rule_mask;
+	struct secy_mac_t      mac_da;
+	struct secy_mac_t      mac_sa;
+	u16   ethtype;
+	u16   outer_vlanid;
+	u16   inner_vlanid;
+	struct secy_sci_t rx_sci;
+	u8    rx_tci;
+	bool  bc_flag;
+	struct secy_rx_sc_policy_action_t action;
+};
+struct secy_tx_sc_policy_action_t {
+	u32   tx_sc_index;
+	struct secy_sci_t tx_sci;
+	u8   tx_tci;
+	u8    encryption_offset;
+};
+struct secy_tx_sc_policy_rule_t {
+	bool  rule_valid;
+	u32   rule_mask;
+	struct secy_mac_t      mac_da;
+	struct secy_mac_t      mac_sa;
+	u16   ethtype;
+	u16   outer_vlanid;
+	u16   inner_vlanid;
+	bool  bc_flag;
+	struct secy_tx_sc_policy_action_t action;
+};
+/** SecY special packet type */
+enum secy_packet_type_t {
+	PACKET_STP   = 0,   /*< Spanning Tree Protocol Packet */
+	PACKET_CDP   = 1,   /*< Cisco Discovery Protocol Packet */
+	PACKET_LLDP  = 2,   /*< Link Layer Discovery Protocol Packet */
+};
+enum secy_packet_action_t {
+	PACKET_CRYPTO_OR_DISCARD = 0X0,
+	PACKET_CRYPTO_OR_UPLOAD  = 0X1,
+	PACKET_PLAIN_OR_DISCARD  = 0X2,
+	PACKET_PLAIN_OR_UPLOAD   = 0X3,
+};
+/** SecY loopback type */
+enum secy_loopback_type_t {
+	MACSEC_NORMAL     = 0x0,
+	MACSEC_PHY_LB     = 0x1,
+	MACSEC_SWITCH_LB  = 0x2,
+	MACSEC_BYPASS     = 0x3,
+};
+enum secy_vf_t {
+	STRICT    = 0,
+	CHECKED   = 1,
+	DISABLED  = 2,
+};
+enum secy_cofidentiality_offset_t {
+	SECY_CONFIDENTIALITY_OFFSET_00 = 0, /**< 0  byte */
+	SECY_CONFIDENTIALITY_OFFSET_30 = 1, /**< 30 bytes */
+	SECY_CONFIDENTIALITY_OFFSET_50 = 2, /**< 50 bytes */
+};
+enum secy_cipher_suite_t {
+	SECY_CIPHER_SUITE_128 = 0,
+	SECY_CIPHER_SUITE_256 = 1,
+	SECY_CIPHER_SUITE_XPN_128,
+	SECY_CIPHER_SUITE_XPN_256,
+	SECY_CIPHER_SUITE_MAX,
+};
+enum secy_tx_class_lut_action_t {
+	SECY_TX_CLASS_ACTION_FORWARD,
+	SECY_TX_CLASS_ACTION_BYPASS,
+	SECY_TX_CLASS_ACTION_DROP,
+	SECY_TX_CLASS_ACTION_MAX
+};
+struct secy_tx_class_lut_t {
+	bool valid;
+	enum secy_tx_class_lut_action_t action;
+	u32 channel;
+	u8 da[6];
+	u8 da_mask;		/* first 6 bits are useful */
+	u8 sa[6];
+	u8 sa_mask;		/* first 6 bits are useful */
+	u16 ether_type;
+	u8 ether_type_mask;	/* first 2 bits are useful */
+	bool udf0_valid;
+	u8 udf0_byte;
+	u8 udf0_location;	/* first 6 bits are useful */
+	bool udf1_valid;
+	u8 udf1_byte;
+	u8 udf1_location;	/* first 6 bits are useful */
+	bool udf2_valid;
+	u8 udf2_byte;
+	u8 udf2_location;	/* first 6 bits are useful */
+	bool udf3_valid;
+	u8 udf3_byte;
+	u8 udf3_location;	/* first 6 bits are useful */
+	bool vlan_valid;
+	u8 vlan_valid_mask;	/* first bit is useful */
+	u8 vlan_up;
+	u8 vlan_up_mask;	/* first bit is useful */
+	u16 vlan_id;
+	u8 vlan_id_mask;	/* first 2 bits are useful */
+	/*add for NAPA PHY*/
+	u16 outer_vlanid;
+	u8 sci[8];
+	u8 tci;
+	u8 offset;
+	bool bc_flag;
+	u32 rule_mask;
+};
+enum secy_rx_prc_lut_action_t {
+	SECY_RX_PRC_ACTION_PROCESS,
+	SECY_RX_PRC_ACTION_PROCESS_WITH_SECTAG,
+	SECY_RX_PRC_ACTION_BYPASS,
+	SECY_RX_PRC_ACTION_DROP,
+	SECY_RX_PRC_ACTION_MAX
+};
+struct secy_rx_prc_lut_t {
+	bool valid;
+	bool uncontrolled_port;
+	enum secy_rx_prc_lut_action_t action;
+	u32 channel;
+	u8 sci[8];
+	u8 sci_mask;		/* first 8 bits are useful */
+	u8 tci;
+	u8 tci_mask;		/* first 6 bits are useful */
+	u8 da[6];
+	u8 da_mask;		/* first 6 bits are useful */
+	u8 sa[6];
+	u8 sa_mask;		/* first 6 bits are useful */
+	u16 ether_type;
+	u8 ether_type_mask;	/* first 2 bits are useful */
+	u8 offset;
+	/*add for NAPA PHY*/
+	u16 outer_vlanid;
+	u16 inner_vlanid;
+	bool bc_flag;
+	u32 rule_mask;
+};
+struct secy_sak_t {
+	u8 sak[16];
+	u8 sak1[16];
+	u32 len;
+};
+struct secy_sa_ki_t {
+	u8 ki[16];
+};
+struct secy_tx_sa_mib_t {
+	u64 hit_drop_redirect;
+	u64 protected2_pkts;
+	u64 protected_pkts;
+	u64 encrypted_pkts;
+};
+struct secy_tx_sc_mib_t {
+	u64 protected_pkts;
+	u64 encrypted_pkts;
+	u64 protected_octets;
+	u64 encrypted_octets;
+};
+struct secy_tx_mib_t {
+	u64 ctl_pkts;
+	u64 unknown_sa_pkts;
+	u64 untagged_pkts;
+	u64 too_long;
+	u64 ecc_error_pkts;
+	u64 unctrl_hit_drop_redir_pkts;
+};
+struct secy_rx_sa_mib_t {
+	u64 untagged_hit_pkts;
+	u64 hit_drop_redir_pkts;
+	u64 not_using_sa;
+	u64 unused_sa;
+	u64 not_valid_pkts;
+	u64 invalid_pkts;
+	u64 ok_pkts;
+	u64 late_pkts;
+	u64 delayed_pkts;
+	u64 unchecked_pkts;
+	u64 validated_octets;
+	u64 decrypted_octets;
+};
+struct secy_rx_mib_t {
+	u64 unctrl_prt_tx_octets;
+	u64 ctl_pkts;
+	u64 tagged_miss_pkts;
+	u64 untagged_hit_pkts;
+	u64 notag_pkts;
+	u64 untagged_pkts;
+	u64 bad_tag_pkts;
+	u64 no_sci_pkts;
+	u64 unknown_sci_pkts;
+	u64 ctrl_prt_pass_pkts;
+	u64 unctrl_prt_pass_pkts;
+	u64 ctrl_prt_fail_pkts;
+	u64 unctrl_prt_fail_pkts;
+	u64 too_long_packets;
+	u64 igpoc_ctl_pkts;
+	u64 ecc_error_pkts;
+};
+enum secy_sc_sa_mapping_mode_t {
+	SECY_SC_SA_MAP_1_1 = 0,
+	SECY_SC_SA_MAP_1_2 = 1,
+	SECY_SC_SA_MAP_1_4 = 2,
+	SECY_SC_SA_MAP_MAX = 3
+};
+int nss_macsec_phy_mdio_write(u32 phy_addr, u32 reg_addr, u16 val16);
+int nss_macsec_phy_mdio_read(u32 phy_addr, u32 reg_addr, u16 *val16);
+g_error_t phy_mii_reg_read(u32 secy_id, u32 reg_addr, u16 *p_val16);
+
+
+int qca808x_secy_driver_init(u32 secy_id);
+int qca808x_secy_driver_exit(u32 secy_id);
+
+
+#endif /* __QCA808X_MACSECY_H */
+
