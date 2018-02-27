@@ -365,10 +365,22 @@ u32 nss_macsec_secy_rx_sc_en_get(u32 secy_id, u32 channel, bool *penable)
 {
 	u32 sc_id = 0;
 	struct ig_sc sc;
+	g_error_t rv;
+	struct secy_drv_t *secy_drv;
 
 	SHR_PARAM_CHECK((secy_id < FAL_SECY_ID_NUM) &&
 			(channel < FAL_SECY_CHANNEL_NUM(secy_id)) &&
 			(penable != NULL));
+
+	secy_drv = nss_macsec_secy_ops_get(secy_id);
+	if (secy_drv != NULL) {
+		if (secy_drv->secy_rx_sc_en_get == NULL)
+			rv = ERROR_NOT_SUPPORT;
+		else
+			rv = secy_drv->secy_rx_sc_en_get(secy_id, channel,
+				penable);
+		return rv;
+	}
 
 	sc_id = fal_rx_channel_2_sc_id(secy_id, channel);
 
@@ -383,9 +395,21 @@ u32 nss_macsec_secy_rx_sc_en_set(u32 secy_id, u32 channel, bool enable)
 {
 	u32 sc_id = 0;
 	struct ig_sc sc;
+	g_error_t rv;
+	struct secy_drv_t *secy_drv;
 
 	SHR_PARAM_CHECK((secy_id < FAL_SECY_ID_NUM) &&
 			(channel < FAL_SECY_CHANNEL_NUM(secy_id)));
+
+	secy_drv = nss_macsec_secy_ops_get(secy_id);
+	if (secy_drv != NULL) {
+		if (secy_drv->secy_rx_sc_en_set == NULL)
+			rv = ERROR_NOT_SUPPORT;
+		else
+			rv = secy_drv->secy_rx_sc_en_set(secy_id, channel,
+				enable);
+		return rv;
+	}
 
 	sc_id = fal_rx_channel_2_sc_id(secy_id, channel);
 
@@ -904,10 +928,21 @@ u32 nss_macsec_secy_rx_sa_del(u32 secy_id, u32 channel, u32 an)
 	u32 sc_id = 0;
 	u32 sa_id = 0;
 	struct ig_sa sa;
+	g_error_t rv;
+	struct secy_drv_t *secy_drv;
 
 	SHR_PARAM_CHECK((secy_id < FAL_SECY_ID_NUM) &&
 			(channel < FAL_SECY_CHANNEL_NUM(secy_id)) &&
 			(an < FAL_SECY_SA_NUM_PER_SC(secy_id)));
+
+	secy_drv = nss_macsec_secy_ops_get(secy_id);
+	if (secy_drv != NULL) {
+		if (secy_drv->secy_rx_sa_del == NULL)
+			rv = ERROR_NOT_SUPPORT;
+		else
+			rv = secy_drv->secy_rx_sa_del(secy_id, channel, an);
+		return rv;
+	}
 
 	sc_id = fal_rx_channel_2_sc_id(secy_id, channel);
 	sa_id = IG_SA_INDEX_MIN + sc_id + an;
@@ -922,6 +957,17 @@ u32 nss_macsec_secy_rx_sa_del_all(u32 secy_id)
 {
 	int i = 0;
 	struct ig_sa sa;
+	g_error_t rv;
+	struct secy_drv_t *secy_drv;
+
+	secy_drv = nss_macsec_secy_ops_get(secy_id);
+	if (secy_drv != NULL) {
+		if (secy_drv->secy_rx_sa_del_all == NULL)
+			rv = ERROR_NOT_SUPPORT;
+		else
+			rv = secy_drv->secy_rx_sa_del_all(secy_id);
+		return rv;
+	}
 
 	memset(&sa, 0, sizeof(sa));
 
@@ -1013,11 +1059,23 @@ u32 nss_macsec_secy_rx_sa_in_used_get(u32 secy_id, u32 channel,
 	u32 sc_id = 0;
 	u32 sa_id = 0;
 	struct ig_sa sa;
+	g_error_t rv;
+	struct secy_drv_t *secy_drv;
 
 	SHR_PARAM_CHECK((secy_id < FAL_SECY_ID_NUM) &&
 			(channel < FAL_SECY_CHANNEL_NUM(secy_id)) &&
 			(an < FAL_SECY_SA_NUM_PER_SC(secy_id)) &&
 			(p_in_used != NULL));
+
+	secy_drv = nss_macsec_secy_ops_get(secy_id);
+	if (secy_drv != NULL) {
+		if (secy_drv->secy_rx_sa_in_used_get == NULL)
+			rv = ERROR_NOT_SUPPORT;
+		else
+			rv = secy_drv->secy_rx_sa_in_used_get(secy_id, channel,
+				an, p_in_used);
+		return rv;
+	}
 
 	sc_id = fal_rx_channel_2_sc_id(secy_id, channel);
 	sa_id = IG_SA_INDEX_MIN + sc_id + an;
@@ -1102,6 +1160,18 @@ u32 nss_macsec_secy_rx_pn_threshold_set(u32 secy_id, u32 pn_threshold)
 u32 nss_macsec_secy_rx_replay_protect_get(u32 secy_id, u32 *enable)
 {
 	union insy_ectrl_en_u value;
+	g_error_t rv;
+	struct secy_drv_t *secy_drv;
+
+	secy_drv = nss_macsec_secy_ops_get(secy_id);
+	if (secy_drv != NULL) {
+		if (secy_drv->secy_rx_replay_protect_get == NULL)
+			rv = ERROR_NOT_SUPPORT;
+		else
+			rv = secy_drv->secy_rx_replay_protect_get(secy_id,
+				(bool *)enable);
+		return rv;
+	}
 
 	value.val = 0;
 	SHR_RET_ON_ERR(insy_ectrl_en_get(secy_id, &value));
@@ -1114,6 +1184,18 @@ u32 nss_macsec_secy_rx_replay_protect_get(u32 secy_id, u32 *enable)
 u32 nss_macsec_secy_rx_replay_protect_set(u32 secy_id, u32 enable)
 {
 	union insy_ectrl_en_u value;
+	g_error_t rv;
+	struct secy_drv_t *secy_drv;
+
+	secy_drv = nss_macsec_secy_ops_get(secy_id);
+	if (secy_drv != NULL) {
+		if (secy_drv->secy_rx_replay_protect_set == NULL)
+			rv = ERROR_NOT_SUPPORT;
+		else
+			rv = secy_drv->secy_rx_replay_protect_set(secy_id,
+				(bool)enable);
+		return rv;
+	}
 
 	value.val = 0;
 	SHR_RET_ON_ERR(insy_ectrl_en_get(secy_id, &value));
@@ -1131,6 +1213,28 @@ u32 nss_macsec_secy_rx_replay_protect_set(u32 secy_id, u32 enable)
 u32 nss_macsec_secy_rx_validate_frame_get(u32 secy_id, u32 *mode)
 {
 	union csr_igsy_ctrl_u value;
+	g_error_t rv;
+	struct secy_drv_t *secy_drv;
+	enum secy_vf_t secy_vf_mode;
+
+	secy_drv = nss_macsec_secy_ops_get(secy_id);
+	if (secy_drv != NULL) {
+		if (secy_drv->secy_rx_validate_frame_get == NULL) {
+			rv = ERROR_NOT_SUPPORT;
+		} else {
+			rv = secy_drv->secy_rx_validate_frame_get(secy_id,
+				&secy_vf_mode);
+			if (secy_vf_mode == STRICT)
+				*mode = FAL_RX_SC_VALIDATE_FRAME_STRICT;
+			else if (secy_vf_mode == CHECKED)
+				*mode = FAL_RX_SC_VALIDATE_FRAME_CHECK;
+			else if (secy_vf_mode == DISABLED)
+				*mode = FAL_RX_SC_VALIDATE_FRAME_DISABLED;
+			else
+				rv = ERROR_NOT_SUPPORT;
+		}
+		return rv;
+	}
 
 	value.val = 0;
 	SHR_RET_ON_ERR(csr_igsy_ctrl_get(secy_id, &value));
@@ -1142,6 +1246,29 @@ u32 nss_macsec_secy_rx_validate_frame_get(u32 secy_id, u32 *mode)
 u32 nss_macsec_secy_rx_validate_frame_set(u32 secy_id, u32 mode)
 {
 	union csr_igsy_ctrl_u value;
+	g_error_t rv;
+	struct secy_drv_t *secy_drv;
+	enum secy_vf_t secy_vf_mode = STRICT;
+
+	secy_drv = nss_macsec_secy_ops_get(secy_id);
+	if (secy_drv != NULL) {
+		if (secy_drv->secy_rx_validate_frame_set == NULL) {
+			rv = ERROR_NOT_SUPPORT;
+		} else {
+			if (mode == FAL_RX_SC_VALIDATE_FRAME_STRICT)
+				secy_vf_mode = STRICT;
+			else if (mode == FAL_RX_SC_VALIDATE_FRAME_CHECK)
+				secy_vf_mode = CHECKED;
+			else if (mode == FAL_RX_SC_VALIDATE_FRAME_DISABLED)
+				secy_vf_mode = DISABLED;
+			else
+				rv = ERROR_NOT_SUPPORT;
+
+			rv = secy_drv->secy_rx_validate_frame_set(secy_id,
+				secy_vf_mode);
+		}
+		return rv;
+	}
 
 	value.val = 0;
 	SHR_RET_ON_ERR(csr_igsy_ctrl_get(secy_id, &value));

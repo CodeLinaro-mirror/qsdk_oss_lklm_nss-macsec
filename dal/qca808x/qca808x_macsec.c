@@ -41,6 +41,7 @@ static g_error_t phy_mii_reg_write(u32 secy_id, u32  reg_addr, u16 val16)
 	phy_addr = secy_id_to_phy_addr(secy_id);
 
 	ret = nss_macsec_phy_mdio_write(phy_addr, reg_addr, val16);
+
 	return ret;
 }
 g_error_t phy_mii_reg_read(u32 secy_id, u32 reg_addr, u16 *p_val16)
@@ -1101,6 +1102,134 @@ g_error_t qca808x_secy_rx_prc_lut_clear_all(u32 secy_id)
 
 	return ERROR_OK;
 }
+g_error_t qca808x_secy_rx_validate_frames_set(u32 secy_id,
+	enum secy_vf_t value)
+{
+	u32 sc_index = 0;
+
+	SHR_RET_ON_ERR(qca808x_secy_rx_sc_validate_frames_set(secy_id,
+		sc_index, value));
+
+	return ERROR_OK;
+}
+g_error_t qca808x_secy_rx_validate_frames_get(u32 secy_id,
+	enum secy_vf_t *value)
+{
+	u32 sc_index = 0;
+
+	SHR_RET_ON_ERR(qca808x_secy_rx_sc_validate_frames_get(secy_id,
+		sc_index, value));
+
+	return ERROR_OK;
+}
+g_error_t qca808x_secy_rx_replay_protect_en_set(u32 secy_id,
+	bool enable)
+{
+	u32 sc_index = 0;
+
+	SHR_RET_ON_ERR(qca808x_secy_rx_sc_replay_protect_en_set(secy_id,
+		sc_index, enable));
+
+	return ERROR_OK;
+}
+g_error_t qca808x_secy_rx_replay_protect_en_get(u32 secy_id,
+	bool *enable)
+{
+	u32 sc_index = 0;
+
+	SHR_RET_ON_ERR(qca808x_secy_rx_sc_replay_protect_en_get(secy_id,
+		sc_index, enable));
+
+	return ERROR_OK;
+}
+g_error_t qca808x_secy_rx_sa_del(u32 secy_id, u32 sc_index, u32 an)
+{
+	u16 val = 0, chan_shift;
+	u32 reg, sa_index;
+
+	if ((sc_index > SECY_SC_IDX_MAX) ||
+			(an > SECY_SA_IDX_MAX)) {
+		return ERROR_PARAM;
+	}
+
+	sa_index = an;
+	reg = sc_index/4;
+	chan_shift = 2*((sc_index%4) * 2 + sa_index);
+
+	reg += MACSEC_RX_AN_BASE;
+
+	val  = (0x0 << chan_shift);
+
+	return phy_access_reg_mask_write(secy_id, PHY_MMD3, reg,
+		(AN_MASK<<chan_shift), val);
+}
+g_error_t qca808x_secy_rx_sa_del_all(u32 secy_id)
+{
+	u32 sc_index = 0, sa_index = 0;
+
+	for (sc_index = 0; sc_index <= SECY_SC_IDX_MAX; sc_index++) {
+		for (sa_index = 0; sa_index <= SECY_SA_IDX_MAX; sa_index++)
+			qca808x_secy_rx_sa_del(secy_id, sc_index, sa_index);
+	}
+
+	return ERROR_OK;
+}
+g_error_t qca808x_secy_rx_sa_in_used_get(u32 secy_id, u32 sc_index,
+	u32 sa_index, bool *p_in_used)
+{
+	if ((sc_index > SECY_SC_IDX_MAX) ||
+			(sa_index > SECY_SA_IDX_MAX)) {
+		return ERROR_PARAM;
+	}
+
+	SHR_RET_ON_ERR(qca808x_secy_rx_sa_en_get(secy_id, sc_index,
+		sa_index, p_in_used));
+
+	return ERROR_OK;
+}
+g_error_t qca808x_secy_rx_sc_en_set(u32 secy_id, u32 sc_index,
+	bool enable)
+{
+	struct secy_rx_sc_policy_rule_t rule;
+
+	memset(&rule, 0, sizeof(rule));
+
+	if (sc_index > SECY_SC_IDX_MAX)
+		return ERROR_PARAM;
+
+	SHR_RET_ON_ERR(qca808x_secy_rx_sc_policy_get(secy_id, sc_index, &rule));
+
+	rule.action.rx_sc_index = sc_index;
+
+	if (enable == TRUE)
+		rule.rule_valid = TRUE;
+	else
+		rule.rule_valid = FALSE;
+
+	SHR_RET_ON_ERR(qca808x_secy_rx_sc_policy_set(secy_id, sc_index, &rule));
+
+	return ERROR_OK;
+
+}
+g_error_t qca808x_secy_rx_sc_en_get(u32 secy_id, u32 sc_index, bool *enable)
+{
+	struct secy_rx_sc_policy_rule_t rule;
+
+	memset(&rule, 0, sizeof(rule));
+
+	if (sc_index > SECY_SC_IDX_MAX)
+		return ERROR_PARAM;
+
+	SHR_RET_ON_ERR(qca808x_secy_rx_sc_policy_get(secy_id, sc_index, &rule));
+
+	if (rule.rule_valid == TRUE)
+		*enable = TRUE;
+	else
+		*enable = FALSE;
+
+	return ERROR_OK;
+
+}
 
 g_error_t qca808x_secy_tx_sc_policy_set(u32 secy_id, u32 rule_index,
 	struct secy_tx_sc_policy_rule_t *rule)
@@ -1884,6 +2013,142 @@ g_error_t qca808x_secy_tx_class_lut_clear_all(u32 secy_id)
 
 	return ERROR_OK;
 }
+g_error_t qca808x_secy_tx_sa_create(u32 secy_id, u32 sc_index, u32 an)
+{
+	u16 val = 0;
+	u16 reg, chan_shift;
+	u32 sa_index;
+
+	if ((sc_index > SECY_SC_IDX_MAX) ||
+			(an > SECY_SA_IDX_MAX)) {
+		return ERROR_PARAM;
+	}
+
+	sa_index = an;
+	reg = sc_index/4;
+	chan_shift = 2*((sc_index%4) * 2 + sa_index);
+
+	reg += MACSEC_TX_AN_BASE;
+
+	val = (((u16)an&AN_MASK) << chan_shift);
+
+	return phy_access_reg_mask_write(secy_id, PHY_MMD3, reg,
+		(AN_MASK << chan_shift), val);
+}
+
+g_error_t qca808x_secy_tx_sa_del(u32 secy_id, u32 sc_index, u32 an)
+{
+	u16 val = 0, chan_shift;
+	u32 reg, sa_index;
+
+	if ((sc_index > SECY_SC_IDX_MAX) ||
+			(an > SECY_SA_IDX_MAX)) {
+		return ERROR_PARAM;
+	}
+
+	sa_index = an;
+	reg = sc_index/4;
+	chan_shift = 2*((sc_index%4) * 2 + sa_index);
+
+	reg += MACSEC_TX_AN_BASE;
+
+	val = (0x0 << chan_shift);
+
+	return phy_access_reg_mask_write(secy_id, PHY_MMD3, reg,
+		(AN_MASK << chan_shift), val);
+
+}
+g_error_t qca808x_secy_tx_sa_del_all(u32 secy_id)
+{
+	u32 sc_index = 0, sa_index = 0;
+
+	for (sc_index = 0; sc_index <= SECY_SC_IDX_MAX; sc_index++) {
+		for (sa_index = 0; sa_index <= SECY_SA_IDX_MAX; sa_index++)
+			qca808x_secy_tx_sa_del(secy_id, sc_index, sa_index);
+	}
+
+	return ERROR_OK;
+}
+g_error_t qca808x_secy_tx_sa_in_used_get(u32 secy_id, u32 sc_index,
+	u32 sa_index, bool *p_in_used)
+{
+	if ((sc_index > SECY_SC_IDX_MAX) ||
+			(sa_index > SECY_SA_IDX_MAX)) {
+		return ERROR_PARAM;
+	}
+
+	SHR_RET_ON_ERR(qca808x_secy_tx_sa_en_get(secy_id, sc_index,
+		sa_index, p_in_used));
+
+	return ERROR_OK;
+}
+g_error_t qca808x_secy_tx_sc_en_set(u32 secy_id, u32 sc_index, bool enable)
+{
+	struct secy_tx_sc_policy_rule_t rule;
+
+	memset(&rule, 0, sizeof(rule));
+
+	if (sc_index > SECY_SC_IDX_MAX)
+		return ERROR_PARAM;
+
+	SHR_RET_ON_ERR(qca808x_secy_tx_sc_policy_get(secy_id, sc_index, &rule));
+
+	rule.action.tx_sc_index = sc_index;
+
+	if (enable == TRUE)
+		rule.rule_valid = TRUE;
+	else
+		rule.rule_valid = FALSE;
+
+	SHR_RET_ON_ERR(qca808x_secy_tx_sc_policy_set(secy_id, sc_index, &rule));
+
+	return ERROR_OK;
+
+}
+g_error_t qca808x_secy_tx_sc_en_get(u32 secy_id, u32 sc_index, bool *enable)
+{
+	struct secy_tx_sc_policy_rule_t rule;
+
+	memset(&rule, 0, sizeof(rule));
+
+	if (sc_index > SECY_SC_IDX_MAX)
+		return ERROR_PARAM;
+
+	SHR_RET_ON_ERR(qca808x_secy_tx_sc_policy_get(secy_id, sc_index, &rule));
+
+
+	if (rule.rule_valid == TRUE)
+		*enable = TRUE;
+	else
+		*enable = FALSE;
+
+	return ERROR_OK;
+
+}
+g_error_t qca808x_secy_tx_class_lut_sci_update(u32 secy_id, u32 sc_index,
+	u8 *sci)
+{
+	struct secy_tx_sc_policy_rule_t rule;
+	u32 i = 0;
+
+	if ((sc_index > SECY_SC_IDX_MAX) || (sci == NULL))
+		return ERROR_PARAM;
+
+	memset(&rule, 0, sizeof(rule));
+
+	SHR_RET_ON_ERR(qca808x_secy_tx_sc_policy_get(secy_id, sc_index, &rule));
+
+	rule.action.tx_sc_index = sc_index;
+
+	for (i = 0; i < 6; i++)
+		rule.action.tx_sci.addr[i] = sci[i];
+
+	rule.action.tx_sci.port = (((u16)sci[6]) << 8) | ((u16)sci[7]);
+
+	SHR_RET_ON_ERR(qca808x_secy_tx_sc_policy_set(secy_id, sc_index, &rule));
+
+	return ERROR_OK;
+}
 
 static u32 qca808x_addr(u32 sc_index, u32 sa_index, u32 addr)
 {
@@ -2163,25 +2428,6 @@ g_error_t qca808x_secy_rx_mib_clear(u32 secy_id)
 	memset(&mib, 0, sizeof(mib));
 
 	SHR_RET_ON_ERR(qca808x_secy_rx_mib_get(secy_id, &mib));
-
-	return ERROR_OK;
-}
-
-g_error_t qca808x_secy_init(u32 secy_id)
-{
-	u32 sc, sa;
-
-	qca808x_secy_tx_mib_clear(secy_id);
-	qca808x_secy_rx_mib_clear(secy_id);
-	for (sc = 0; sc < SECY_POLICY_IDX_MAX + 1; sc++) {
-		qca808x_secy_tx_sc_mib_clear(secy_id, sc);
-		for (sa = 0; sa < SECY_POLICY_IDX_MAX + 1; sa++) {
-			qca808x_secy_tx_sa_mib_clear(secy_id,
-			sc, sa);
-			qca808x_secy_rx_sa_mib_clear(secy_id,
-			sc, sa);
-		}
-	}
 
 	return ERROR_OK;
 }
@@ -2600,6 +2846,48 @@ g_error_t qca808x_secy_udf_ethtype_get(u32 secy_id, bool *enable, u16 *type)
 
 	return ERROR_OK;
 }
+g_error_t qca808x_secy_forward_az_pattern_en_set(u32 secy_id, bool enable)
+{
+
+	SHR_RET_ON_ERR(PHY_REG_FIELD_WRITE
+		(secy_id, PHY_MMD3, MACSEC_FORWARD_AZ_PATTERN_EN_CTRL,
+		E_FORWARD_PATTERN_EN, enable));
+	SHR_RET_ON_ERR(PHY_REG_FIELD_WRITE
+		(secy_id, PHY_MMD3, MACSEC_FORWARD_AZ_PATTERN_EN_CTRL,
+		I_FORWARD_PATTERN_EN, enable));
+
+	return ERROR_OK;
+
+}
+g_error_t qca808x_secy_init(u32 secy_id)
+{
+	u32 sc, sa;
+	u32 pn = 1;
+
+	qca808x_secy_tx_mib_clear(secy_id);
+	qca808x_secy_rx_mib_clear(secy_id);
+	qca808x_secy_forward_az_pattern_en_set(secy_id, TRUE);
+	for (sc = 0; sc < SECY_SC_IDX_MAX + 1; sc++) {
+		qca808x_secy_tx_sc_mib_clear(secy_id, sc);
+		for (sa = 0; sa < SECY_SA_IDX_MAX + 1; sa++) {
+			qca808x_secy_tx_sa_mib_clear(secy_id,
+				sc, sa);
+			qca808x_secy_rx_sa_mib_clear(secy_id,
+				sc, sa);
+			/*init next pn*/
+			qca808x_secy_tx_sa_npn_set(secy_id, sc,
+				sa, pn);
+			qca808x_secy_rx_sa_npn_set(secy_id, sc,
+				sa, pn);
+			qca808x_secy_tx_sa_xpn_set(secy_id, sc,
+				sa, pn);
+			qca808x_secy_rx_sa_xpn_set(secy_id, sc,
+				sa, pn);
+		}
+	}
+
+	return ERROR_OK;
+}
 
 static struct secy_drv_t *qca808x_secy_ops;
 static int qca808x_secy_ops_init(void)
@@ -2686,7 +2974,21 @@ static int qca808x_secy_ops_init(void)
 	qca808x_secy_ops->secy_rx_sa_ki_get = qca808x_secy_rx_sa_ki_get;
 	qca808x_secy_ops->secy_rx_prc_lut_clear = qca808x_secy_rx_prc_lut_clear;
 	qca808x_secy_ops->secy_rx_prc_lut_clear_all =
-	qca808x_secy_rx_prc_lut_clear_all;
+		qca808x_secy_rx_prc_lut_clear_all;
+	qca808x_secy_ops->secy_rx_validate_frame_set =
+		qca808x_secy_rx_validate_frames_set;
+	qca808x_secy_ops->secy_rx_validate_frame_get =
+		qca808x_secy_rx_validate_frames_get;
+	qca808x_secy_ops->secy_rx_replay_protect_set =
+		qca808x_secy_rx_replay_protect_en_set;
+	qca808x_secy_ops->secy_rx_replay_protect_get =
+		qca808x_secy_rx_replay_protect_en_get;
+	qca808x_secy_ops->secy_rx_sa_del = qca808x_secy_rx_sa_del;
+	qca808x_secy_ops->secy_rx_sa_del_all = qca808x_secy_rx_sa_del_all;
+	qca808x_secy_ops->secy_rx_sa_in_used_get =
+		qca808x_secy_rx_sa_in_used_get;
+	qca808x_secy_ops->secy_rx_sc_en_set = qca808x_secy_rx_sc_en_set;
+	qca808x_secy_ops->secy_rx_sc_en_get = qca808x_secy_rx_sc_en_get;
 
 	/*tx */
 	qca808x_secy_ops->secy_tx_sc_in_used_get =
@@ -2728,7 +3030,16 @@ static int qca808x_secy_ops_init(void)
 	qca808x_secy_ops->secy_tx_class_lut_clear =
 		qca808x_secy_tx_class_lut_clear;
 	qca808x_secy_ops->secy_tx_class_lut_clear_all =
-	qca808x_secy_tx_class_lut_clear_all;
+		qca808x_secy_tx_class_lut_clear_all;
+	qca808x_secy_ops->secy_tx_sa_create = qca808x_secy_tx_sa_create;
+	qca808x_secy_ops->secy_tx_sa_del = qca808x_secy_tx_sa_del;
+	qca808x_secy_ops->secy_tx_sa_del_all = qca808x_secy_tx_sa_del_all;
+	qca808x_secy_ops->secy_tx_sa_in_used_get =
+		qca808x_secy_tx_sa_in_used_get;
+	qca808x_secy_ops->secy_tx_sc_en_set = qca808x_secy_tx_sc_en_set;
+	qca808x_secy_ops->secy_tx_sc_en_get = qca808x_secy_tx_sc_en_get;
+	qca808x_secy_ops->secy_tx_class_lut_sci_update =
+		qca808x_secy_tx_class_lut_sci_update;
 
 
 	/*mib*/

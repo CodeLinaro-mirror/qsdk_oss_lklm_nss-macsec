@@ -296,6 +296,18 @@
 #define SOFTWARE_BYPASS               BIT_NULL
 #define SOFTWARE_EN               0x3
 
+	/* macsec forward az pattern register */
+#define MACSEC_FORWARD_AZ_PATTERN_EN_CTRL      0xC062
+
+#define E_FORWARD_PATTERN_EN               BIT_13
+#define E_FORWARD_PATTERN_EN_OFFSET        13
+#define E_FORWARD_PATTERN_EN_LEN           1
+
+#define I_FORWARD_PATTERN_EN               BIT_12
+#define I_FORWARD_PATTERN_EN_OFFSET        12
+#define I_FORWARD_PATTERN_EN_LEN           1
+
+
 
 /* EPR block */
 

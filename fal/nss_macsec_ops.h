@@ -113,6 +113,23 @@ typedef g_error_t (*secy_rx_sa_ki_set_func)(u32 secy_id, u32 channel, u32 an,
 	struct secy_sa_ki_t *ki);
 typedef g_error_t (*secy_rx_prc_lut_clear_func)(u32 secy_id, u32 index);
 typedef g_error_t (*secy_rx_prc_lut_clear_all_func)(u32 secy_id);
+typedef g_error_t (*secy_rx_sa_del_func)(u32 secy_id, u32 channel, u32 an);
+typedef g_error_t (*secy_rx_sa_del_all_func)(u32 secy_id);
+
+typedef g_error_t (*secy_rx_sa_in_used_get_func)(u32 secy_id, u32 channel,
+	u32 an, bool *p_in_used);
+typedef g_error_t (*secy_rx_replay_protect_get_func)(u32 secy_id,
+	bool *enable);
+typedef g_error_t (*secy_rx_replay_protect_set_func)(u32 secy_id,
+	bool enable);
+typedef g_error_t (*secy_rx_validate_frame_get_func)(u32 secy_id,
+	enum secy_vf_t *pmode);
+typedef g_error_t (*secy_rx_validate_frame_set_func)(u32 secy_id,
+	enum secy_vf_t mode);
+typedef g_error_t (*secy_rx_sc_en_get_func)(u32 secy_id, u32 channel,
+	bool *penable);
+typedef g_error_t (*secy_rx_sc_en_set_func)(u32 secy_id, u32 channel,
+	bool enable);
 
 
 /* tx */
@@ -173,6 +190,17 @@ typedef g_error_t (*secy_tx_sa_ki_set_func)(u32 secy_id, u32 channel, u32 an,
 	struct secy_sa_ki_t *ki);
 typedef g_error_t (*secy_tx_class_lut_clear_func)(u32 secy_id, u32 index);
 typedef g_error_t (*secy_tx_class_lut_clear_all_func)(u32 secy_id);
+typedef g_error_t (*secy_tx_sa_create_func)(u32 secy_id, u32 channel, u32 an);
+typedef g_error_t (*secy_tx_sa_del_func)(u32 secy_id, u32 channel, u32 an);
+typedef g_error_t (*secy_tx_sa_del_all_func)(u32 secy_id);
+typedef g_error_t (*secy_tx_sa_in_used_get_func)(u32 secy_id, u32 channel,
+	u32 an, bool *p_in_used);
+typedef g_error_t (*secy_tx_sc_en_get_func)(u32 secy_id, u32 channel,
+	bool *penable);
+typedef g_error_t (*secy_tx_sc_en_set_func)(u32 secy_id, u32 channel,
+	bool enable);
+typedef g_error_t (*secy_tx_class_lut_sci_update_func)(u32 secy_id,
+	u32 channel, u8 *sci);
 
 
 /*mib */
@@ -247,6 +275,15 @@ struct secy_drv_t {
 	secy_rx_sa_ki_get_func secy_rx_sa_ki_get;
 	secy_rx_prc_lut_clear_func secy_rx_prc_lut_clear;
 	secy_rx_prc_lut_clear_all_func secy_rx_prc_lut_clear_all;
+	secy_rx_sa_in_used_get_func secy_rx_sa_in_used_get;
+	secy_rx_replay_protect_get_func secy_rx_replay_protect_get;
+	secy_rx_replay_protect_set_func secy_rx_replay_protect_set;
+	secy_rx_validate_frame_get_func secy_rx_validate_frame_get;
+	secy_rx_validate_frame_set_func secy_rx_validate_frame_set;
+	secy_rx_sc_en_get_func secy_rx_sc_en_get;
+	secy_rx_sc_en_set_func secy_rx_sc_en_set;
+	secy_rx_sa_del_func secy_rx_sa_del;
+	secy_rx_sa_del_all_func secy_rx_sa_del_all;
 
 	/*tx*/
 	secy_tx_sc_in_used_get_func secy_tx_sc_in_used_get;
@@ -280,6 +317,13 @@ struct secy_drv_t {
 	secy_tx_sa_ki_get_func secy_tx_sa_ki_get;
 	secy_tx_class_lut_clear_func secy_tx_class_lut_clear;
 	secy_tx_class_lut_clear_all_func secy_tx_class_lut_clear_all;
+	secy_tx_sa_create_func secy_tx_sa_create;
+	secy_tx_sa_del_func secy_tx_sa_del;
+	secy_tx_sa_del_all_func secy_tx_sa_del_all;
+	secy_tx_sa_in_used_get_func secy_tx_sa_in_used_get;
+	secy_tx_sc_en_get_func secy_tx_sc_en_get;
+	secy_tx_sc_en_set_func secy_tx_sc_en_set;
+	secy_tx_class_lut_sci_update_func secy_tx_class_lut_sci_update;
 
 	/*mib*/
 	secy_tx_sa_mib_get_func secy_tx_sa_mib_get;

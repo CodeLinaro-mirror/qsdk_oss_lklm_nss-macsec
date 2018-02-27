@@ -514,8 +514,20 @@ static u32 nss_macsec_secy_tx_class_lut_sci_update(u32 secy_id,
 {
 	int i;
 	struct eg_class_lut egc;
+	g_error_t rv;
+	struct secy_drv_t *secy_drv;
 
 	memset(&egc, 0 , sizeof(egc));
+
+	secy_drv = nss_macsec_secy_ops_get(secy_id);
+	if (secy_drv != NULL) {
+		if (secy_drv->secy_tx_class_lut_sci_update == NULL)
+			rv = ERROR_NOT_SUPPORT;
+		else
+			rv = secy_drv->secy_tx_class_lut_sci_update(secy_id,
+				(u32)sc_id, sci);
+		return rv;
+	}
 
 	for (i = 0; i < FAL_TX_CLASS_LUT_NUM; i++) {
 		SHR_RET_ON_ERR(eg_class_lut_table_get(secy_id, i,
@@ -582,10 +594,22 @@ u32 nss_macsec_secy_tx_sc_en_get(u32 secy_id, u32 channel, bool *penable)
 {
 	u32 sc_id = 0;
 	struct eg_sc sc;
+	g_error_t rv;
+	struct secy_drv_t *secy_drv;
 
 	SHR_PARAM_CHECK((secy_id < FAL_SECY_ID_NUM) &&
 			(channel < FAL_SECY_CHANNEL_NUM(secy_id)) &&
 			(penable != NULL));
+
+	secy_drv = nss_macsec_secy_ops_get(secy_id);
+	if (secy_drv != NULL) {
+		if (secy_drv->secy_tx_sc_en_get == NULL)
+			rv = ERROR_NOT_SUPPORT;
+		else
+			rv = secy_drv->secy_tx_sc_en_get(secy_id, channel,
+				penable);
+		return rv;
+	}
 
 	sc_id = fal_tx_channel_2_sc_id(secy_id, channel);
 
@@ -600,9 +624,21 @@ u32 nss_macsec_secy_tx_sc_en_set(u32 secy_id, u32 channel, bool enable)
 {
 	u32 sc_id = 0;
 	struct eg_sc sc;
+	g_error_t rv;
+	struct secy_drv_t *secy_drv;
 
 	SHR_PARAM_CHECK((secy_id < FAL_SECY_ID_NUM) &&
 			(channel < FAL_SECY_CHANNEL_NUM(secy_id)));
+
+	secy_drv = nss_macsec_secy_ops_get(secy_id);
+	if (secy_drv != NULL) {
+		if (secy_drv->secy_tx_sc_en_set == NULL)
+			rv = ERROR_NOT_SUPPORT;
+		else
+			rv = secy_drv->secy_tx_sc_en_set(secy_id, channel,
+				enable);
+		return rv;
+	}
 
 	sc_id = fal_tx_channel_2_sc_id(secy_id, channel);
 
@@ -1109,10 +1145,21 @@ u32 nss_macsec_secy_tx_sa_create(u32 secy_id, u32 channel, u32 an)
 	u32 sc_id = 0;
 	u32 sa_id = 0;
 	struct eg_sa sa;
+	g_error_t rv;
+	struct secy_drv_t *secy_drv;
 
 	SHR_PARAM_CHECK((secy_id < FAL_SECY_ID_NUM) &&
 			(channel < FAL_SECY_CHANNEL_NUM(secy_id)) &&
 			(an < FAL_SECY_SA_NUM_PER_SC(secy_id)));
+
+	secy_drv = nss_macsec_secy_ops_get(secy_id);
+	if (secy_drv != NULL) {
+		if (secy_drv->secy_tx_sa_create == NULL)
+			rv = ERROR_NOT_SUPPORT;
+		else
+			rv = secy_drv->secy_tx_sa_create(secy_id, channel, an);
+		return rv;
+	}
 
 	sc_id = fal_tx_channel_2_sc_id(secy_id, channel);
 	sa_id = EG_SA_INDEX_MIN + sc_id + an;
@@ -1196,10 +1243,21 @@ u32 nss_macsec_secy_tx_sa_del(u32 secy_id, u32 channel, u32 an)
 	u32 sc_id = 0;
 	u32 sa_id = 0;
 	struct eg_sa sa;
+	g_error_t rv;
+	struct secy_drv_t *secy_drv;
 
 	SHR_PARAM_CHECK((secy_id < FAL_SECY_ID_NUM) &&
 			(channel < FAL_SECY_CHANNEL_NUM(secy_id)) &&
 			(an < FAL_SECY_SA_NUM_PER_SC(secy_id)));
+
+	secy_drv = nss_macsec_secy_ops_get(secy_id);
+	if (secy_drv != NULL) {
+		if (secy_drv->secy_tx_sa_del == NULL)
+			rv = ERROR_NOT_SUPPORT;
+		else
+			rv = secy_drv->secy_tx_sa_del(secy_id, channel, an);
+		return rv;
+	}
 
 	sc_id = fal_tx_channel_2_sc_id(secy_id, channel);
 	sa_id = EG_SA_INDEX_MIN + sc_id + an;
@@ -1216,8 +1274,19 @@ u32 nss_macsec_secy_tx_sa_del_all(u32 secy_id)
 {
 	int i = 0;
 	struct eg_sa sa;
+	g_error_t rv;
+	struct secy_drv_t *secy_drv;
 
 	memset(&sa, 0, sizeof(sa));
+
+	secy_drv = nss_macsec_secy_ops_get(secy_id);
+	if (secy_drv != NULL) {
+		if (secy_drv->secy_tx_sa_del_all == NULL)
+			rv = ERROR_NOT_SUPPORT;
+		else
+			rv = secy_drv->secy_tx_sa_del_all(secy_id);
+		return rv;
+	}
 
 	for (i = EG_SA_INDEX_MIN; i <= EG_SA_INDEX_MAX; i++) {
 		SHR_RET_ON_ERR(eg_sa_table_set(secy_id, i, (u32 *) (&sa)));
@@ -1300,11 +1369,23 @@ u32 nss_macsec_secy_tx_sa_in_used_get(u32 secy_id, u32 channel,
 	u32 sc_id = 0;
 	u32 sa_id = 0;
 	struct eg_sa sa;
+	g_error_t rv;
+	struct secy_drv_t *secy_drv;
 
 	SHR_PARAM_CHECK((secy_id < FAL_SECY_ID_NUM) &&
 			(channel < FAL_SECY_CHANNEL_NUM(secy_id)) &&
 			(an < FAL_SECY_SA_NUM_PER_SC(secy_id)) &&
 			(p_in_used != NULL));
+
+	secy_drv = nss_macsec_secy_ops_get(secy_id);
+	if (secy_drv != NULL) {
+		if (secy_drv->secy_tx_sa_in_used_get == NULL)
+			rv = ERROR_NOT_SUPPORT;
+		else
+			rv = secy_drv->secy_tx_sa_in_used_get(secy_id, channel,
+				an, p_in_used);
+		return rv;
+	}
 
 	sc_id = fal_tx_channel_2_sc_id(secy_id, channel);
 	sa_id = EG_SA_INDEX_MIN + sc_id + an;
