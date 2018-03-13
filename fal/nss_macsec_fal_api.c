@@ -175,7 +175,17 @@ unsigned int nss_macsec_cmd_len[] = {
 	sizeof(struct nss_macsec_secy_udf_ethtype_get_cmd),
 	sizeof(struct nss_macsec_secy_udf_ethtype_set_cmd),
 	sizeof(struct nss_macsec_secy_loopback_get_cmd),
-	sizeof(struct nss_macsec_secy_loopback_set_cmd)
+	sizeof(struct nss_macsec_secy_loopback_set_cmd),
+	sizeof(struct nss_macsec_secy_tx_udf_filt_set_cmd),
+	sizeof(struct nss_macsec_secy_tx_udf_filt_get_cmd),
+	sizeof(struct nss_macsec_secy_rx_udf_filt_set_cmd),
+	sizeof(struct nss_macsec_secy_rx_udf_filt_get_cmd),
+	sizeof(struct nss_macsec_secy_tx_udf_ufilt_cfg_set_cmd),
+	sizeof(struct nss_macsec_secy_tx_udf_ufilt_cfg_get_cmd),
+	sizeof(struct nss_macsec_secy_tx_udf_cfilt_cfg_set_cmd),
+	sizeof(struct nss_macsec_secy_tx_udf_cfilt_cfg_get_cmd),
+	sizeof(struct nss_macsec_secy_rx_udf_ufilt_cfg_set_cmd),
+	sizeof(struct nss_macsec_secy_rx_udf_ufilt_cfg_get_cmd)
 };
 
 unsigned int nss_macsec_fal_msg_handle(struct sdk_msg_header *header)
@@ -1813,6 +1823,100 @@ unsigned int nss_macsec_fal_msg_handle(struct sdk_msg_header *header)
 			    nss_macsec_secy_loopback_set(param->secy_id,
 							      param->type
 							      );
+		}
+		break;
+	case NSS_MACSEC_SECY_TX_UDF_FILT_GET_CMD:{
+			struct nss_macsec_secy_tx_udf_filt_get_cmd *param =
+			    (struct nss_macsec_secy_tx_udf_filt_get_cmd
+			     *)(header + 1);
+			ret =
+			    nss_macsec_secy_tx_udf_filt_get(param->secy_id,
+							    param->filt_id,
+							    &param->pfilt);
+		}
+		break;
+	case NSS_MACSEC_SECY_TX_UDF_FILT_SET_CMD:{
+			struct nss_macsec_secy_tx_udf_filt_set_cmd *param =
+			    (struct nss_macsec_secy_tx_udf_filt_set_cmd
+			     *)(header + 1);
+			ret =
+			    nss_macsec_secy_tx_udf_filt_set(param->secy_id,
+							    param->filt_id,
+							    &param->pfilt);
+		}
+		break;
+	case NSS_MACSEC_SECY_RX_UDF_FILT_GET_CMD:{
+			struct nss_macsec_secy_rx_udf_filt_get_cmd *param =
+			    (struct nss_macsec_secy_rx_udf_filt_get_cmd
+			     *)(header + 1);
+			ret =
+			    nss_macsec_secy_rx_udf_filt_get(param->secy_id,
+							    param->filt_id,
+							    &param->pfilt);
+		}
+		break;
+	case NSS_MACSEC_SECY_RX_UDF_FILT_SET_CMD:{
+			struct nss_macsec_secy_rx_udf_filt_set_cmd *param =
+			    (struct nss_macsec_secy_rx_udf_filt_set_cmd
+			     *)(header + 1);
+			ret =
+			    nss_macsec_secy_rx_udf_filt_set(param->secy_id,
+							    param->filt_id,
+							    &param->pfilt);
+		}
+		break;
+	case NSS_MACSEC_SECY_TX_UDF_UFILT_CFG_GET_CMD:{
+			struct nss_macsec_secy_tx_udf_ufilt_cfg_get_cmd *param =
+			    (struct nss_macsec_secy_tx_udf_ufilt_cfg_get_cmd
+			     *)(header + 1);
+			ret =
+			    nss_macsec_secy_tx_udf_ufilt_cfg_get(param->secy_id,
+							    &param->pcfg);
+		}
+		break;
+	case NSS_MACSEC_SECY_TX_UDF_UFILT_CFG_SET_CMD:{
+			struct nss_macsec_secy_tx_udf_ufilt_cfg_set_cmd *param =
+			    (struct nss_macsec_secy_tx_udf_ufilt_cfg_set_cmd
+			     *)(header + 1);
+			ret =
+			    nss_macsec_secy_tx_udf_ufilt_cfg_set(param->secy_id,
+							    &param->pcfg);
+		}
+		break;
+	case NSS_MACSEC_SECY_TX_UDF_CFILT_CFG_GET_CMD:{
+			struct nss_macsec_secy_tx_udf_cfilt_cfg_get_cmd *param =
+			    (struct nss_macsec_secy_tx_udf_cfilt_cfg_get_cmd
+			     *)(header + 1);
+			ret =
+			    nss_macsec_secy_tx_udf_cfilt_cfg_get(param->secy_id,
+							    &param->pcfg);
+		}
+		break;
+	case NSS_MACSEC_SECY_TX_UDF_CFILT_CFG_SET_CMD:{
+			struct nss_macsec_secy_tx_udf_cfilt_cfg_set_cmd *param =
+			    (struct nss_macsec_secy_tx_udf_cfilt_cfg_set_cmd
+			     *)(header + 1);
+			ret =
+			    nss_macsec_secy_tx_udf_cfilt_cfg_set(param->secy_id,
+							    &param->pcfg);
+		}
+		break;
+	case NSS_MACSEC_SECY_RX_UDF_UFILT_CFG_GET_CMD:{
+			struct nss_macsec_secy_rx_udf_ufilt_cfg_get_cmd *param =
+			    (struct nss_macsec_secy_rx_udf_ufilt_cfg_get_cmd
+			     *)(header + 1);
+			ret =
+			    nss_macsec_secy_rx_udf_ufilt_cfg_get(param->secy_id,
+							    &param->pcfg);
+		}
+		break;
+	case NSS_MACSEC_SECY_RX_UDF_UFILT_CFG_SET_CMD:{
+			struct nss_macsec_secy_rx_udf_ufilt_cfg_set_cmd *param =
+			    (struct nss_macsec_secy_rx_udf_ufilt_cfg_set_cmd
+			     *)(header + 1);
+			ret =
+			    nss_macsec_secy_rx_udf_ufilt_cfg_set(param->secy_id,
+							    &param->pcfg);
 		}
 		break;
 	default:

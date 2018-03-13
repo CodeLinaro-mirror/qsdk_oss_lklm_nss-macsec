@@ -177,6 +177,16 @@ enum {
 	NSS_MACSEC_SECY_UDF_ETHTYPE_SET_CMD,
 	NSS_MACSEC_SECY_LOOPBACK_GET_CMD,
 	NSS_MACSEC_SECY_LOOPBACK_SET_CMD,
+	NSS_MACSEC_SECY_TX_UDF_FILT_GET_CMD,
+	NSS_MACSEC_SECY_TX_UDF_FILT_SET_CMD,
+	NSS_MACSEC_SECY_RX_UDF_FILT_GET_CMD,
+	NSS_MACSEC_SECY_RX_UDF_FILT_SET_CMD,
+	NSS_MACSEC_SECY_TX_UDF_UFILT_CFG_GET_CMD,
+	NSS_MACSEC_SECY_TX_UDF_UFILT_CFG_SET_CMD,
+	NSS_MACSEC_SECY_RX_UDF_UFILT_CFG_GET_CMD,
+	NSS_MACSEC_SECY_RX_UDF_UFILT_CFG_SET_CMD,
+	NSS_MACSEC_SECY_TX_UDF_CFILT_CFG_GET_CMD,
+	NSS_MACSEC_SECY_TX_UDF_CFILT_CFG_SET_CMD,
 };
 
 struct nss_macsec_secy_interrupt_en_get_cmd {
@@ -1049,6 +1059,58 @@ struct nss_macsec_secy_loopback_get_cmd {
 struct nss_macsec_secy_loopback_set_cmd {
 	u32 secy_id;
 	enum fal_loopback_type_t type;
+};
+
+struct nss_macsec_secy_tx_udf_filt_get_cmd {
+	u32 secy_id;
+	u32 filt_id;
+	struct fal_tx_udf_filt_t pfilt;
+};
+
+struct nss_macsec_secy_tx_udf_filt_set_cmd {
+	u32 secy_id;
+	u32 filt_id;
+	struct fal_tx_udf_filt_t pfilt;
+};
+struct nss_macsec_secy_rx_udf_filt_get_cmd {
+	u32 secy_id;
+	u32 filt_id;
+	struct fal_rx_udf_filt_t pfilt;
+};
+
+struct nss_macsec_secy_rx_udf_filt_set_cmd {
+	u32 secy_id;
+	u32 filt_id;
+	struct fal_rx_udf_filt_t pfilt;
+};
+
+struct nss_macsec_secy_tx_udf_ufilt_cfg_get_cmd {
+	u32 secy_id;
+	struct fal_tx_udf_filt_cfg_t pcfg;
+};
+
+struct nss_macsec_secy_tx_udf_ufilt_cfg_set_cmd {
+	u32 secy_id;
+	struct fal_tx_udf_filt_cfg_t pcfg;
+};
+struct nss_macsec_secy_rx_udf_ufilt_cfg_get_cmd {
+	u32 secy_id;
+	struct fal_rx_udf_filt_cfg_t pcfg;
+};
+
+struct nss_macsec_secy_rx_udf_ufilt_cfg_set_cmd {
+	u32 secy_id;
+	struct fal_rx_udf_filt_cfg_t pcfg;
+};
+
+struct nss_macsec_secy_tx_udf_cfilt_cfg_get_cmd {
+	u32 secy_id;
+	struct fal_tx_udf_filt_cfg_t pcfg;
+};
+
+struct nss_macsec_secy_tx_udf_cfilt_cfg_set_cmd {
+	u32 secy_id;
+	struct fal_tx_udf_filt_cfg_t pcfg;
 };
 
 unsigned int nss_macsec_fal_msg_handle(struct sdk_msg_header *header);

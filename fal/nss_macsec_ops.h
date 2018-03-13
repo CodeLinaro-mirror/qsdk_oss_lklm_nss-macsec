@@ -222,6 +222,29 @@ typedef g_error_t (*secy_tx_mib_clear_func)(u32 secy_id);
 typedef g_error_t (*secy_rx_sa_mib_clear_func)(u32 secy_id, u32 channel,
 	u32 an);
 typedef g_error_t (*secy_rx_mib_clear_func)(u32 secy_id);
+
+/*filter*/
+typedef g_error_t (*secy_tx_udf_ufilt_cfg_set_func)(u32 secy_id,
+	struct secy_udf_filt_cfg_t *cfg);
+typedef g_error_t (*secy_tx_udf_ufilt_cfg_get_func)(u32 secy_id,
+	struct secy_udf_filt_cfg_t *cfg);
+typedef g_error_t (*secy_tx_udf_cfilt_cfg_set_func)(u32 secy_id,
+	struct secy_udf_filt_cfg_t *cfg);
+typedef g_error_t (*secy_tx_udf_cfilt_cfg_get_func)(u32 secy_id,
+	struct secy_udf_filt_cfg_t *cfg);
+typedef g_error_t (*secy_rx_udf_ufilt_cfg_set_func)(u32 secy_id,
+	struct secy_udf_filt_cfg_t *cfg);
+typedef g_error_t (*secy_rx_udf_ufilt_cfg_get_func)(u32 secy_id,
+	struct secy_udf_filt_cfg_t *cfg);
+typedef g_error_t (*secy_rx_udf_filt_set_func)(u32 secy_id, u32 index,
+	struct secy_udf_filt_t *filter);
+typedef g_error_t (*secy_rx_udf_filt_get_func)(u32 secy_id, u32 index,
+	struct secy_udf_filt_t *filter);
+typedef g_error_t (*secy_tx_udf_filt_set_func)(u32 secy_id, u32 index,
+	struct secy_udf_filt_t *filter);
+typedef g_error_t (*secy_tx_udf_filt_get_func)(u32 secy_id, u32 index,
+	struct secy_udf_filt_t *filter);
+
 struct secy_drv_t {
 	secy_init_func secy_init;
 	secy_controlled_port_en_get_func secy_controlled_port_en_get;
@@ -336,6 +359,17 @@ struct secy_drv_t {
 	secy_tx_mib_clear_func secy_tx_mib_clear;
 	secy_rx_sa_mib_clear_func secy_rx_sa_mib_clear;
 	secy_rx_mib_clear_func secy_rx_mib_clear;
+
+	secy_tx_udf_ufilt_cfg_set_func secy_tx_udf_ufilt_cfg_set;
+	secy_tx_udf_ufilt_cfg_get_func secy_tx_udf_ufilt_cfg_get;
+	secy_tx_udf_cfilt_cfg_set_func secy_tx_udf_cfilt_cfg_set;
+	secy_tx_udf_cfilt_cfg_get_func secy_tx_udf_cfilt_cfg_get;
+	secy_rx_udf_ufilt_cfg_set_func secy_rx_udf_ufilt_cfg_set;
+	secy_rx_udf_ufilt_cfg_get_func secy_rx_udf_ufilt_cfg_get;
+	secy_rx_udf_filt_set_func secy_rx_udf_filt_set;
+	secy_rx_udf_filt_get_func secy_rx_udf_filt_get;
+	secy_tx_udf_filt_set_func secy_tx_udf_filt_set;
+	secy_tx_udf_filt_get_func secy_tx_udf_filt_get;
 };
 
 enum secy_phy_type_t {

@@ -37,6 +37,11 @@ fal_tx_sa_mib_t g_fal_tx_sa_mib_t;
 fal_tx_sc_mib_t g_fal_tx_sc_mib_t;
 struct fal_tx_sa_ki_t g_fal_tx_sa_ki_t;
 struct fal_rx_sa_ki_t g_fal_rx_sa_ki_t;
+struct fal_tx_udf_filt_cfg_t g_fal_tx_udf_ufilt_cfg_t;
+struct fal_tx_udf_filt_cfg_t g_fal_tx_udf_cfilt_cfg_t;
+struct fal_tx_udf_filt_t g_fal_tx_udf_filt_t;
+struct fal_rx_udf_filt_cfg_t g_fal_rx_udf_ufilt_cfg_t;
+struct fal_rx_udf_filt_t g_fal_rx_udf_filt_t;
 
 DEFCMD(g_fal_tx_sa_ki_t_init_func,
 	g_fal_tx_sa_ki_t_init_cmd,
@@ -4371,6 +4376,671 @@ DEFCMD(nss_macsec_secy_udf_ethtype_set_func,
 
 	return CLI_OK;
 }
+DEFCMD(g_fal_tx_udf_filt_t_init_func,
+	g_fal_tx_udf_filt_t_init_cmd,
+	"g_fal_tx_udf_filt_t init", "g_fal_tx_udf_filt_t\n init\n")
+
+{
+	memset(&g_fal_tx_udf_filt_t, 0, sizeof(g_fal_tx_udf_filt_t));
+
+	return CLI_OK;
+}
+
+DEFCMD(fal_tx_udf_filt_t_field0_add_func,
+	fal_tx_udf_filt_t_field0_add_cmd,
+	"fal_tx_udf_filt_t field0 add HEX",
+	"fal_tx_udf_filt_t\n field0\n add\n field0\n")
+{
+	u32 field0 = 0;
+
+	CLI_EXEC_API(cli_str_2_hex(argv[3], &field0));
+	g_fal_tx_udf_filt_t.udf_field0 = (u16) field0;
+
+	return CLI_OK;
+}
+DEFCMD(fal_tx_udf_filt_t_field1_add_func,
+	fal_tx_udf_filt_t_field1_add_cmd,
+	"fal_tx_udf_filt_t field1 add HEX",
+	"fal_tx_udf_filt_t\n field1\n add\n field1\n")
+{
+	u32 field1 = 0;
+
+	CLI_EXEC_API(cli_str_2_hex(argv[3], &field1));
+	g_fal_tx_udf_filt_t.udf_field1 = (u16) field1;
+
+	return CLI_OK;
+}
+DEFCMD(fal_tx_udf_filt_t_field2_add_func,
+	fal_tx_udf_filt_t_field2_add_cmd,
+	"fal_tx_udf_filt_t field2 add HEX",
+	"fal_tx_udf_filt_t\n field2\n add\n field2\n")
+{
+	u32 field2 = 0;
+
+	CLI_EXEC_API(cli_str_2_hex(argv[3], &field2));
+	g_fal_tx_udf_filt_t.udf_field2 = (u16) field2;
+
+	return CLI_OK;
+}
+DEFCMD(fal_tx_udf_filt_t_mask_add_func,
+	fal_tx_udf_filt_t_mask_add_cmd,
+	"fal_tx_udf_filt_t mask add HEX",
+	"fal_tx_udf_filt_t\n mask\n add\n mask\n")
+{
+	u32 mask = 0;
+
+	CLI_EXEC_API(cli_str_2_hex(argv[3], &mask));
+	g_fal_tx_udf_filt_t.mask = (u16) mask;
+
+	return CLI_OK;
+}
+DEFCMD(fal_tx_udf_filt_t_type_add_func,
+	fal_tx_udf_filt_t_type_add_cmd,
+	"fal_tx_udf_filt_t type add HEX",
+	"fal_tx_udf_filt_t\n type\n add\n type\n")
+{
+	u32 type = 0;
+
+	CLI_EXEC_API(cli_str_2_hex(argv[3], &type));
+	g_fal_tx_udf_filt_t.type = (enum fal_tx_udf_filt_type_e) type;
+
+	return CLI_OK;
+}
+DEFCMD(fal_tx_udf_filt_t_offset_add_func,
+	fal_tx_udf_filt_t_offset_add_cmd,
+	"fal_tx_udf_filt_t offset add HEX",
+	"fal_tx_udf_filt_t\n offset\n add\n offset\n")
+{
+	u32 offset = 0;
+
+	CLI_EXEC_API(cli_str_2_hex(argv[3], &offset));
+	g_fal_tx_udf_filt_t.offset = (u16) offset;
+
+	return CLI_OK;
+}
+DEFCMD(fal_tx_udf_filt_t_operator_add_func,
+	fal_tx_udf_filt_t_operator_add_cmd,
+	"fal_tx_udf_filt_t operator add HEX",
+	"fal_tx_udf_filt_t\n operator\n add\n operator\n")
+{
+	u32 operator = 0;
+
+	CLI_EXEC_API(cli_str_2_hex(argv[3], &operator));
+	g_fal_tx_udf_filt_t.operator = (enum fal_tx_udf_filt_op_e) operator;
+
+	return CLI_OK;
+}
+DEFCMD(nss_macsec_secy_tx_udf_filt_set_func,
+	nss_macsec_secy_tx_udf_filt_set_cmd,
+	"nss_macsec_secy_tx_udf_filt set HEX HEX",
+	"nss_macsec_secy_tx_udf_filt\n set\n secy_id\n filt_id\n")
+{
+	u32 secy_id = 0;
+	u32 filt_id = 0;
+
+	cli_str_2_hex(argv[2], (u32 *) (&secy_id));
+	cli_str_2_hex(argv[3], (u32 *) (&filt_id));
+
+	CLI_EXEC_API(nss_macsec_secy_tx_udf_filt_set
+		     (secy_id, filt_id, &g_fal_tx_udf_filt_t));
+
+	return CLI_OK;
+}
+void _dump_g_fal_tx_udf_filt_t(VTY_T *pVty, struct fal_tx_udf_filt_t *value)
+{
+	char mac_str[32] = { 0 };
+
+	vty_print("udf_field0 : 0x%x\n", value->udf_field0);
+	vty_print("udf_field1 : 0x%x\n", value->udf_field1);
+	vty_print("udf_field2 : 0x%x\n", value->udf_field2);
+	vty_print("mask : 0x%x\n", value->mask);
+	vty_print("type : 0x%x\n", value->type);
+	vty_print("offset : 0x%x\n", value->offset);
+	vty_print("operator : 0x%x\n", value->operator);
+	vty_print("\n");
+}
+
+DEFCMD(nss_macsec_secy_tx_udf_filt_get_func,
+	nss_macsec_secy_tx_udf_filt_get_cmd,
+	"nss_macsec_secy_tx_udf_filt get HEX HEX",
+	"nss_macsec_secy_tx_udf_filt\n get\n secy_id\n filt_id\n")
+{
+	u32 secy_id = 0;
+	u32 filt_id = 0;
+
+	cli_str_2_hex(argv[2], (u32 *) (&secy_id));
+	cli_str_2_hex(argv[3], (u32 *) (&filt_id));
+
+	CLI_EXEC_API(nss_macsec_secy_tx_udf_filt_get
+		     (secy_id, filt_id, &g_fal_tx_udf_filt_t));
+	_dump_g_fal_tx_udf_filt_t(pVty, &g_fal_tx_udf_filt_t);
+
+	return CLI_OK;
+}
+
+DEFCMD(g_fal_rx_udf_filt_t_init_func,
+	g_fal_rx_udf_filt_t_init_cmd,
+	"g_fal_rx_udf_filt_t init", "g_fal_rx_udf_filt_t\n init\n")
+{
+	memset(&g_fal_rx_udf_filt_t, 0, sizeof(g_fal_rx_udf_filt_t));
+
+	return CLI_OK;
+}
+DEFCMD(fal_rx_udf_filt_t_field0_add_func,
+	fal_rx_udf_filt_t_field0_add_cmd,
+	"fal_rx_udf_filt_t field0 add HEX",
+	"fal_rx_udf_filt_t\n field0\n add\n field0\n")
+{
+	u32 field0 = 0;
+
+	CLI_EXEC_API(cli_str_2_hex(argv[3], &field0));
+	g_fal_rx_udf_filt_t.udf_field0 = (u16) field0;
+
+	return CLI_OK;
+}
+DEFCMD(fal_rx_udf_filt_t_field1_add_func,
+	fal_rx_udf_filt_t_field1_add_cmd,
+	"fal_rx_udf_filt_t field1 add HEX",
+	"fal_rx_udf_filt_t\n field1\n add\n field1\n")
+{
+	u32 field1 = 0;
+
+	CLI_EXEC_API(cli_str_2_hex(argv[3], &field1));
+	g_fal_rx_udf_filt_t.udf_field1 = (u16) field1;
+
+	return CLI_OK;
+}
+DEFCMD(fal_rx_udf_filt_t_field2_add_func,
+	fal_rx_udf_filt_t_field2_add_cmd,
+	"fal_rx_udf_filt_t field2 add HEX",
+	"fal_rx_udf_filt_t\n field2\n add\n field2\n")
+{
+	u32 field2 = 0;
+
+	CLI_EXEC_API(cli_str_2_hex(argv[3], &field2));
+	g_fal_rx_udf_filt_t.udf_field2 = (u16) field2;
+
+	return CLI_OK;
+}
+DEFCMD(fal_rx_udf_filt_t_mask_add_func,
+	fal_rx_udf_filt_t_mask_add_cmd,
+	"fal_rx_udf_filt_t mask add HEX",
+	"fal_rx_udf_filt_t\n mask\n add\n mask\n")
+{
+	u32 mask = 0;
+
+	CLI_EXEC_API(cli_str_2_hex(argv[3], &mask));
+	g_fal_rx_udf_filt_t.mask = (u16) mask;
+
+	return CLI_OK;
+}
+DEFCMD(fal_rx_udf_filt_t_type_add_func,
+	fal_rx_udf_filt_t_type_add_cmd,
+	"fal_rx_udf_filt_t type add HEX",
+	"fal_rx_udf_filt_t\n type\n add\n type\n")
+{
+	u32 type = 0;
+
+	CLI_EXEC_API(cli_str_2_hex(argv[3], &type));
+	g_fal_rx_udf_filt_t.type = (enum fal_rx_udf_filt_type_e) type;
+
+	return CLI_OK;
+}
+DEFCMD(fal_rx_udf_filt_t_offset_add_func,
+	fal_rx_udf_filt_t_offset_add_cmd,
+	"fal_rx_udf_filt_t offset add HEX",
+	"fal_rx_udf_filt_t\n offset\n add\n offset\n")
+{
+	u32 offset = 0;
+
+	CLI_EXEC_API(cli_str_2_hex(argv[3], &offset));
+	g_fal_rx_udf_filt_t.offset = (u16) offset;
+
+	return CLI_OK;
+}
+DEFCMD(fal_rx_udf_filt_t_operator_add_func,
+	fal_rx_udf_filt_t_operator_add_cmd,
+	"fal_rx_udf_filt_t operator add HEX",
+	"fal_rx_udf_filt_t\n operator\n add\n operator\n")
+{
+	u32 operator = 0;
+
+	CLI_EXEC_API(cli_str_2_hex(argv[3], &operator));
+	g_fal_rx_udf_filt_t.operator = (enum fal_rx_udf_filt_op_e) operator;
+
+	return CLI_OK;
+}
+DEFCMD(nss_macsec_secy_rx_udf_filt_set_func,
+	nss_macsec_secy_rx_udf_filt_set_cmd,
+	"nss_macsec_secy_rx_udf_filt set HEX HEX",
+	"nss_macsec_secy_rx_udf_filt\n set\n secy_id\n filt_id\n")
+{
+	u32 secy_id = 0;
+	u32 filt_id = 0;
+
+	cli_str_2_hex(argv[2], (u32 *) (&secy_id));
+	cli_str_2_hex(argv[3], (u32 *) (&filt_id));
+
+	CLI_EXEC_API(nss_macsec_secy_rx_udf_filt_set
+		     (secy_id, filt_id, &g_fal_rx_udf_filt_t));
+
+	return CLI_OK;
+}
+void _dump_g_fal_rx_udf_filt_t(VTY_T *pVty, struct fal_rx_udf_filt_t *value)
+{
+	char mac_str[32] = { 0 };
+
+	vty_print("udf_field0 : 0x%x\n", value->udf_field0);
+	vty_print("udf_field1 : 0x%x\n", value->udf_field1);
+	vty_print("udf_field2 : 0x%x\n", value->udf_field2);
+	vty_print("mask : 0x%x\n", value->mask);
+	vty_print("type : 0x%x\n", value->type);
+	vty_print("offset : 0x%x\n", value->offset);
+	vty_print("operator : 0x%x\n", value->operator);
+	vty_print("\n");
+}
+
+DEFCMD(nss_macsec_secy_rx_udf_filt_get_func,
+	nss_macsec_secy_rx_udf_filt_get_cmd,
+	"nss_macsec_secy_rx_udf_filt get HEX HEX",
+	"nss_macsec_secy_rx_udf_filt\n get\n secy_id\n filt_id\n")
+{
+	u32 secy_id = 0;
+	u32 filt_id = 0;
+
+	cli_str_2_hex(argv[2], (u32 *) (&secy_id));
+	cli_str_2_hex(argv[3], (u32 *) (&filt_id));
+
+	CLI_EXEC_API(nss_macsec_secy_rx_udf_filt_get
+		     (secy_id, filt_id, &g_fal_rx_udf_filt_t));
+	_dump_g_fal_rx_udf_filt_t(pVty, &g_fal_rx_udf_filt_t);
+
+	return CLI_OK;
+}
+
+DEFCMD(g_fal_tx_udf_ufilt_cfg_t_init_func,
+	g_fal_tx_udf_ufilt_cfg_t_init_cmd,
+	"g_fal_tx_udf_ufilt_cfg_t init", "g_fal_tx_udf_ufilt_cfg_t\n init\n")
+{
+	memset(&g_fal_tx_udf_ufilt_cfg_t, 0, sizeof(g_fal_tx_udf_ufilt_cfg_t));
+
+	return CLI_OK;
+}
+DEFCMD(fal_tx_udf_ufilt_cfg_t_enable_add_func,
+	fal_tx_udf_ufilt_cfg_t_enable_add_cmd,
+	"fal_tx_udf_ufilt_cfg_t enable add HEX",
+	"fal_tx_udf_ufilt_cfg_t\n enable\n add\n enable\n")
+{
+	u32 enable = 0;
+
+	CLI_EXEC_API(cli_str_2_hex(argv[3], &enable));
+	g_fal_tx_udf_ufilt_cfg_t.enable = (bool) enable;
+
+	return CLI_OK;
+}
+DEFCMD(fal_tx_udf_ufilt_cfg_t_priority_add_func,
+	fal_tx_udf_ufilt_cfg_t_priority_add_cmd,
+	"fal_tx_udf_ufilt_cfg_t priority add HEX",
+	"fal_tx_udf_ufilt_cfg_t\n priority\n add\n priority\n")
+{
+	u32 priority = 0;
+
+	CLI_EXEC_API(cli_str_2_hex(argv[3], &priority));
+	g_fal_tx_udf_ufilt_cfg_t.priority = (u16) priority;
+
+	return CLI_OK;
+}
+DEFCMD(fal_tx_udf_ufilt_cfg_t_inverse_add_func,
+	fal_tx_udf_ufilt_cfg_t_inverse_add_cmd,
+	"fal_tx_udf_ufilt_cfg_t inverse add HEX",
+	"fal_tx_udf_ufilt_cfg_t\n inverse\n add\n inverse\n")
+{
+	u32 inverse = 0;
+
+	CLI_EXEC_API(cli_str_2_hex(argv[3], &inverse));
+	g_fal_tx_udf_ufilt_cfg_t.inverse = (u16) inverse;
+
+	return CLI_OK;
+}
+
+DEFCMD(fal_tx_udf_ufilt_cfg_t_pattern0_add_func,
+	fal_tx_udf_ufilt_cfg_t_pattern0_add_cmd,
+	"fal_tx_udf_ufilt_cfg_t pattern0 add HEX",
+	"fal_tx_udf_ufilt_cfg_t\n pattern0\n add\n pattern0\n")
+{
+	u32 pattern0 = 0;
+
+	CLI_EXEC_API(cli_str_2_hex(argv[3], &pattern0));
+	g_fal_tx_udf_ufilt_cfg_t.pattern0 =
+		(enum fal_tx_udf_filt_cfg_pattern_e) pattern0;
+
+	return CLI_OK;
+}
+DEFCMD(fal_tx_udf_ufilt_cfg_t_pattern1_add_func,
+	fal_tx_udf_ufilt_cfg_t_pattern1_add_cmd,
+	"fal_tx_udf_ufilt_cfg_t pattern1 add HEX",
+	"fal_tx_udf_ufilt_cfg_t\n pattern1\n add\n pattern1\n")
+{
+	u32 pattern1 = 0;
+
+	CLI_EXEC_API(cli_str_2_hex(argv[3], &pattern1));
+	g_fal_tx_udf_ufilt_cfg_t.pattern1 =
+		(enum fal_tx_udf_filt_cfg_pattern_e) pattern1;
+
+	return CLI_OK;
+}
+DEFCMD(fal_tx_udf_ufilt_cfg_t_pattern2_add_func,
+	fal_tx_udf_ufilt_cfg_t_pattern2_add_cmd,
+	"fal_tx_udf_ufilt_cfg_t pattern2 add HEX",
+	"fal_tx_udf_ufilt_cfg_t\n pattern2\n add\n pattern2\n")
+{
+	u32 pattern2 = 0;
+
+	CLI_EXEC_API(cli_str_2_hex(argv[3], &pattern2));
+	g_fal_tx_udf_ufilt_cfg_t.pattern2 =
+		(enum fal_tx_udf_filt_cfg_pattern_e) pattern2;
+
+	return CLI_OK;
+}
+DEFCMD(nss_macsec_secy_tx_udf_ufilt_cfg_set_func,
+	nss_macsec_secy_tx_udf_ufilt_cfg_set_cmd,
+	"nss_macsec_secy_tx_udf_ufilt_cfg set HEX",
+	"nss_macsec_secy_tx_udf_ufilt_cfg\n set\n secy_id\n")
+{
+	u32 secy_id = 0;
+
+	cli_str_2_hex(argv[2], (u32 *) (&secy_id));
+
+	CLI_EXEC_API(nss_macsec_secy_tx_udf_ufilt_cfg_set
+		     (secy_id, &g_fal_tx_udf_ufilt_cfg_t));
+
+	return CLI_OK;
+}
+void _dump_g_fal_tx_udf_ufilt_cfg_t(VTY_T *pVty,
+	struct fal_tx_udf_filt_cfg_t *value)
+{
+	char mac_str[32] = { 0 };
+
+	vty_print("enable : 0x%x\n", value->enable);
+	vty_print("priority : 0x%x\n", value->priority);
+	vty_print("inverse : 0x%x\n", value->inverse);
+	vty_print("pattern0 : 0x%x\n", value->pattern0);
+	vty_print("pattern1 : 0x%x\n", value->pattern1);
+	vty_print("pattern2 : 0x%x\n", value->pattern2);
+	vty_print("\n");
+}
+
+DEFCMD(nss_macsec_secy_tx_udf_ufilt_cfg_get_func,
+	nss_macsec_secy_tx_udf_ufilt_cfg_get_cmd,
+	"nss_macsec_secy_tx_udf_ufilt_cfg get HEX",
+	"nss_macsec_secy_tx_udf_ufilt_cfg\n get\n secy_id\n")
+{
+	u32 secy_id = 0;
+
+	cli_str_2_hex(argv[2], (u32 *) (&secy_id));
+
+	CLI_EXEC_API(nss_macsec_secy_tx_udf_ufilt_cfg_get
+		     (secy_id, &g_fal_tx_udf_ufilt_cfg_t));
+	_dump_g_fal_tx_udf_ufilt_cfg_t(pVty, &g_fal_tx_udf_ufilt_cfg_t);
+
+	return CLI_OK;
+}
+
+DEFCMD(g_fal_tx_udf_cfilt_cfg_t_init_func,
+	g_fal_tx_udf_cfilt_cfg_t_init_cmd,
+	"g_fal_tx_udf_cfilt_cfg_t init", "g_fal_tx_udf_cfilt_cfg_t\n init\n")
+{
+	memset(&g_fal_tx_udf_cfilt_cfg_t, 0, sizeof(g_fal_tx_udf_cfilt_cfg_t));
+
+	return CLI_OK;
+}
+DEFCMD(fal_tx_udf_cfilt_cfg_t_enable_add_func,
+	fal_tx_udf_cfilt_cfg_t_enable_add_cmd,
+	"fal_tx_udf_cfilt_cfg_t enable add HEX",
+	"fal_tx_udf_cfilt_cfg_t\n enable\n add\n enable\n")
+{
+	u32 enable = 0;
+
+	CLI_EXEC_API(cli_str_2_hex(argv[3], &enable));
+	g_fal_tx_udf_cfilt_cfg_t.enable = (bool) enable;
+
+	return CLI_OK;
+}
+DEFCMD(fal_tx_udf_cfilt_cfg_t_priority_add_func,
+	fal_tx_udf_cfilt_cfg_t_priority_add_cmd,
+	"fal_tx_udf_cfilt_cfg_t priority add HEX",
+	"fal_tx_udf_cfilt_cfg_t\n priority\n add\n priority\n")
+{
+	u32 priority = 0;
+
+	CLI_EXEC_API(cli_str_2_hex(argv[3], &priority));
+	g_fal_tx_udf_cfilt_cfg_t.priority = (u16) priority;
+
+	return CLI_OK;
+}
+DEFCMD(fal_tx_udf_cfilt_cfg_t_inverse_add_func,
+	fal_tx_udf_cfilt_cfg_t_inverse_add_cmd,
+	"fal_tx_udf_cfilt_cfg_t inverse add HEX",
+	"fal_tx_udf_cfilt_cfg_t\n inverse\n add\n inverse\n")
+{
+	u32 inverse = 0;
+
+	CLI_EXEC_API(cli_str_2_hex(argv[3], &inverse));
+	g_fal_tx_udf_cfilt_cfg_t.inverse = (u16) inverse;
+
+	return CLI_OK;
+}
+
+DEFCMD(fal_tx_udf_cfilt_cfg_t_pattern0_add_func,
+	fal_tx_udf_cfilt_cfg_t_pattern0_add_cmd,
+	"fal_tx_udf_cfilt_cfg_t pattern0 add HEX",
+	"fal_tx_udf_cfilt_cfg_t\n pattern0\n add\n pattern0\n")
+{
+	u32 pattern0 = 0;
+
+	CLI_EXEC_API(cli_str_2_hex(argv[3], &pattern0));
+	g_fal_tx_udf_cfilt_cfg_t.pattern0 =
+		(enum fal_tx_udf_filt_cfg_pattern_e) pattern0;
+
+	return CLI_OK;
+}
+DEFCMD(fal_tx_udf_cfilt_cfg_t_pattern1_add_func,
+	fal_tx_udf_cfilt_cfg_t_pattern1_add_cmd,
+	"fal_tx_udf_cfilt_cfg_t pattern1 add HEX",
+	"fal_tx_udf_cfilt_cfg_t\n pattern1\n add\n pattern1\n")
+{
+	u32 pattern1 = 0;
+
+	CLI_EXEC_API(cli_str_2_hex(argv[3], &pattern1));
+	g_fal_tx_udf_cfilt_cfg_t.pattern1 =
+		(enum fal_tx_udf_filt_cfg_pattern_e) pattern1;
+
+	return CLI_OK;
+}
+DEFCMD(fal_tx_udf_cfilt_cfg_t_pattern2_add_func,
+	fal_tx_udf_cfilt_cfg_t_pattern2_add_cmd,
+	"fal_tx_udf_cfilt_cfg_t pattern2 add HEX",
+	"fal_tx_udf_cfilt_cfg_t\n pattern2\n add\n pattern2\n")
+{
+	u32 pattern2 = 0;
+
+	CLI_EXEC_API(cli_str_2_hex(argv[3], &pattern2));
+	g_fal_tx_udf_cfilt_cfg_t.pattern2 =
+		(enum fal_tx_udf_filt_cfg_pattern_e) pattern2;
+
+	return CLI_OK;
+}
+DEFCMD(nss_macsec_secy_tx_udf_cfilt_cfg_set_func,
+	nss_macsec_secy_tx_udf_cfilt_cfg_set_cmd,
+	"nss_macsec_secy_tx_udf_cfilt_cfg set HEX",
+	"nss_macsec_secy_tx_udf_cfilt_cfg\n set\n secy_id\n")
+{
+	u32 secy_id = 0;
+
+	cli_str_2_hex(argv[2], (u32 *) (&secy_id));
+
+	CLI_EXEC_API(nss_macsec_secy_tx_udf_cfilt_cfg_set
+		     (secy_id, &g_fal_tx_udf_cfilt_cfg_t));
+
+	return CLI_OK;
+}
+void _dump_g_fal_tx_udf_cfilt_cfg_t(VTY_T *pVty,
+	struct fal_tx_udf_filt_cfg_t *value)
+{
+	char mac_str[32] = { 0 };
+
+	vty_print("enable : 0x%x\n", value->enable);
+	vty_print("priority : 0x%x\n", value->priority);
+	vty_print("inverse : 0x%x\n", value->inverse);
+	vty_print("pattern0 : 0x%x\n", value->pattern0);
+	vty_print("pattern1 : 0x%x\n", value->pattern1);
+	vty_print("pattern2 : 0x%x\n", value->pattern2);
+	vty_print("\n");
+}
+
+DEFCMD(nss_macsec_secy_tx_udf_cfilt_cfg_get_func,
+	nss_macsec_secy_tx_udf_cfilt_cfg_get_cmd,
+	"nss_macsec_secy_tx_udf_cfilt_cfg get HEX",
+	"nss_macsec_secy_tx_udf_cfilt_cfg\n get\n secy_id\n")
+{
+	u32 secy_id = 0;
+
+	cli_str_2_hex(argv[2], (u32 *) (&secy_id));
+
+	CLI_EXEC_API(nss_macsec_secy_tx_udf_cfilt_cfg_get
+		     (secy_id, &g_fal_tx_udf_cfilt_cfg_t));
+	_dump_g_fal_tx_udf_cfilt_cfg_t(pVty, &g_fal_tx_udf_cfilt_cfg_t);
+
+	return CLI_OK;
+}
+
+DEFCMD(g_fal_rx_udf_ufilt_cfg_t_init_func,
+	g_fal_rx_udf_ufilt_cfg_t_init_cmd,
+	"g_fal_rx_udf_ufilt_cfg_t init", "g_fal_rx_udf_ufilt_cfg_t\n init\n")
+{
+	memset(&g_fal_rx_udf_ufilt_cfg_t, 0, sizeof(g_fal_rx_udf_ufilt_cfg_t));
+
+	return CLI_OK;
+}
+DEFCMD(fal_rx_udf_ufilt_cfg_t_enable_add_func,
+	fal_rx_udf_ufilt_cfg_t_enable_add_cmd,
+	"fal_rx_udf_ufilt_cfg_t enable add HEX",
+	"fal_rx_udf_ufilt_cfg_t\n enable\n add\n enable\n")
+{
+	u32 enable = 0;
+
+	CLI_EXEC_API(cli_str_2_hex(argv[3], &enable));
+	g_fal_rx_udf_ufilt_cfg_t.enable = (bool) enable;
+
+	return CLI_OK;
+}
+DEFCMD(fal_rx_udf_ufilt_cfg_t_priority_add_func,
+	fal_rx_udf_ufilt_cfg_t_priority_add_cmd,
+	"fal_rx_udf_ufilt_cfg_t priority add HEX",
+	"fal_rx_udf_ufilt_cfg_t\n priority\n add\n priority\n")
+{
+	u32 priority = 0;
+
+	CLI_EXEC_API(cli_str_2_hex(argv[3], &priority));
+	g_fal_rx_udf_ufilt_cfg_t.priority = (u16) priority;
+
+	return CLI_OK;
+}
+DEFCMD(fal_rx_udf_ufilt_cfg_t_inverse_add_func,
+	fal_rx_udf_ufilt_cfg_t_inverse_add_cmd,
+	"fal_rx_udf_ufilt_cfg_t inverse add HEX",
+	"fal_rx_udf_ufilt_cfg_t\n inverse\n add\n inverse\n")
+{
+	u32 inverse = 0;
+
+	CLI_EXEC_API(cli_str_2_hex(argv[3], &inverse));
+	g_fal_rx_udf_ufilt_cfg_t.inverse = (u16) inverse;
+
+	return CLI_OK;
+}
+
+DEFCMD(fal_rx_udf_ufilt_cfg_t_pattern0_add_func,
+	fal_rx_udf_ufilt_cfg_t_pattern0_add_cmd,
+	"fal_rx_udf_ufilt_cfg_t pattern0 add HEX",
+	"fal_rx_udf_ufilt_cfg_t\n pattern0\n add\n pattern0\n")
+{
+	u32 pattern0 = 0;
+
+	CLI_EXEC_API(cli_str_2_hex(argv[3], &pattern0));
+	g_fal_rx_udf_ufilt_cfg_t.pattern0 =
+		(enum fal_rx_udf_filt_cfg_pattern_e) pattern0;
+
+	return CLI_OK;
+}
+DEFCMD(fal_rx_udf_ufilt_cfg_t_pattern1_add_func,
+	fal_rx_udf_ufilt_cfg_t_pattern1_add_cmd,
+	"fal_rx_udf_ufilt_cfg_t pattern1 add HEX",
+	"fal_rx_udf_ufilt_cfg_t\n pattern1\n add\n pattern1\n")
+{
+	u32 pattern1 = 0;
+
+	CLI_EXEC_API(cli_str_2_hex(argv[3], &pattern1));
+	g_fal_rx_udf_ufilt_cfg_t.pattern1 =
+		(enum fal_rx_udf_filt_cfg_pattern_e) pattern1;
+
+	return CLI_OK;
+}
+DEFCMD(fal_rx_udf_ufilt_cfg_t_pattern2_add_func,
+	fal_rx_udf_ufilt_cfg_t_pattern2_add_cmd,
+	"fal_rx_udf_ufilt_cfg_t pattern2 add HEX",
+	"fal_rx_udf_ufilt_cfg_t\n pattern2\n add\n pattern2\n")
+{
+	u32 pattern2 = 0;
+
+	CLI_EXEC_API(cli_str_2_hex(argv[3], &pattern2));
+	g_fal_rx_udf_ufilt_cfg_t.pattern2 =
+		(enum fal_rx_udf_filt_cfg_pattern_e) pattern2;
+
+	return CLI_OK;
+}
+DEFCMD(nss_macsec_secy_rx_udf_ufilt_cfg_set_func,
+	nss_macsec_secy_rx_udf_ufilt_cfg_set_cmd,
+	"nss_macsec_secy_rx_udf_ufilt_cfg set HEX",
+	"nss_macsec_secy_rx_udf_ufilt_cfg\n set\n secy_id\n")
+{
+	u32 secy_id = 0;
+
+	cli_str_2_hex(argv[2], (u32 *) (&secy_id));
+
+	CLI_EXEC_API(nss_macsec_secy_rx_udf_ufilt_cfg_set
+		     (secy_id, &g_fal_rx_udf_ufilt_cfg_t));
+
+	return CLI_OK;
+}
+void _dump_g_fal_rx_udf_ufilt_cfg_t(VTY_T *pVty,
+	struct fal_rx_udf_filt_cfg_t *value)
+{
+	char mac_str[32] = { 0 };
+
+	vty_print("enable : 0x%x\n", value->enable);
+	vty_print("priority : 0x%x\n", value->priority);
+	vty_print("inverse : 0x%x\n", value->inverse);
+	vty_print("pattern0 : 0x%x\n", value->pattern0);
+	vty_print("pattern1 : 0x%x\n", value->pattern1);
+	vty_print("pattern2 : 0x%x\n", value->pattern2);
+	vty_print("\n");
+}
+
+DEFCMD(nss_macsec_secy_rx_udf_ufilt_cfg_get_func,
+	nss_macsec_secy_rx_udf_ufilt_cfg_get_cmd,
+	"nss_macsec_secy_rx_udf_ufilt_cfg get HEX",
+	"nss_macsec_secy_rx_udf_ufilt_cfg\n get\n secy_id\n")
+{
+	u32 secy_id = 0;
+
+	cli_str_2_hex(argv[2], (u32 *) (&secy_id));
+
+	CLI_EXEC_API(nss_macsec_secy_rx_udf_ufilt_cfg_get
+		     (secy_id, &g_fal_rx_udf_ufilt_cfg_t));
+	_dump_g_fal_rx_udf_ufilt_cfg_t(pVty, &g_fal_rx_udf_ufilt_cfg_t);
+
+	return CLI_OK;
+}
 
 int cli_cmd_fal_init(void)
 {
@@ -4732,6 +5402,82 @@ int cli_cmd_fal_init(void)
 		&nss_macsec_secy_flow_control_en_get_cmd);
 	cli_install_cmd(CLI_MODE_ENABLE,
 		&nss_macsec_secy_flow_control_en_set_cmd);
+
+	cli_install_cmd(CLI_MODE_ENABLE, &g_fal_tx_udf_filt_t_init_cmd);
+	cli_install_cmd(CLI_MODE_ENABLE, &fal_tx_udf_filt_t_field0_add_cmd);
+	cli_install_cmd(CLI_MODE_ENABLE, &fal_tx_udf_filt_t_field1_add_cmd);
+	cli_install_cmd(CLI_MODE_ENABLE, &fal_tx_udf_filt_t_field2_add_cmd);
+	cli_install_cmd(CLI_MODE_ENABLE, &fal_tx_udf_filt_t_mask_add_cmd);
+	cli_install_cmd(CLI_MODE_ENABLE, &fal_tx_udf_filt_t_type_add_cmd);
+	cli_install_cmd(CLI_MODE_ENABLE, &fal_tx_udf_filt_t_offset_add_cmd);
+	cli_install_cmd(CLI_MODE_ENABLE, &fal_tx_udf_filt_t_operator_add_cmd);
+	cli_install_cmd(CLI_MODE_ENABLE, &nss_macsec_secy_tx_udf_filt_set_cmd);
+	cli_install_cmd(CLI_MODE_ENABLE, &nss_macsec_secy_tx_udf_filt_get_cmd);
+
+	cli_install_cmd(CLI_MODE_ENABLE, &g_fal_rx_udf_filt_t_init_cmd);
+	cli_install_cmd(CLI_MODE_ENABLE, &fal_rx_udf_filt_t_field0_add_cmd);
+	cli_install_cmd(CLI_MODE_ENABLE, &fal_rx_udf_filt_t_field1_add_cmd);
+	cli_install_cmd(CLI_MODE_ENABLE, &fal_rx_udf_filt_t_field2_add_cmd);
+	cli_install_cmd(CLI_MODE_ENABLE, &fal_rx_udf_filt_t_mask_add_cmd);
+	cli_install_cmd(CLI_MODE_ENABLE, &fal_rx_udf_filt_t_type_add_cmd);
+	cli_install_cmd(CLI_MODE_ENABLE, &fal_rx_udf_filt_t_offset_add_cmd);
+	cli_install_cmd(CLI_MODE_ENABLE, &fal_rx_udf_filt_t_operator_add_cmd);
+	cli_install_cmd(CLI_MODE_ENABLE, &nss_macsec_secy_rx_udf_filt_set_cmd);
+	cli_install_cmd(CLI_MODE_ENABLE, &nss_macsec_secy_rx_udf_filt_get_cmd);
+
+	cli_install_cmd(CLI_MODE_ENABLE, &g_fal_tx_udf_ufilt_cfg_t_init_cmd);
+	cli_install_cmd(CLI_MODE_ENABLE,
+			&fal_tx_udf_ufilt_cfg_t_enable_add_cmd);
+	cli_install_cmd(CLI_MODE_ENABLE,
+			&fal_tx_udf_ufilt_cfg_t_priority_add_cmd);
+	cli_install_cmd(CLI_MODE_ENABLE,
+			&fal_tx_udf_ufilt_cfg_t_inverse_add_cmd);
+	cli_install_cmd(CLI_MODE_ENABLE,
+			&fal_tx_udf_ufilt_cfg_t_pattern0_add_cmd);
+	cli_install_cmd(CLI_MODE_ENABLE,
+			&fal_tx_udf_ufilt_cfg_t_pattern1_add_cmd);
+	cli_install_cmd(CLI_MODE_ENABLE,
+			&fal_tx_udf_ufilt_cfg_t_pattern2_add_cmd);
+	cli_install_cmd(CLI_MODE_ENABLE,
+			&nss_macsec_secy_tx_udf_ufilt_cfg_set_cmd);
+	cli_install_cmd(CLI_MODE_ENABLE,
+			&nss_macsec_secy_tx_udf_ufilt_cfg_get_cmd);
+
+	cli_install_cmd(CLI_MODE_ENABLE, &g_fal_tx_udf_cfilt_cfg_t_init_cmd);
+	cli_install_cmd(CLI_MODE_ENABLE,
+			&fal_tx_udf_cfilt_cfg_t_enable_add_cmd);
+	cli_install_cmd(CLI_MODE_ENABLE,
+			&fal_tx_udf_cfilt_cfg_t_priority_add_cmd);
+	cli_install_cmd(CLI_MODE_ENABLE,
+			&fal_tx_udf_cfilt_cfg_t_inverse_add_cmd);
+	cli_install_cmd(CLI_MODE_ENABLE,
+			&fal_tx_udf_cfilt_cfg_t_pattern0_add_cmd);
+	cli_install_cmd(CLI_MODE_ENABLE,
+			&fal_tx_udf_cfilt_cfg_t_pattern1_add_cmd);
+	cli_install_cmd(CLI_MODE_ENABLE,
+			&fal_tx_udf_cfilt_cfg_t_pattern2_add_cmd);
+	cli_install_cmd(CLI_MODE_ENABLE,
+			&nss_macsec_secy_tx_udf_cfilt_cfg_set_cmd);
+	cli_install_cmd(CLI_MODE_ENABLE,
+			&nss_macsec_secy_tx_udf_cfilt_cfg_get_cmd);
+
+	cli_install_cmd(CLI_MODE_ENABLE, &g_fal_rx_udf_ufilt_cfg_t_init_cmd);
+	cli_install_cmd(CLI_MODE_ENABLE,
+			&fal_rx_udf_ufilt_cfg_t_enable_add_cmd);
+	cli_install_cmd(CLI_MODE_ENABLE,
+			&fal_rx_udf_ufilt_cfg_t_priority_add_cmd);
+	cli_install_cmd(CLI_MODE_ENABLE,
+			&fal_rx_udf_ufilt_cfg_t_inverse_add_cmd);
+	cli_install_cmd(CLI_MODE_ENABLE,
+			&fal_rx_udf_ufilt_cfg_t_pattern0_add_cmd);
+	cli_install_cmd(CLI_MODE_ENABLE,
+			&fal_rx_udf_ufilt_cfg_t_pattern1_add_cmd);
+	cli_install_cmd(CLI_MODE_ENABLE,
+			&fal_rx_udf_ufilt_cfg_t_pattern2_add_cmd);
+	cli_install_cmd(CLI_MODE_ENABLE,
+			&nss_macsec_secy_rx_udf_ufilt_cfg_set_cmd);
+	cli_install_cmd(CLI_MODE_ENABLE,
+			&nss_macsec_secy_rx_udf_ufilt_cfg_get_cmd);
 
 	return CLI_OK;
 }

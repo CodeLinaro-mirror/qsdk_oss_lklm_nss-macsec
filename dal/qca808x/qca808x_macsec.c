@@ -2859,6 +2859,446 @@ g_error_t qca808x_secy_forward_az_pattern_en_set(u32 secy_id, bool enable)
 	return ERROR_OK;
 
 }
+
+static g_error_t _qca808x_secy_tx_epr_property_set(u32 secy_id,
+	struct secy_udf_filt_cfg_t *cfg)
+{
+	u16 val = 0;
+
+	SHR_RET_ON_ERR(PHY_REG_FIELD_WRITE(secy_id, PHY_MMD3,
+		MACSEC_E_EPR_CONFIG, E_EPR_PRIORITY, cfg->priority));
+
+	SHR_RET_ON_ERR(PHY_REG_FIELD_WRITE(secy_id, PHY_MMD3,
+		MACSEC_E_EPR_CONFIG, E_EPR_REVERSE, cfg->inverse));
+
+	if (cfg->pattern0 == SECY_FILTER_PATTERN_AND)
+		val = SECY_EPR_PATTERN0;
+	else if (cfg->pattern0 == SECY_FILTER_PATTERN_OR)
+		val = SECY_EPR_PATTERN1;
+	else
+		val = SECY_EPR_PATTERN2;
+	SHR_RET_ON_ERR(PHY_REG_FIELD_WRITE(secy_id, PHY_MMD3,
+		MACSEC_E_EPR_CONFIG, E_EPR_PATTERN0, val));
+
+	if (cfg->pattern1 == SECY_FILTER_PATTERN_AND)
+		val = SECY_EPR_PATTERN0;
+	else if (cfg->pattern1 == SECY_FILTER_PATTERN_OR)
+		val = SECY_EPR_PATTERN1;
+	else
+		val = SECY_EPR_PATTERN2;
+
+	SHR_RET_ON_ERR(PHY_REG_FIELD_WRITE(secy_id, PHY_MMD3,
+		MACSEC_E_EPR_CONFIG, E_EPR_PATTERN1, val));
+
+	if (cfg->pattern2 == SECY_FILTER_PATTERN_AND)
+		val = SECY_EPR_PATTERN0;
+	else if (cfg->pattern2 == SECY_FILTER_PATTERN_OR)
+		val = SECY_EPR_PATTERN1;
+	else
+		val = SECY_EPR_PATTERN2;
+
+	SHR_RET_ON_ERR(PHY_REG_FIELD_WRITE(secy_id, PHY_MMD3,
+		MACSEC_E_EPR_CONFIG, E_EPR_PATTERN2, val));
+
+	return ERROR_OK;
+}
+
+static g_error_t _qca808x_secy_tx_epr_property_get(u32 secy_id,
+	struct secy_udf_filt_cfg_t *cfg)
+{
+	u16 val = 0;
+
+	SHR_RET_ON_ERR(phy_access_reg_read(secy_id, PHY_MMD3,
+		MACSEC_E_EPR_CONFIG, &val));
+
+	cfg->inverse = (val >> E_EPR_REVERSE_OFFSET) & 0xf;
+	cfg->priority = (val >> E_EPR_PRIORITY_OFFSET) & 0x7;
+	if (((val >> E_EPR_PATTERN0_OFFSET) & 0x3) == SECY_EPR_PATTERN0)
+		cfg->pattern0 = SECY_FILTER_PATTERN_AND;
+	else if (((val >> E_EPR_PATTERN0_OFFSET) & 0x3) == SECY_EPR_PATTERN1)
+		cfg->pattern0 = SECY_FILTER_PATTERN_OR;
+	else
+		cfg->pattern0 = SECY_FILTER_PATTERN_XOR;
+
+	if (((val >> E_EPR_PATTERN1_OFFSET) & 0x3) == SECY_EPR_PATTERN0)
+		cfg->pattern1 = SECY_FILTER_PATTERN_AND;
+	else if (((val >> E_EPR_PATTERN1_OFFSET) & 0x3) == SECY_EPR_PATTERN1)
+		cfg->pattern1 = SECY_FILTER_PATTERN_OR;
+	else
+		cfg->pattern1 = SECY_FILTER_PATTERN_XOR;
+
+	if ((val & 0x3) == SECY_EPR_PATTERN0)
+		cfg->pattern2 = SECY_FILTER_PATTERN_AND;
+	else if ((val & 0x3) == SECY_EPR_PATTERN1)
+		cfg->pattern2 = SECY_FILTER_PATTERN_OR;
+	else
+		cfg->pattern2 = SECY_FILTER_PATTERN_XOR;
+
+	return ERROR_OK;
+
+}
+
+g_error_t qca808x_secy_tx_udf_ufilt_cfg_set(u32 secy_id,
+	struct secy_udf_filt_cfg_t *cfg)
+{
+	bool val = FALSE, val1 = FALSE;
+
+	SHR_RET_ON_ERR(PHY_REG_FIELD_READ(secy_id, PHY_MMD3,
+		MACSEC_SYS_CONFIG, SYS_CEPR_EN, &val1));
+
+	if (cfg->enable) {
+		val = TRUE;
+		val1 = FALSE;
+	} else
+		val = FALSE;
+
+	SHR_RET_ON_ERR(PHY_REG_FIELD_WRITE(secy_id, PHY_MMD3,
+		MACSEC_SYS_CONFIG, SYS_UEPR_EN, val));
+
+	SHR_RET_ON_ERR(PHY_REG_FIELD_WRITE(secy_id, PHY_MMD3,
+		MACSEC_SYS_CONFIG, SYS_CEPR_EN, val1));
+
+	SHR_RET_ON_ERR(_qca808x_secy_tx_epr_property_set(secy_id, cfg));
+
+	return ERROR_OK;
+}
+
+g_error_t qca808x_secy_tx_udf_ufilt_cfg_get(u32 secy_id,
+	struct secy_udf_filt_cfg_t *cfg)
+{
+	u16 val = 0;
+
+	memset(cfg, 0, sizeof(*cfg));
+
+	SHR_RET_ON_ERR(PHY_REG_FIELD_READ(secy_id, PHY_MMD3,
+		MACSEC_SYS_CONFIG, SYS_UEPR_EN, &val));
+
+	if (val)
+		cfg->enable = TRUE;
+	else
+		cfg->enable = FALSE;
+
+	SHR_RET_ON_ERR(_qca808x_secy_tx_epr_property_get(secy_id, cfg));
+
+	return ERROR_OK;
+}
+
+g_error_t qca808x_secy_tx_udf_cfilt_cfg_set(u32 secy_id,
+	struct secy_udf_filt_cfg_t *cfg)
+{
+	bool val = 0, val1 = 0;
+
+	SHR_RET_ON_ERR(PHY_REG_FIELD_READ(secy_id, PHY_MMD3,
+		MACSEC_SYS_CONFIG, SYS_UEPR_EN, &val));
+
+	if (cfg->enable) {
+		val = FALSE;
+		val1 = TRUE;
+	} else
+		val1 = FALSE;
+
+	SHR_RET_ON_ERR(PHY_REG_FIELD_WRITE(secy_id, PHY_MMD3,
+		MACSEC_SYS_CONFIG, SYS_UEPR_EN, val));
+
+	SHR_RET_ON_ERR(PHY_REG_FIELD_WRITE(secy_id, PHY_MMD3,
+		MACSEC_SYS_CONFIG, SYS_CEPR_EN, val1));
+
+	SHR_RET_ON_ERR(_qca808x_secy_tx_epr_property_set(secy_id, cfg));
+
+	return ERROR_OK;
+}
+
+g_error_t qca808x_secy_tx_udf_cfilt_cfg_get(u32 secy_id,
+	struct secy_udf_filt_cfg_t *cfg)
+{
+	u16 val = 0;
+
+	memset(cfg, 0, sizeof(*cfg));
+
+	SHR_RET_ON_ERR(PHY_REG_FIELD_READ(secy_id, PHY_MMD3,
+		MACSEC_SYS_CONFIG, SYS_CEPR_EN, &val));
+
+	if (val)
+		cfg->enable = TRUE;
+	else
+		cfg->enable = FALSE;
+
+	SHR_RET_ON_ERR(_qca808x_secy_tx_epr_property_get(secy_id, cfg));
+
+	return ERROR_OK;
+}
+
+g_error_t qca808x_secy_rx_udf_ufilt_cfg_set(u32 secy_id,
+	struct secy_udf_filt_cfg_t *cfg)
+{
+	bool val = FALSE;
+
+	if (cfg->enable)
+		val = TRUE;
+	else
+		val = FALSE;
+
+	SHR_RET_ON_ERR(PHY_REG_FIELD_WRITE(secy_id, PHY_MMD3,
+		MACSEC_SYS_CONFIG, SYS_UIER_EN, val));
+
+	SHR_RET_ON_ERR(PHY_REG_FIELD_WRITE(secy_id, PHY_MMD3,
+		MACSEC_I_EPR_CONFIG, I_EPR_PRIORITY, cfg->priority));
+
+	SHR_RET_ON_ERR(PHY_REG_FIELD_WRITE(secy_id, PHY_MMD3,
+		MACSEC_I_EPR_CONFIG, I_EPR_REVERSE, cfg->inverse));
+
+	if (cfg->pattern0 == SECY_FILTER_PATTERN_AND)
+		val = SECY_EPR_PATTERN0;
+	else if (cfg->pattern0 == SECY_FILTER_PATTERN_OR)
+		val = SECY_EPR_PATTERN1;
+	else
+		val = SECY_EPR_PATTERN2;
+	SHR_RET_ON_ERR(PHY_REG_FIELD_WRITE(secy_id, PHY_MMD3,
+		MACSEC_I_EPR_CONFIG, I_EPR_PATTERN0, val));
+
+	if (cfg->pattern1 == SECY_FILTER_PATTERN_AND)
+		val = SECY_EPR_PATTERN0;
+	else if (cfg->pattern1 == SECY_FILTER_PATTERN_OR)
+		val = SECY_EPR_PATTERN1;
+	else
+		val = SECY_EPR_PATTERN2;
+
+	SHR_RET_ON_ERR(PHY_REG_FIELD_WRITE(secy_id, PHY_MMD3,
+		MACSEC_I_EPR_CONFIG, I_EPR_PATTERN1, val));
+
+	if (cfg->pattern2 == SECY_FILTER_PATTERN_AND)
+		val = SECY_EPR_PATTERN0;
+	else if (cfg->pattern2 == SECY_FILTER_PATTERN_OR)
+		val = SECY_EPR_PATTERN1;
+	else
+		val = SECY_EPR_PATTERN2;
+
+	SHR_RET_ON_ERR(PHY_REG_FIELD_WRITE(secy_id, PHY_MMD3,
+		MACSEC_I_EPR_CONFIG, I_EPR_PATTERN2, val));
+
+	return ERROR_OK;
+}
+
+g_error_t qca808x_secy_rx_udf_ufilt_cfg_get(u32 secy_id,
+	struct secy_udf_filt_cfg_t *cfg)
+{
+	u16 val = 0;
+
+	memset(cfg, 0, sizeof(*cfg));
+
+	SHR_RET_ON_ERR(PHY_REG_FIELD_READ(secy_id, PHY_MMD3,
+		MACSEC_SYS_CONFIG, SYS_UIER_EN, &val));
+
+	if (val)
+		cfg->enable = TRUE;
+	else
+		cfg->enable = FALSE;
+
+	SHR_RET_ON_ERR(phy_access_reg_read(secy_id, PHY_MMD3,
+		MACSEC_I_EPR_CONFIG, &val));
+
+	cfg->inverse = (val >> I_EPR_REVERSE_OFFSET) & 0xf;
+	cfg->priority = (val >> I_EPR_PRIORITY_OFFSET) & 0x7;
+	if (((val >> I_EPR_PATTERN0_OFFSET) & 0x3) == SECY_EPR_PATTERN0)
+		cfg->pattern0 = SECY_FILTER_PATTERN_AND;
+	else if (((val >> I_EPR_PATTERN0_OFFSET) & 0x3) == SECY_EPR_PATTERN1)
+		cfg->pattern0 = SECY_FILTER_PATTERN_OR;
+	else
+		cfg->pattern0 = SECY_FILTER_PATTERN_XOR;
+
+	if (((val >> I_EPR_PATTERN1_OFFSET) & 0x3) == SECY_EPR_PATTERN0)
+		cfg->pattern1 = SECY_FILTER_PATTERN_AND;
+	else if (((val >> I_EPR_PATTERN1_OFFSET) & 0x3) == SECY_EPR_PATTERN1)
+		cfg->pattern1 = SECY_FILTER_PATTERN_OR;
+	else
+		cfg->pattern1 = SECY_FILTER_PATTERN_XOR;
+
+	if ((val & 0x3) == SECY_EPR_PATTERN0)
+		cfg->pattern2 = SECY_FILTER_PATTERN_AND;
+	else if ((val & 0x3) == SECY_EPR_PATTERN1)
+		cfg->pattern2 = SECY_FILTER_PATTERN_OR;
+	else
+		cfg->pattern2 = SECY_FILTER_PATTERN_XOR;
+
+	return ERROR_OK;
+}
+g_error_t qca808x_secy_tx_udf_filt_set(u32 secy_id, u32 index,
+	struct secy_udf_filt_t *filter)
+{
+	u16 val = 0;
+	u16 val_type = 0, val_offset;
+
+	if (index > SECY_FILTER_MAX_INDEX)
+		return ERROR_PARAM;
+
+	val = filter->udf_field0;
+	SHR_RET_ON_ERR(phy_access_reg_write(secy_id, PHY_MMD3,
+		MACSEC_E_EPR_FIELD0(index), val));
+
+	val = filter->udf_field1;
+	SHR_RET_ON_ERR(phy_access_reg_write(secy_id, PHY_MMD3,
+		MACSEC_E_EPR_FIELD1(index), val));
+
+	val = filter->udf_field2;
+	SHR_RET_ON_ERR(phy_access_reg_write(secy_id, PHY_MMD3,
+		MACSEC_E_EPR_FIELD2(index), val));
+
+	val = 0;
+	val |= (filter->mask & 0x3f) << E_EPR_MASK_OFFSET;
+
+	if ((filter->type & 0x3) == SECY_FILTER_IP_PACKET)
+		val_type = SECY_EPR_IP_PACKET;
+	else if ((filter->type & 0x3) == SECY_FILTER_TCP_PACKET)
+		val_type = SECY_EPR_TCP_PACKET;
+	else
+		val_type = SECY_EPR_ANY_PACKET;
+
+	val |= val_type << E_EPR_TYPE_OFFSET;
+
+	val_offset = filter->offset & 0x3f;
+	val |= val_offset << E_EPR_OFFSET_OFFSET;
+
+	val |= (filter->operator & 0x1) << E_EPR_OPERATOR_OFFSET;
+
+	SHR_RET_ON_ERR(phy_access_reg_write(secy_id, PHY_MMD3,
+		MACSEC_E_EPR_MSK_TYPE_OP(index), val));
+
+	return ERROR_OK;
+}
+g_error_t qca808x_secy_tx_udf_filt_get(u32 secy_id, u32 index,
+	struct secy_udf_filt_t *filter)
+{
+	u16 val = 0;
+
+	memset(filter, 0, sizeof(*filter));
+
+	if (index > SECY_FILTER_MAX_INDEX)
+		return ERROR_PARAM;
+	SHR_RET_ON_ERR(phy_access_reg_read(secy_id, PHY_MMD3,
+		MACSEC_E_EPR_FIELD0(index), &val));
+	filter->udf_field0 = val;
+
+	val = 0;
+	SHR_RET_ON_ERR(phy_access_reg_read(secy_id, PHY_MMD3,
+		MACSEC_E_EPR_FIELD1(index), &val));
+	filter->udf_field1 = val;
+
+	val = 0;
+	SHR_RET_ON_ERR(phy_access_reg_read(secy_id, PHY_MMD3,
+		MACSEC_E_EPR_FIELD2(index), &val));
+	filter->udf_field2 = val;
+
+	val = 0;
+	SHR_RET_ON_ERR(phy_access_reg_read(secy_id, PHY_MMD3,
+		MACSEC_E_EPR_MSK_TYPE_OP(index), &val));
+
+	filter->mask = val & 0x3f;
+
+	if (((val >> E_EPR_TYPE_OFFSET) & 0x3) == SECY_EPR_IP_PACKET)
+		filter->type = SECY_FILTER_IP_PACKET;
+	else if (((val >> E_EPR_TYPE_OFFSET) & 0x3) == SECY_EPR_TCP_PACKET)
+		filter->type = SECY_FILTER_TCP_PACKET;
+	else
+		filter->type = SECY_FILTER_ANY_PACKET;
+
+	filter->offset = (val >> E_EPR_OFFSET_OFFSET) & 0x3f;
+
+	if ((val >> E_EPR_OPERATOR_OFFSET) & 0x1)
+		filter->operator = SECY_FILTER_OPERATOR_LESS;
+	else
+		filter->operator = SECY_FILTER_OPERATOR_EQUAL;
+
+	return ERROR_OK;
+}
+g_error_t qca808x_secy_rx_udf_filt_set(u32 secy_id, u32 index,
+	struct secy_udf_filt_t *filter)
+{
+	u16 val = 0;
+	u16 val_type = 0, val_offset;
+
+	if (index > SECY_FILTER_MAX_INDEX)
+		return ERROR_PARAM;
+
+	val = filter->udf_field0;
+	SHR_RET_ON_ERR(phy_access_reg_write(secy_id, PHY_MMD3,
+		MACSEC_I_EPR_FIELD0(index), val));
+
+	val = filter->udf_field1;
+	SHR_RET_ON_ERR(phy_access_reg_write(secy_id, PHY_MMD3,
+		MACSEC_I_EPR_FIELD1(index), val));
+
+	val = filter->udf_field2;
+	SHR_RET_ON_ERR(phy_access_reg_write(secy_id, PHY_MMD3,
+		MACSEC_I_EPR_FIELD2(index), val));
+
+	val = 0;
+	val |= (filter->mask & 0x3f) << I_EPR_MASK_OFFSET;
+
+	if ((filter->type & 0x3) == SECY_FILTER_IP_PACKET)
+		val_type = SECY_EPR_IP_PACKET;
+	else if ((filter->type & 0x3) == SECY_FILTER_TCP_PACKET)
+		val_type = SECY_EPR_TCP_PACKET;
+	else
+		val_type = SECY_EPR_ANY_PACKET;
+
+	val |= val_type << I_EPR_TYPE_OFFSET;
+
+	val_offset = filter->offset & 0x3f;
+	val |= val_offset << I_EPR_OFFSET_OFFSET;
+
+	val |= (filter->operator & 0x1) << I_EPR_OPERATOR_OFFSET;
+
+	SHR_RET_ON_ERR(phy_access_reg_write(secy_id, PHY_MMD3,
+		MACSEC_I_EPR_MSK_TYPE_OP(index), val));
+
+	return ERROR_OK;
+}
+g_error_t qca808x_secy_rx_udf_filt_get(u32 secy_id, u32 index,
+	struct secy_udf_filt_t *filter)
+{
+	u16 val = 0;
+
+	memset(filter, 0, sizeof(*filter));
+
+	if (index > SECY_FILTER_MAX_INDEX)
+		return ERROR_PARAM;
+	SHR_RET_ON_ERR(phy_access_reg_read(secy_id, PHY_MMD3,
+		MACSEC_I_EPR_FIELD0(index), &val));
+	filter->udf_field0 = val;
+
+	val = 0;
+	SHR_RET_ON_ERR(phy_access_reg_read(secy_id, PHY_MMD3,
+		MACSEC_I_EPR_FIELD1(index), &val));
+	filter->udf_field1 = val;
+
+	val = 0;
+	SHR_RET_ON_ERR(phy_access_reg_read(secy_id, PHY_MMD3,
+		MACSEC_I_EPR_FIELD2(index), &val));
+	filter->udf_field2 = val;
+
+	val = 0;
+	SHR_RET_ON_ERR(phy_access_reg_read(secy_id, PHY_MMD3,
+		MACSEC_I_EPR_MSK_TYPE_OP(index), &val));
+
+	filter->mask = val & 0x3f;
+
+	if (((val >> I_EPR_TYPE_OFFSET) & 0x3) == SECY_EPR_IP_PACKET)
+		filter->type = SECY_FILTER_IP_PACKET;
+	else if (((val >> I_EPR_TYPE_OFFSET) & 0x3) == SECY_EPR_TCP_PACKET)
+		filter->type = SECY_FILTER_TCP_PACKET;
+	else
+		filter->type = SECY_FILTER_ANY_PACKET;
+
+	filter->offset = (val >> I_EPR_OFFSET_OFFSET) & 0x3f;
+
+	if ((val >> I_EPR_OPERATOR_OFFSET) & 0x1)
+		filter->operator = SECY_FILTER_OPERATOR_LESS;
+	else
+		filter->operator = SECY_FILTER_OPERATOR_EQUAL;
+
+	return ERROR_OK;
+}
+
 g_error_t qca808x_secy_init(u32 secy_id)
 {
 	u32 sc, sa;
@@ -3054,6 +3494,27 @@ static int qca808x_secy_ops_init(void)
 	qca808x_secy_ops->secy_rx_sa_mib_clear = qca808x_secy_rx_sa_mib_clear;
 	qca808x_secy_ops->secy_rx_mib_clear = qca808x_secy_rx_mib_clear;
 
+	/*filter */
+	qca808x_secy_ops->secy_tx_udf_ufilt_cfg_set =
+		qca808x_secy_tx_udf_ufilt_cfg_set;
+	qca808x_secy_ops->secy_tx_udf_ufilt_cfg_get =
+		qca808x_secy_tx_udf_ufilt_cfg_get;
+	qca808x_secy_ops->secy_tx_udf_cfilt_cfg_set =
+		qca808x_secy_tx_udf_cfilt_cfg_set;
+	qca808x_secy_ops->secy_tx_udf_cfilt_cfg_get =
+		qca808x_secy_tx_udf_cfilt_cfg_get;
+	qca808x_secy_ops->secy_rx_udf_ufilt_cfg_set =
+		qca808x_secy_rx_udf_ufilt_cfg_set;
+	qca808x_secy_ops->secy_rx_udf_ufilt_cfg_get =
+		qca808x_secy_rx_udf_ufilt_cfg_get;
+	qca808x_secy_ops->secy_tx_udf_filt_set =
+		qca808x_secy_tx_udf_filt_set;
+	qca808x_secy_ops->secy_tx_udf_filt_get =
+		qca808x_secy_tx_udf_filt_get;
+	qca808x_secy_ops->secy_rx_udf_filt_set =
+		qca808x_secy_rx_udf_filt_set;
+	qca808x_secy_ops->secy_rx_udf_filt_get =
+		qca808x_secy_rx_udf_filt_get;
 
 	ret = secy_ops_register(NAPA_PHY_CHIP, qca808x_secy_ops);
 

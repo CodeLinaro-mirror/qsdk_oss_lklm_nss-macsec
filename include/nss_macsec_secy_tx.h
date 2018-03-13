@@ -105,6 +105,39 @@ struct fal_tx_sa_ki_t {
 	u8 ki[16];
 };
 
+#define FAL_TX_UDF_FILT_MAX_ID     0x4
+
+enum fal_tx_udf_filt_cfg_pattern_e {
+	FAL_TX_FILTER_PATTERN_AND = 0,
+	FAL_TX_FILTER_PATTERN_OR = 1,
+	FAL_TX_FILTER_PATTERN_XOR = 2
+};
+struct fal_tx_udf_filt_cfg_t {
+	bool enable;
+	u16 priority;
+	u16 inverse;
+	enum fal_tx_udf_filt_cfg_pattern_e pattern0;
+	enum fal_tx_udf_filt_cfg_pattern_e pattern1;
+	enum fal_tx_udf_filt_cfg_pattern_e pattern2;
+};
+enum fal_tx_udf_filt_type_e {
+	FAL_TX_FILTER_ANY_PACKET = 0,
+	FAL_TX_FILTER_IP_PACKET = 1,
+	FAL_TX_FILTER_TCP_PACKET = 2
+};
+enum fal_tx_udf_filt_op_e {
+	FAL_TX_FILTER_OPERATOR_EQUAL = 0,
+	FAL_TX_FILTER_OPERATOR_LESS = 1
+};
+struct fal_tx_udf_filt_t {
+	u16 udf_field0;
+	u16 udf_field1;
+	u16 udf_field2;
+	u16 mask;
+	enum fal_tx_udf_filt_type_e type;
+	enum fal_tx_udf_filt_op_e operator;
+	u16 offset;
+};
 
 /**
 * @param[in] secy_id
@@ -523,5 +556,17 @@ u32 nss_macsec_secy_tx_sa_ki_get(u32 secy_id, u32 channel, u32 an,
 u32 nss_macsec_secy_tx_sa_ki_set(u32 secy_id, u32 channel, u32 an,
 	struct fal_tx_sa_ki_t *ki);
 
+u32 nss_macsec_secy_tx_udf_filt_set(u32 secy_id, u32 filt_id,
+	struct fal_tx_udf_filt_t *pfilt);
+u32 nss_macsec_secy_tx_udf_filt_get(u32 secy_id, u32 filt_id,
+	struct fal_tx_udf_filt_t *pfilt);
+u32 nss_macsec_secy_tx_udf_ufilt_cfg_set(u32 secy_id,
+	struct fal_tx_udf_filt_cfg_t *cfg);
+u32 nss_macsec_secy_tx_udf_ufilt_cfg_get(u32 secy_id,
+	struct fal_tx_udf_filt_cfg_t *cfg);
+u32 nss_macsec_secy_tx_udf_cfilt_cfg_set(u32 secy_id,
+	struct fal_tx_udf_filt_cfg_t *cfg);
+u32 nss_macsec_secy_tx_udf_cfilt_cfg_get(u32 secy_id,
+	struct fal_tx_udf_filt_cfg_t *cfg);
 
 #endif /* _NSS_MACSEC_SECY_TX_H_ */

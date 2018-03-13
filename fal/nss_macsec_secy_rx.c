@@ -1420,3 +1420,138 @@ u32 nss_macsec_secy_rx_sa_ki_set(u32 secy_id, u32 channel,
 
 	return ERROR_NOT_SUPPORT;
 }
+
+u32 nss_macsec_secy_rx_udf_filt_set(u32 secy_id, u32 filt_id,
+	struct fal_rx_udf_filt_t *pfilt)
+{
+	g_error_t rv;
+	struct secy_drv_t *secy_drv;
+	struct secy_udf_filt_t filter;
+
+	SHR_PARAM_CHECK((secy_id < FAL_SECY_ID_NUM) &&
+			(filt_id < FAL_RX_UDF_FILT_MAX_ID) && (pfilt != NULL));
+
+	memset(&filter, 0, sizeof(filter));
+	secy_drv = nss_macsec_secy_ops_get(secy_id);
+	if (secy_drv != NULL) {
+		if (secy_drv->secy_rx_udf_filt_set == NULL) {
+			rv = ERROR_NOT_SUPPORT;
+		} else {
+			filter.udf_field0 = pfilt->udf_field0;
+			filter.udf_field1 = pfilt->udf_field1;
+			filter.udf_field2 = pfilt->udf_field2;
+			filter.type = (enum secy_udf_filt_type_t)pfilt->type;
+			filter.operator =
+				(enum secy_udf_filt_op_t)pfilt->operator;
+			filter.offset = pfilt->offset;
+			filter.mask = pfilt->mask;
+			rv = secy_drv->secy_rx_udf_filt_set(secy_id, filt_id,
+				&filter);
+		}
+		return rv;
+	}
+
+	return ERROR_NOT_SUPPORT;
+}
+u32 nss_macsec_secy_rx_udf_filt_get(u32 secy_id, u32 filt_id,
+	struct fal_rx_udf_filt_t *pfilt)
+{
+	g_error_t rv;
+	struct secy_drv_t *secy_drv;
+	struct secy_udf_filt_t filter;
+
+	SHR_PARAM_CHECK((secy_id < FAL_SECY_ID_NUM) &&
+			(filt_id < FAL_RX_UDF_FILT_MAX_ID) && (pfilt != NULL));
+
+	memset(&filter, 0, sizeof(filter));
+
+	secy_drv = nss_macsec_secy_ops_get(secy_id);
+	if (secy_drv != NULL) {
+		if (secy_drv->secy_rx_udf_filt_get == NULL) {
+			rv = ERROR_NOT_SUPPORT;
+		} else {
+			rv = secy_drv->secy_rx_udf_filt_get(secy_id, filt_id,
+				&filter);
+			pfilt->udf_field0 = filter.udf_field0;
+			pfilt->udf_field1 = filter.udf_field1;
+			pfilt->udf_field2 = filter.udf_field2;
+			pfilt->type = (enum fal_rx_udf_filt_type_e)filter.type;
+			pfilt->operator =
+				(enum fal_rx_udf_filt_op_e)filter.operator;
+			pfilt->offset = filter.offset;
+			pfilt->mask = filter.mask;
+		}
+		return rv;
+	}
+
+	return ERROR_NOT_SUPPORT;
+}
+u32 nss_macsec_secy_rx_udf_ufilt_cfg_set(u32 secy_id,
+	struct fal_rx_udf_filt_cfg_t *cfg)
+{
+	g_error_t rv;
+	struct secy_drv_t *secy_drv;
+	struct secy_udf_filt_cfg_t secy_cfg;
+
+	SHR_PARAM_CHECK((secy_id < FAL_SECY_ID_NUM) &&
+			(cfg != NULL));
+
+	memset(&secy_cfg, 0, sizeof(secy_cfg));
+	secy_drv = nss_macsec_secy_ops_get(secy_id);
+	if (secy_drv != NULL) {
+		if (secy_drv->secy_rx_udf_ufilt_cfg_set == NULL) {
+			rv = ERROR_NOT_SUPPORT;
+		} else {
+			secy_cfg.enable = cfg->enable;
+			secy_cfg.priority = cfg->priority;
+			secy_cfg.inverse = cfg->inverse;
+			secy_cfg.pattern0 =
+			(enum secy_udf_filt_cfg_pattern_t)cfg->pattern0;
+			secy_cfg.pattern1 =
+			(enum secy_udf_filt_cfg_pattern_t)cfg->pattern1;
+			secy_cfg.pattern2 =
+			(enum secy_udf_filt_cfg_pattern_t)cfg->pattern2;
+			rv = secy_drv->secy_rx_udf_ufilt_cfg_set(secy_id,
+				&secy_cfg);
+		}
+		return rv;
+	}
+
+	return ERROR_NOT_SUPPORT;
+}
+u32 nss_macsec_secy_rx_udf_ufilt_cfg_get(u32 secy_id,
+	struct fal_rx_udf_filt_cfg_t *cfg)
+{
+	g_error_t rv;
+	struct secy_drv_t *secy_drv;
+	struct secy_udf_filt_cfg_t secy_cfg;
+
+
+	SHR_PARAM_CHECK((secy_id < FAL_SECY_ID_NUM) &&
+			(cfg != NULL));
+
+	memset(&secy_cfg, 0, sizeof(secy_cfg));
+
+	secy_drv = nss_macsec_secy_ops_get(secy_id);
+	if (secy_drv != NULL) {
+		if (secy_drv->secy_rx_udf_ufilt_cfg_get == NULL) {
+			rv = ERROR_NOT_SUPPORT;
+		} else {
+			rv = secy_drv->secy_rx_udf_ufilt_cfg_get(secy_id,
+				&secy_cfg);
+			cfg->enable = secy_cfg.enable;
+			cfg->priority = secy_cfg.priority;
+			cfg->inverse = secy_cfg.inverse;
+			cfg->pattern0 =
+			(enum fal_rx_udf_filt_cfg_pattern_e)secy_cfg.pattern0;
+			cfg->pattern1 =
+			(enum fal_rx_udf_filt_cfg_pattern_e)secy_cfg.pattern1;
+			cfg->pattern2 =
+			(enum fal_rx_udf_filt_cfg_pattern_e)secy_cfg.pattern2;
+		}
+		return rv;
+	}
+
+	return ERROR_NOT_SUPPORT;
+}
+

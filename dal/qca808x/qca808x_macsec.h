@@ -307,10 +307,113 @@
 #define I_FORWARD_PATTERN_EN_OFFSET        12
 #define I_FORWARD_PATTERN_EN_LEN           1
 
+/* egress epr configure register */
+#define MACSEC_E_EPR_CONFIG           (MACSEC_SYS_BASE + 0x01)
 
+#define E_EPR_PRIORITY                   BIT_12
+#define E_EPR_PRIORITY_OFFSET             12
+#define E_EPR_PRIORITY_LEN                3
+
+#define E_EPR_REVERSE                BIT_6
+#define E_EPR_REVERSE_OFFSET          6
+#define E_EPR_REVERSE_LEN             4
+
+#define E_EPR_PATTERN0              BIT_4
+#define E_EPR_PATTERN0_OFFSET       4
+#define E_EPR_PATTERN0_LEN          2
+
+#define E_EPR_PATTERN1              BIT_2
+#define E_EPR_PATTERN1_OFFSET       2
+#define E_EPR_PATTERN1_LEN          2
+
+#define E_EPR_PATTERN2              BIT_0
+#define E_EPR_PATTERN2_OFFSET       0
+#define E_EPR_PATTERN2_LEN          2
+
+/* ingress epr configure register */
+#define MACSEC_I_EPR_CONFIG           (MACSEC_SYS_BASE + 0x02)
+
+#define I_EPR_PRIORITY                   BIT_12
+#define I_EPR_PRIORITY_OFFSET             12
+#define I_EPR_PRIORITY_LEN                3
+
+#define I_EPR_REVERSE                BIT_6
+#define I_EPR_REVERSE_OFFSET          6
+#define I_EPR_REVERSE_LEN             4
+
+#define I_EPR_PATTERN0              BIT_4
+#define I_EPR_PATTERN0_OFFSET       4
+#define I_EPR_PATTERN0_LEN          2
+
+#define I_EPR_PATTERN1              BIT_2
+#define I_EPR_PATTERN1_OFFSET       2
+#define I_EPR_PATTERN1_LEN          2
+
+#define I_EPR_PATTERN2              BIT_0
+#define I_EPR_PATTERN2_OFFSET       0
+#define I_EPR_PATTERN2_LEN          2
+
+#define SECY_EPR_PATTERN0	0x0
+#define SECY_EPR_PATTERN1	0x1
+#define SECY_EPR_PATTERN2	0x2
 
 /* EPR block */
 
+#define SECY_EPR_ANY_PACKET	0x0
+#define SECY_EPR_IP_PACKET	0x2
+#define SECY_EPR_TCP_PACKET	0x3
+
+#define MACSEC_E_EPR_FIELD2(channel) \
+	((MACSEC_EPR_BASE + channel * 0x4) + 0x00)
+#define MACSEC_E_EPR_FIELD1(channel) \
+	((MACSEC_EPR_BASE + channel * 0x4) + 0x01)
+#define MACSEC_E_EPR_FIELD0(channel) \
+	((MACSEC_EPR_BASE + channel * 0x4) + 0x02)
+
+#define MACSEC_E_EPR_MSK_TYPE_OP(channel) \
+	((MACSEC_EPR_BASE + channel * 0x4) + 0x03)
+
+#define E_EPR_MASK              BIT_0
+#define E_EPR_MASK_OFFSET        0
+#define E_EPR_MASK_LEN           6
+
+#define E_EPR_TYPE                 BIT_6
+#define E_EPR_TYPE_OFFSET           6
+#define E_EPR_TYPE_LEN              2
+
+#define E_EPR_OFFSET              BIT_8
+#define E_EPR_OFFSET_OFFSET           8
+#define E_EPR_OFFSET_LEN              6
+
+#define E_EPR_OPERATOR              BIT_15
+#define E_EPR_OPERATOR_OFFSET           15
+#define E_EPR_OPERATOR_LEN              1
+
+#define MACSEC_I_EPR_FIELD2(channel) \
+	((MACSEC_EPR_BASE + 0x10 + channel * 0x4) + 0x00)
+#define MACSEC_I_EPR_FIELD1(channel) \
+	((MACSEC_EPR_BASE + 0x10 + channel * 0x4) + 0x01)
+#define MACSEC_I_EPR_FIELD0(channel) \
+	((MACSEC_EPR_BASE + 0x10 + channel * 0x4) + 0x02)
+
+#define MACSEC_I_EPR_MSK_TYPE_OP(channel) \
+	((MACSEC_EPR_BASE + 0x10 + channel * 0x4) + 0x03)
+
+#define I_EPR_MASK              BIT_0
+#define I_EPR_MASK_OFFSET        0
+#define I_EPR_MASK_LEN           6
+
+#define I_EPR_TYPE                 BIT_6
+#define I_EPR_TYPE_OFFSET           6
+#define I_EPR_TYPE_LEN              2
+
+#define I_EPR_OFFSET              BIT_8
+#define I_EPR_OFFSET_OFFSET           8
+#define I_EPR_OFFSET_LEN              6
+
+#define I_EPR_OPERATOR              BIT_15
+#define I_EPR_OPERATOR_OFFSET           15
+#define I_EPR_OPERATOR_LEN              1
 
 /* SA TX/RX control registers */
 #define MACSEC_TX_SA_CONTROL        (MACSEC_SA_CONTROL_BASE + 0x00)
@@ -815,6 +918,41 @@ enum secy_sc_sa_mapping_mode_t {
 	SECY_SC_SA_MAP_1_2 = 1,
 	SECY_SC_SA_MAP_1_4 = 2,
 	SECY_SC_SA_MAP_MAX = 3
+};
+
+#define SECY_FILTER_MAX_INDEX	0x3
+
+enum secy_udf_filt_type_t {
+	SECY_FILTER_ANY_PACKET = 0,
+	SECY_FILTER_IP_PACKET = 1,
+	SECY_FILTER_TCP_PACKET = 2
+};
+enum secy_udf_filt_op_t {
+	SECY_FILTER_OPERATOR_EQUAL = 0,
+	SECY_FILTER_OPERATOR_LESS = 1
+};
+struct secy_udf_filt_t {
+	u16 udf_field0;
+	u16 udf_field1;
+	u16 udf_field2;
+	u16 mask;
+	enum secy_udf_filt_type_t type;
+	enum secy_udf_filt_op_t operator;
+	u16 offset;
+};
+
+enum secy_udf_filt_cfg_pattern_t {
+	SECY_FILTER_PATTERN_AND = 0,
+	SECY_FILTER_PATTERN_OR = 1,
+	SECY_FILTER_PATTERN_XOR = 2
+};
+struct secy_udf_filt_cfg_t {
+	bool enable;
+	u16 priority;
+	u16 inverse;
+	enum secy_udf_filt_cfg_pattern_t pattern0;
+	enum secy_udf_filt_cfg_pattern_t pattern1;
+	enum secy_udf_filt_cfg_pattern_t pattern2;
 };
 int nss_macsec_phy_mdio_write(u32 phy_addr, u32 reg_addr, u16 val16);
 int nss_macsec_phy_mdio_read(u32 phy_addr, u32 reg_addr, u16 *val16);
