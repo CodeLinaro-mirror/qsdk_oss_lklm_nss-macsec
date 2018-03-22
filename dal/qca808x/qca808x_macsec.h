@@ -59,6 +59,7 @@
 #define SECY_POLICY_IDX_MAX       15
 #define SAK_LEN_128BITS	16
 #define SAK_LEN_256BITS	32
+#define SECY_FILTER_MAX_INDEX	0x3
 
 #define SC_BIND_MASK_DA           0x00000001
 #define SC_BIND_MASK_SA           0x00000002
@@ -101,6 +102,13 @@
 #define MACSEC_TX_XPN_BASE          0xC180
 #define MACSEC_RX_XPN_BASE          0xC380
 
+/**********************MMD7********************************/
+/* MACsec register base address definition in PHY */
+#define MACSEC_SHADOW_REGISTER           0x807f
+
+#define MACSEC_SHADOW_DUPLEX_EN                    BIT_8
+#define MACSEC_SHADOW_DUPLEX_EN_OFFSET             8
+#define MACSEC_SHADOW_DUPLEX_EN_LEN                1
 
 /* system registers*/
 
@@ -706,7 +714,6 @@ enum phy_layer_t {
 struct secy_sci_t {
 	u8  addr[6];
 	u16 port;
-
 };
 struct secy_mac_t {
 	u8   addr[6];
@@ -714,7 +721,6 @@ struct secy_mac_t {
 struct secy_rx_sc_policy_action_t {
 	u32   rx_sc_index;
 	u8    decryption_offset;
-
 };
 struct secy_rx_sc_policy_rule_t {
 	bool  rule_valid;
@@ -746,214 +752,7 @@ struct secy_tx_sc_policy_rule_t {
 	bool  bc_flag;
 	struct secy_tx_sc_policy_action_t action;
 };
-/** SecY special packet type */
-enum secy_packet_type_t {
-	PACKET_STP   = 0,   /*< Spanning Tree Protocol Packet */
-	PACKET_CDP   = 1,   /*< Cisco Discovery Protocol Packet */
-	PACKET_LLDP  = 2,   /*< Link Layer Discovery Protocol Packet */
-};
-enum secy_packet_action_t {
-	PACKET_CRYPTO_OR_DISCARD = 0X0,
-	PACKET_CRYPTO_OR_UPLOAD  = 0X1,
-	PACKET_PLAIN_OR_DISCARD  = 0X2,
-	PACKET_PLAIN_OR_UPLOAD   = 0X3,
-};
-/** SecY loopback type */
-enum secy_loopback_type_t {
-	MACSEC_NORMAL     = 0x0,
-	MACSEC_PHY_LB     = 0x1,
-	MACSEC_SWITCH_LB  = 0x2,
-	MACSEC_BYPASS     = 0x3,
-};
-enum secy_vf_t {
-	STRICT    = 0,
-	CHECKED   = 1,
-	DISABLED  = 2,
-};
-enum secy_cofidentiality_offset_t {
-	SECY_CONFIDENTIALITY_OFFSET_00 = 0, /**< 0  byte */
-	SECY_CONFIDENTIALITY_OFFSET_30 = 1, /**< 30 bytes */
-	SECY_CONFIDENTIALITY_OFFSET_50 = 2, /**< 50 bytes */
-};
-enum secy_cipher_suite_t {
-	SECY_CIPHER_SUITE_128 = 0,
-	SECY_CIPHER_SUITE_256 = 1,
-	SECY_CIPHER_SUITE_XPN_128,
-	SECY_CIPHER_SUITE_XPN_256,
-	SECY_CIPHER_SUITE_MAX,
-};
-enum secy_tx_class_lut_action_t {
-	SECY_TX_CLASS_ACTION_FORWARD,
-	SECY_TX_CLASS_ACTION_BYPASS,
-	SECY_TX_CLASS_ACTION_DROP,
-	SECY_TX_CLASS_ACTION_MAX
-};
-struct secy_tx_class_lut_t {
-	bool valid;
-	enum secy_tx_class_lut_action_t action;
-	u32 channel;
-	u8 da[6];
-	u8 da_mask;		/* first 6 bits are useful */
-	u8 sa[6];
-	u8 sa_mask;		/* first 6 bits are useful */
-	u16 ether_type;
-	u8 ether_type_mask;	/* first 2 bits are useful */
-	bool udf0_valid;
-	u8 udf0_byte;
-	u8 udf0_location;	/* first 6 bits are useful */
-	bool udf1_valid;
-	u8 udf1_byte;
-	u8 udf1_location;	/* first 6 bits are useful */
-	bool udf2_valid;
-	u8 udf2_byte;
-	u8 udf2_location;	/* first 6 bits are useful */
-	bool udf3_valid;
-	u8 udf3_byte;
-	u8 udf3_location;	/* first 6 bits are useful */
-	bool vlan_valid;
-	u8 vlan_valid_mask;	/* first bit is useful */
-	u8 vlan_up;
-	u8 vlan_up_mask;	/* first bit is useful */
-	u16 vlan_id;
-	u8 vlan_id_mask;	/* first 2 bits are useful */
-	/*add for NAPA PHY*/
-	u16 outer_vlanid;
-	u8 sci[8];
-	u8 tci;
-	u8 offset;
-	bool bc_flag;
-	u32 rule_mask;
-};
-enum secy_rx_prc_lut_action_t {
-	SECY_RX_PRC_ACTION_PROCESS,
-	SECY_RX_PRC_ACTION_PROCESS_WITH_SECTAG,
-	SECY_RX_PRC_ACTION_BYPASS,
-	SECY_RX_PRC_ACTION_DROP,
-	SECY_RX_PRC_ACTION_MAX
-};
-struct secy_rx_prc_lut_t {
-	bool valid;
-	bool uncontrolled_port;
-	enum secy_rx_prc_lut_action_t action;
-	u32 channel;
-	u8 sci[8];
-	u8 sci_mask;		/* first 8 bits are useful */
-	u8 tci;
-	u8 tci_mask;		/* first 6 bits are useful */
-	u8 da[6];
-	u8 da_mask;		/* first 6 bits are useful */
-	u8 sa[6];
-	u8 sa_mask;		/* first 6 bits are useful */
-	u16 ether_type;
-	u8 ether_type_mask;	/* first 2 bits are useful */
-	u8 offset;
-	/*add for NAPA PHY*/
-	u16 outer_vlanid;
-	u16 inner_vlanid;
-	bool bc_flag;
-	u32 rule_mask;
-};
-struct secy_sak_t {
-	u8 sak[16];
-	u8 sak1[16];
-	u32 len;
-};
-struct secy_sa_ki_t {
-	u8 ki[16];
-};
-struct secy_tx_sa_mib_t {
-	u64 hit_drop_redirect;
-	u64 protected2_pkts;
-	u64 protected_pkts;
-	u64 encrypted_pkts;
-};
-struct secy_tx_sc_mib_t {
-	u64 protected_pkts;
-	u64 encrypted_pkts;
-	u64 protected_octets;
-	u64 encrypted_octets;
-};
-struct secy_tx_mib_t {
-	u64 ctl_pkts;
-	u64 unknown_sa_pkts;
-	u64 untagged_pkts;
-	u64 too_long;
-	u64 ecc_error_pkts;
-	u64 unctrl_hit_drop_redir_pkts;
-};
-struct secy_rx_sa_mib_t {
-	u64 untagged_hit_pkts;
-	u64 hit_drop_redir_pkts;
-	u64 not_using_sa;
-	u64 unused_sa;
-	u64 not_valid_pkts;
-	u64 invalid_pkts;
-	u64 ok_pkts;
-	u64 late_pkts;
-	u64 delayed_pkts;
-	u64 unchecked_pkts;
-	u64 validated_octets;
-	u64 decrypted_octets;
-};
-struct secy_rx_mib_t {
-	u64 unctrl_prt_tx_octets;
-	u64 ctl_pkts;
-	u64 tagged_miss_pkts;
-	u64 untagged_hit_pkts;
-	u64 notag_pkts;
-	u64 untagged_pkts;
-	u64 bad_tag_pkts;
-	u64 no_sci_pkts;
-	u64 unknown_sci_pkts;
-	u64 ctrl_prt_pass_pkts;
-	u64 unctrl_prt_pass_pkts;
-	u64 ctrl_prt_fail_pkts;
-	u64 unctrl_prt_fail_pkts;
-	u64 too_long_packets;
-	u64 igpoc_ctl_pkts;
-	u64 ecc_error_pkts;
-};
-enum secy_sc_sa_mapping_mode_t {
-	SECY_SC_SA_MAP_1_1 = 0,
-	SECY_SC_SA_MAP_1_2 = 1,
-	SECY_SC_SA_MAP_1_4 = 2,
-	SECY_SC_SA_MAP_MAX = 3
-};
 
-#define SECY_FILTER_MAX_INDEX	0x3
-
-enum secy_udf_filt_type_t {
-	SECY_FILTER_ANY_PACKET = 0,
-	SECY_FILTER_IP_PACKET = 1,
-	SECY_FILTER_TCP_PACKET = 2
-};
-enum secy_udf_filt_op_t {
-	SECY_FILTER_OPERATOR_EQUAL = 0,
-	SECY_FILTER_OPERATOR_LESS = 1
-};
-struct secy_udf_filt_t {
-	u16 udf_field0;
-	u16 udf_field1;
-	u16 udf_field2;
-	u16 mask;
-	enum secy_udf_filt_type_t type;
-	enum secy_udf_filt_op_t operator;
-	u16 offset;
-};
-
-enum secy_udf_filt_cfg_pattern_t {
-	SECY_FILTER_PATTERN_AND = 0,
-	SECY_FILTER_PATTERN_OR = 1,
-	SECY_FILTER_PATTERN_XOR = 2
-};
-struct secy_udf_filt_cfg_t {
-	bool enable;
-	u16 priority;
-	u16 inverse;
-	enum secy_udf_filt_cfg_pattern_t pattern0;
-	enum secy_udf_filt_cfg_pattern_t pattern1;
-	enum secy_udf_filt_cfg_pattern_t pattern2;
-};
 int nss_macsec_phy_mdio_write(u32 phy_addr, u32 reg_addr, u16 val16);
 int nss_macsec_phy_mdio_read(u32 phy_addr, u32 reg_addr, u16 *val16);
 g_error_t phy_mii_reg_read(u32 secy_id, u32 reg_addr, u16 *p_val16);

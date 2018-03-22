@@ -201,9 +201,33 @@ u32 nss_macsec_secy_tx_ctl_filt_get(u32 secy_id, u32 filt_id,
 				    fal_tx_ctl_filt_t *pfilt)
 {
 	struct eg_ctl_filt ctl_entry;
+	g_error_t rv;
+	struct secy_drv_t *secy_drv;
+	struct secy_ctl_filt_t secy_ctl_filt;
 
 	SHR_PARAM_CHECK((secy_id < FAL_SECY_ID_NUM) &&
 			(filt_id < FAL_TX_CTL_FILT_HW_NUM) && (pfilt != NULL));
+
+	memset(&secy_ctl_filt, 0, sizeof(secy_ctl_filt));
+
+	secy_drv = nss_macsec_secy_ops_get(secy_id);
+	if (secy_drv != NULL) {
+		if (secy_drv->secy_tx_ctl_filt_get == NULL) {
+			rv = ERROR_NOT_SUPPORT;
+		} else {
+			rv = secy_drv->secy_tx_ctl_filt_get(secy_id, filt_id,
+				&secy_ctl_filt);
+			pfilt->bypass = secy_ctl_filt.bypass;
+			pfilt->match_type =
+			(fal_eg_ctl_match_type_e)secy_ctl_filt.match_type;
+			pfilt->match_mask = secy_ctl_filt.match_mask;
+			pfilt->ether_type_da_range =
+				secy_ctl_filt.ether_type_da_range;
+			memcpy(pfilt->sa_da_addr, secy_ctl_filt.sa_da_addr,
+				sizeof(secy_ctl_filt.sa_da_addr));
+		}
+		return rv;
+	}
 
 	SHR_RET_ON_ERR(eg_ctl_filt_table_get
 		       (secy_id, filt_id, (u32 *) (&ctl_entry)));
@@ -227,9 +251,33 @@ u32 nss_macsec_secy_tx_ctl_filt_set(u32 secy_id, u32 filt_id,
 				    fal_tx_ctl_filt_t *pfilt)
 {
 	struct eg_ctl_filt ctl_entry;
+	g_error_t rv;
+	struct secy_drv_t *secy_drv;
+	struct secy_ctl_filt_t secy_ctl_filt;
 
 	SHR_PARAM_CHECK((secy_id < FAL_SECY_ID_NUM) &&
 			(filt_id < FAL_TX_CTL_FILT_NUM) && (pfilt != NULL));
+
+	memset(&secy_ctl_filt, 0, sizeof(secy_ctl_filt));
+
+	secy_drv = nss_macsec_secy_ops_get(secy_id);
+	if (secy_drv != NULL) {
+		if (secy_drv->secy_tx_ctl_filt_set == NULL) {
+			rv = ERROR_NOT_SUPPORT;
+		} else {
+			secy_ctl_filt.bypass = pfilt->bypass;
+			secy_ctl_filt.match_type =
+				(enum secy_ctl_match_type_t)pfilt->match_type;
+			secy_ctl_filt.match_mask = pfilt->match_mask;
+			secy_ctl_filt.ether_type_da_range =
+				pfilt->ether_type_da_range;
+			memcpy(secy_ctl_filt.sa_da_addr, pfilt->sa_da_addr,
+				sizeof(pfilt->sa_da_addr));
+			rv = secy_drv->secy_tx_ctl_filt_set(secy_id, filt_id,
+				&secy_ctl_filt);
+		}
+		return rv;
+	}
 
 	memset(&ctl_entry, 0, sizeof(ctl_entry));
 
@@ -267,9 +315,22 @@ osal_print("ctl_entry.sa_da_1 = 0x%04x\r\n", ctl_entry.sa_da_1);
 u32 nss_macsec_secy_tx_ctl_filt_clear(u32 secy_id, u32 filt_id)
 {
 	struct eg_ctl_filt ctl_entry;
+	g_error_t rv;
+	struct secy_drv_t *secy_drv;
 
 	SHR_PARAM_CHECK((secy_id < FAL_SECY_ID_NUM)
 			&& (filt_id < FAL_TX_CTL_FILT_NUM));
+
+	secy_drv = nss_macsec_secy_ops_get(secy_id);
+	if (secy_drv != NULL) {
+		if (secy_drv->secy_tx_ctl_filt_clear == NULL) {
+			rv = ERROR_NOT_SUPPORT;
+		} else {
+			rv = secy_drv->secy_tx_ctl_filt_clear(secy_id,
+				filt_id);
+		}
+		return rv;
+	}
 
 	memset(&ctl_entry, 0, sizeof(union eg_ctl_filt_u));
 
@@ -282,8 +343,19 @@ u32 nss_macsec_secy_tx_ctl_filt_clear(u32 secy_id, u32 filt_id)
 u32 nss_macsec_secy_tx_ctl_filt_clear_all(u32 secy_id)
 {
 	int i;
+	g_error_t rv;
+	struct secy_drv_t *secy_drv;
 
 	SHR_PARAM_CHECK(secy_id < FAL_SECY_ID_NUM);
+
+	secy_drv = nss_macsec_secy_ops_get(secy_id);
+	if (secy_drv != NULL) {
+		if (secy_drv->secy_tx_ctl_filt_clear_all == NULL)
+			rv = ERROR_NOT_SUPPORT;
+		else
+			rv = secy_drv->secy_tx_ctl_filt_clear_all(secy_id);
+		return rv;
+	}
 
 	for (i = 0; i < FAL_TX_CTL_FILT_NUM; i++) {
 		nss_macsec_secy_tx_ctl_filt_clear(secy_id, i);

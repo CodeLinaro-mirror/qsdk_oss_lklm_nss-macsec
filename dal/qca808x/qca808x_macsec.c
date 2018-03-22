@@ -20,6 +20,8 @@ static struct secy_tx_sc_policy_rule_t
 	g_tx_sc_policy[MAX_SECY_ID][SECY_POLICY_IDX_MAX + 1];
 static u32 tx_ssci[MAX_SECY_ID][SECY_POLICY_IDX_MAX + 1];
 static u32 rx_ssci[MAX_SECY_ID][SECY_POLICY_IDX_MAX + 1];
+struct secy_ctl_filt_t g_secy_tx_filt[MAX_SECY_ID];
+struct secy_ctl_filt_t g_secy_rx_filt[MAX_SECY_ID];
 
 
 #define PHY_REG_FIELD_READ(secy_id, phy_layer, reg_addr, field, pFieldValue) \
@@ -3299,6 +3301,457 @@ g_error_t qca808x_secy_rx_udf_filt_get(u32 secy_id, u32 index,
 	return ERROR_OK;
 }
 
+g_error_t qca808x_secy_ctl_filt_mac_convert(struct secy_ctl_filt_t *secy_filt,
+	struct secy_udf_filt_t *filter)
+{
+	memset(filter, 0, sizeof(*filter));
+
+	filter->udf_field0 = secy_filt->sa_da_addr[0] << 0x8 |
+		secy_filt->sa_da_addr[1];
+	filter->udf_field1 = secy_filt->sa_da_addr[2] << 0x8 |
+		secy_filt->sa_da_addr[3];
+	filter->udf_field2 = secy_filt->sa_da_addr[4] << 0x8 |
+		secy_filt->sa_da_addr[5];
+
+	return ERROR_OK;
+}
+g_error_t qca808x_secy_tx_ctl_filt_da_mac_set(u32 secy_id, u32 index,
+	struct secy_ctl_filt_t *secy_filt)
+{
+	struct secy_udf_filt_t filter, filter1;
+
+	memset(&filter1, 0, sizeof(filter1));
+
+	SHR_RET_ON_ERR(qca808x_secy_ctl_filt_mac_convert(secy_filt, &filter));
+
+	filter.offset = 0x0;
+	filter.mask = secy_filt->match_mask;
+
+	SHR_RET_ON_ERR(qca808x_secy_tx_udf_filt_set(secy_id, 0, &filter));
+	SHR_RET_ON_ERR(qca808x_secy_tx_udf_filt_set(secy_id, 1, &filter1));
+
+	return ERROR_OK;
+}
+g_error_t qca808x_secy_tx_ctl_filt_sa_mac_set(u32 secy_id, u32 index,
+	struct secy_ctl_filt_t *secy_filt)
+{
+	struct secy_udf_filt_t filter, filter1;
+
+	memset(&filter1, 0, sizeof(filter1));
+
+	SHR_RET_ON_ERR(qca808x_secy_ctl_filt_mac_convert(secy_filt, &filter));
+
+	filter.offset = 0x6;
+	filter.mask = secy_filt->match_mask;
+
+	SHR_RET_ON_ERR(qca808x_secy_tx_udf_filt_set(secy_id, 0, &filter));
+	SHR_RET_ON_ERR(qca808x_secy_tx_udf_filt_set(secy_id, 1, &filter1));
+
+	return ERROR_OK;
+}
+g_error_t qca808x_secy_tx_ctl_filt_ether_type_set(u32 secy_id, u32 index,
+	struct secy_ctl_filt_t *secy_filt)
+{
+	struct secy_udf_filt_t filter, filter1;
+
+	memset(&filter, 0, sizeof(filter));
+	memset(&filter1, 0, sizeof(filter1));
+
+	filter.udf_field0 = secy_filt->ether_type_da_range;
+	filter.offset = 0xc;
+	filter.mask = secy_filt->match_mask & 0x30;
+
+	SHR_RET_ON_ERR(qca808x_secy_tx_udf_filt_set(secy_id, 0, &filter));
+	SHR_RET_ON_ERR(qca808x_secy_tx_udf_filt_set(secy_id, 1, &filter1));
+
+	return ERROR_OK;
+}
+g_error_t qca808x_secy_tx_ctl_filt_da_ether_type_set(u32 secy_id,
+	u32 index, struct secy_ctl_filt_t *secy_filt)
+{
+	struct secy_udf_filt_t filter, filter1;
+
+	memset(&filter1, 0, sizeof(filter1));
+
+	SHR_RET_ON_ERR(qca808x_secy_ctl_filt_mac_convert(secy_filt, &filter));
+
+	filter.offset = 0x0;
+	filter.mask = secy_filt->match_mask;
+
+	filter1.udf_field0 = secy_filt->ether_type_da_range;
+	filter1.offset = 0xc;
+	filter1.mask = (secy_filt->match_mask >> 0x8) & 0x30;
+
+	SHR_RET_ON_ERR(qca808x_secy_tx_udf_filt_set(secy_id, 0, &filter));
+	SHR_RET_ON_ERR(qca808x_secy_tx_udf_filt_set(secy_id, 1, &filter1));
+
+	return ERROR_OK;
+}
+
+g_error_t qca808x_secy_tx_ctl_filt_sa_ether_type_set(u32 secy_id,
+	u32 index, struct secy_ctl_filt_t *secy_filt)
+{
+	struct secy_udf_filt_t filter, filter1;
+
+	memset(&filter1, 0, sizeof(filter1));
+
+	SHR_RET_ON_ERR(qca808x_secy_ctl_filt_mac_convert(secy_filt, &filter));
+
+	filter.offset = 0x6;
+	filter.mask = secy_filt->match_mask;
+
+	filter1.udf_field0 = secy_filt->ether_type_da_range;
+	filter1.offset = 0xc;
+	filter1.mask = (secy_filt->match_mask >> 0x8) & 0x30;
+
+	SHR_RET_ON_ERR(qca808x_secy_tx_udf_filt_set(secy_id, 0, &filter));
+	SHR_RET_ON_ERR(qca808x_secy_tx_udf_filt_set(secy_id, 1, &filter1));
+
+	return ERROR_OK;
+}
+
+g_error_t qca808x_secy_tx_ctl_filt_half_da_sa_set(u32 secy_id,
+	u32 index, struct secy_ctl_filt_t *secy_filt)
+{
+	struct secy_udf_filt_t filter, filter1;
+
+	memset(&filter, 0, sizeof(filter));
+	memset(&filter1, 0, sizeof(filter1));
+
+
+	filter.udf_field1 = secy_filt->sa_da_addr[0];
+	filter.udf_field2 = secy_filt->sa_da_addr[1] << 0x8 |
+		secy_filt->sa_da_addr[2];
+	filter.offset = 0x0;
+	filter.mask = (secy_filt->match_mask) & 0x7;
+
+	filter1.udf_field1 = secy_filt->sa_da_addr[3];
+	filter1.udf_field2 = secy_filt->sa_da_addr[4] << 0x8 |
+		secy_filt->sa_da_addr[5];
+	filter1.offset = 0x6;
+	filter1.mask = (secy_filt->match_mask >> 0x8) & 0x7;
+
+	SHR_RET_ON_ERR(qca808x_secy_tx_udf_filt_set(secy_id, 0, &filter));
+	SHR_RET_ON_ERR(qca808x_secy_tx_udf_filt_set(secy_id, 1, &filter1));
+
+	return ERROR_OK;
+}
+g_error_t qca808x_secy_tx_ctl_filt_set(u32 secy_id, u32 index,
+	struct secy_ctl_filt_t *secy_filt)
+{
+	bool val = 0, val1 = 0;
+	g_error_t rv;
+
+	if (index > 0)
+		return ERROR_PARAM;
+
+	switch (secy_filt->match_type) {
+	case SECY_CTL_COMPARE_DA:
+		rv = qca808x_secy_tx_ctl_filt_da_mac_set(secy_id,
+			index, secy_filt);
+		break;
+	case SECY_CTL_COMPARE_SA:
+		rv = qca808x_secy_tx_ctl_filt_sa_mac_set(secy_id,
+			index, secy_filt);
+		break;
+	case SECY_CTL_COMPARE_ETHER_TYPE:
+		rv = qca808x_secy_tx_ctl_filt_ether_type_set(secy_id,
+			index, secy_filt);
+		break;
+	case SECY_CTL_COMPARE_HALF_DA_SA:
+		rv = qca808x_secy_tx_ctl_filt_half_da_sa_set(secy_id,
+			index, secy_filt);
+		break;
+	case SECY_CTL_COMPARE_DA_ETHER_TYPE:
+		rv = qca808x_secy_tx_ctl_filt_da_ether_type_set(
+			secy_id, index, secy_filt);
+		break;
+	case SECY_CTL_COMPARE_SA_ETHER_TYPE:
+		rv = qca808x_secy_tx_ctl_filt_sa_ether_type_set(
+			secy_id, index, secy_filt);
+		break;
+	default:
+		return ERROR_PARAM;
+	}
+
+	SHR_RET_ON_ERR(PHY_REG_FIELD_READ(secy_id, PHY_MMD3,
+		MACSEC_SYS_CONFIG, SYS_CEPR_EN, &val1));
+
+	if (secy_filt->bypass) {
+		val = TRUE;
+		val1 = FALSE;
+	} else
+		val = FALSE;
+
+	SHR_RET_ON_ERR(PHY_REG_FIELD_WRITE(secy_id, PHY_MMD3,
+		MACSEC_SYS_CONFIG, SYS_UEPR_EN, val));
+
+	SHR_RET_ON_ERR(PHY_REG_FIELD_WRITE(secy_id, PHY_MMD3,
+		MACSEC_SYS_CONFIG, SYS_CEPR_EN, val1));
+
+	memcpy(&g_secy_tx_filt[secy_id], secy_filt,
+		sizeof(struct secy_ctl_filt_t));
+
+	return ERROR_OK;
+}
+
+g_error_t qca808x_secy_tx_ctl_filt_get(u32 secy_id, u32 index,
+	struct secy_ctl_filt_t *secy_filt)
+{
+	if (index > 0)
+		return ERROR_PARAM;
+
+	memcpy(secy_filt, &g_secy_tx_filt[secy_id],
+		sizeof(struct secy_ctl_filt_t));
+
+	return ERROR_OK;
+}
+g_error_t qca808x_secy_tx_ctl_filt_clear(u32 secy_id, u32 index)
+{
+	u32 i = 0;
+	struct secy_udf_filt_t filter;
+
+	if (index > 0)
+		return ERROR_PARAM;
+
+	memset(&filter, 0, sizeof(filter));
+
+	SHR_RET_ON_ERR(PHY_REG_FIELD_WRITE(secy_id, PHY_MMD3,
+		MACSEC_SYS_CONFIG, SYS_UEPR_EN, FALSE));
+
+	for (i = 0; i < 4; i++)
+		SHR_RET_ON_ERR(qca808x_secy_tx_udf_filt_set(secy_id, i,
+			&filter));
+
+	memset(&g_secy_tx_filt[secy_id], 0, sizeof(struct secy_ctl_filt_t));
+
+	return ERROR_OK;
+}
+g_error_t qca808x_secy_tx_ctl_filt_clear_all(u32 secy_id)
+{
+	u32 index = 0;
+
+	SHR_RET_ON_ERR(qca808x_secy_tx_ctl_filt_clear(secy_id, index));
+
+	return ERROR_OK;
+}
+
+g_error_t qca808x_secy_rx_ctl_filt_da_mac_set(u32 secy_id, u32 index,
+	struct secy_ctl_filt_t *secy_filt)
+{
+	struct secy_udf_filt_t filter, filter1;
+
+	memset(&filter1, 0, sizeof(filter1));
+
+	SHR_RET_ON_ERR(qca808x_secy_ctl_filt_mac_convert(secy_filt, &filter));
+
+	filter.offset = 0x0;
+	filter.mask = secy_filt->match_mask;
+
+	SHR_RET_ON_ERR(qca808x_secy_rx_udf_filt_set(secy_id, 0, &filter));
+	SHR_RET_ON_ERR(qca808x_secy_rx_udf_filt_set(secy_id, 1, &filter1));
+
+	return ERROR_OK;
+}
+
+g_error_t qca808x_secy_rx_ctl_filt_sa_mac_set(u32 secy_id, u32 index,
+	struct secy_ctl_filt_t *secy_filt)
+{
+	struct secy_udf_filt_t filter, filter1;
+
+	memset(&filter1, 0, sizeof(filter1));
+
+	SHR_RET_ON_ERR(qca808x_secy_ctl_filt_mac_convert(secy_filt, &filter));
+
+	filter.offset = 0x6;
+	filter.mask = secy_filt->match_mask;
+
+	SHR_RET_ON_ERR(qca808x_secy_rx_udf_filt_set(secy_id, 0, &filter));
+	SHR_RET_ON_ERR(qca808x_secy_rx_udf_filt_set(secy_id, 1, &filter1));
+
+	return ERROR_OK;
+}
+g_error_t qca808x_secy_rx_ctl_filt_ether_type_set(u32 secy_id, u32 index,
+	struct secy_ctl_filt_t *secy_filt)
+{
+	struct secy_udf_filt_t filter, filter1;
+
+	memset(&filter, 0, sizeof(filter));
+	memset(&filter1, 0, sizeof(filter1));
+
+	filter.udf_field0 = secy_filt->ether_type_da_range;
+	filter.offset = 0xc;
+	filter.mask = secy_filt->match_mask & 0x30;
+
+	SHR_RET_ON_ERR(qca808x_secy_rx_udf_filt_set(secy_id, 0, &filter));
+	SHR_RET_ON_ERR(qca808x_secy_rx_udf_filt_set(secy_id, 1, &filter1));
+
+	return ERROR_OK;
+}
+g_error_t qca808x_secy_rx_ctl_filt_da_ether_type_set(u32 secy_id,
+	u32 index, struct secy_ctl_filt_t *secy_filt)
+{
+	struct secy_udf_filt_t filter, filter1;
+
+	memset(&filter1, 0, sizeof(filter1));
+
+	SHR_RET_ON_ERR(qca808x_secy_ctl_filt_mac_convert(secy_filt, &filter));
+
+	filter.offset = 0x0;
+	filter.mask = secy_filt->match_mask;
+
+	filter1.udf_field0 = secy_filt->ether_type_da_range;
+	filter1.offset = 0xc;
+	filter1.mask = (secy_filt->match_mask >> 0x8) & 0x30;
+
+	SHR_RET_ON_ERR(qca808x_secy_rx_udf_filt_set(secy_id, 0, &filter));
+	SHR_RET_ON_ERR(qca808x_secy_rx_udf_filt_set(secy_id, 1, &filter1));
+
+	return ERROR_OK;
+}
+
+g_error_t qca808x_secy_rx_ctl_filt_sa_ether_type_set(u32 secy_id,
+	u32 index, struct secy_ctl_filt_t *secy_filt)
+{
+	struct secy_udf_filt_t filter, filter1;
+
+	memset(&filter1, 0, sizeof(filter1));
+
+	SHR_RET_ON_ERR(qca808x_secy_ctl_filt_mac_convert(secy_filt, &filter));
+
+	filter.offset = 0x6;
+	filter.mask = secy_filt->match_mask;
+
+	filter1.udf_field0 = secy_filt->ether_type_da_range;
+	filter1.offset = 0xc;
+	filter1.mask = (secy_filt->match_mask >> 0x8) & 0x30;
+
+	SHR_RET_ON_ERR(qca808x_secy_rx_udf_filt_set(secy_id, 0, &filter));
+	SHR_RET_ON_ERR(qca808x_secy_rx_udf_filt_set(secy_id, 1, &filter1));
+
+	return ERROR_OK;
+}
+
+g_error_t qca808x_secy_rx_ctl_filt_half_da_sa_set(u32 secy_id,
+	u32 index, struct secy_ctl_filt_t *secy_filt)
+{
+	struct secy_udf_filt_t filter, filter1;
+
+	memset(&filter, 0, sizeof(filter));
+	memset(&filter1, 0, sizeof(filter1));
+
+
+	filter.udf_field1 = secy_filt->sa_da_addr[0];
+	filter.udf_field2 = secy_filt->sa_da_addr[1] << 0x8 |
+		secy_filt->sa_da_addr[2];
+	filter.offset = 0x0;
+	filter.mask = (secy_filt->match_mask) & 0x7;
+
+	filter1.udf_field1 = secy_filt->sa_da_addr[3];
+	filter1.udf_field2 = secy_filt->sa_da_addr[4] << 0x8 |
+		secy_filt->sa_da_addr[5];
+	filter1.offset = 0x6;
+	filter1.mask = (secy_filt->match_mask >> 0x8) & 0x7;
+
+	SHR_RET_ON_ERR(qca808x_secy_rx_udf_filt_set(secy_id, 0, &filter));
+	SHR_RET_ON_ERR(qca808x_secy_rx_udf_filt_set(secy_id, 1, &filter1));
+
+	return ERROR_OK;
+}
+g_error_t qca808x_secy_rx_ctl_filt_set(u32 secy_id, u32 index,
+	struct secy_ctl_filt_t *secy_filt)
+{
+	bool val = 0;
+	g_error_t rv;
+
+	if (index > 0)
+		return ERROR_PARAM;
+
+	switch (secy_filt->match_type) {
+	case SECY_CTL_COMPARE_DA:
+		rv = qca808x_secy_rx_ctl_filt_da_mac_set(secy_id,
+			index, secy_filt);
+		break;
+	case SECY_CTL_COMPARE_SA:
+		rv = qca808x_secy_rx_ctl_filt_sa_mac_set(secy_id,
+			index, secy_filt);
+		break;
+	case SECY_CTL_COMPARE_ETHER_TYPE:
+		rv = qca808x_secy_rx_ctl_filt_ether_type_set(secy_id,
+			index, secy_filt);
+		break;
+	case SECY_CTL_COMPARE_HALF_DA_SA:
+		rv = qca808x_secy_rx_ctl_filt_half_da_sa_set(secy_id,
+			index, secy_filt);
+		break;
+	case SECY_CTL_COMPARE_DA_ETHER_TYPE:
+		rv = qca808x_secy_rx_ctl_filt_da_ether_type_set(
+			secy_id, index, secy_filt);
+		break;
+	case SECY_CTL_COMPARE_SA_ETHER_TYPE:
+		rv = qca808x_secy_rx_ctl_filt_sa_ether_type_set(
+			secy_id, index, secy_filt);
+		break;
+	default:
+		return ERROR_PARAM;
+	}
+
+	if (secy_filt->bypass)
+		val = TRUE;
+	else
+		val = FALSE;
+
+	SHR_RET_ON_ERR(PHY_REG_FIELD_WRITE(secy_id, PHY_MMD3,
+		MACSEC_SYS_CONFIG, SYS_UIER_EN, val));
+
+	memcpy(&g_secy_rx_filt[secy_id], secy_filt,
+		sizeof(struct secy_ctl_filt_t));
+
+	return ERROR_OK;
+}
+
+g_error_t qca808x_secy_rx_ctl_filt_get(u32 secy_id, u32 index,
+	struct secy_ctl_filt_t *secy_filt)
+{
+	if (index > 0)
+		return ERROR_PARAM;
+
+	memcpy(secy_filt, &g_secy_rx_filt[secy_id],
+		sizeof(struct secy_ctl_filt_t));
+
+	return ERROR_OK;
+}
+g_error_t qca808x_secy_rx_ctl_filt_clear(u32 secy_id, u32 index)
+{
+	u32 i = 0;
+	struct secy_udf_filt_t filter;
+
+	if (index > 0)
+		return ERROR_PARAM;
+
+	memset(&filter, 0, sizeof(filter));
+
+	SHR_RET_ON_ERR(PHY_REG_FIELD_WRITE(secy_id, PHY_MMD3,
+		MACSEC_SYS_CONFIG, SYS_UIER_EN, FALSE));
+
+	for (i = 0; i < 4; i++)
+		SHR_RET_ON_ERR(qca808x_secy_rx_udf_filt_set(secy_id, i,
+			&filter));
+
+	memset(&g_secy_rx_filt[secy_id], 0,
+		sizeof(struct secy_ctl_filt_t));
+
+	return ERROR_OK;
+}
+g_error_t qca808x_secy_rx_ctl_filt_clear_all(u32 secy_id)
+{
+	u32 index = 0;
+
+	SHR_RET_ON_ERR(qca808x_secy_rx_ctl_filt_clear(secy_id, index));
+
+	return ERROR_OK;
+}
+
 g_error_t qca808x_secy_init(u32 secy_id)
 {
 	u32 sc, sa;
@@ -3325,6 +3778,9 @@ g_error_t qca808x_secy_init(u32 secy_id)
 				sa, pn);
 		}
 	}
+
+	SHR_RET_ON_ERR(PHY_REG_FIELD_WRITE(secy_id, PHY_MMD7,
+		MACSEC_SHADOW_REGISTER, MACSEC_SHADOW_DUPLEX_EN, TRUE));
 
 	return ERROR_OK;
 }
@@ -3515,6 +3971,23 @@ static int qca808x_secy_ops_init(void)
 		qca808x_secy_rx_udf_filt_set;
 	qca808x_secy_ops->secy_rx_udf_filt_get =
 		qca808x_secy_rx_udf_filt_get;
+
+	qca808x_secy_ops->secy_tx_ctl_filt_set =
+		qca808x_secy_tx_ctl_filt_set;
+	qca808x_secy_ops->secy_tx_ctl_filt_get =
+		qca808x_secy_tx_ctl_filt_get;
+	qca808x_secy_ops->secy_tx_ctl_filt_clear =
+		qca808x_secy_tx_ctl_filt_clear;
+	qca808x_secy_ops->secy_tx_ctl_filt_clear_all =
+		qca808x_secy_tx_ctl_filt_clear_all;
+	qca808x_secy_ops->secy_rx_ctl_filt_set =
+		qca808x_secy_rx_ctl_filt_set;
+	qca808x_secy_ops->secy_rx_ctl_filt_get =
+		qca808x_secy_rx_ctl_filt_get;
+	qca808x_secy_ops->secy_rx_ctl_filt_clear =
+		qca808x_secy_rx_ctl_filt_clear;
+	qca808x_secy_ops->secy_rx_ctl_filt_clear_all =
+		qca808x_secy_rx_ctl_filt_clear_all;
 
 	ret = secy_ops_register(NAPA_PHY_CHIP, qca808x_secy_ops);
 
