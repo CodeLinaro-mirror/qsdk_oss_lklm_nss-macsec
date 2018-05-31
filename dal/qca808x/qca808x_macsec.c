@@ -283,7 +283,7 @@ g_error_t qca808x_secy_sc_sa_mapping_mode_set(u32 secy_id,
 	return ERROR_OK;
 }
 
-static g_error_t _qca808x_secy_software_en_set(u32 secy_id, bool enable)
+static g_error_t qca808x_secy_clock_en_set(u32 secy_id, bool enable)
 {
 	u16 val = 0;
 
@@ -366,8 +366,6 @@ g_error_t qca808x_secy_en_set(u32 secy_id, bool enable)
 		type = MACSEC_BYPASS;
 
 	qca808x_secy_loopback_set(secy_id, type);
-
-	_qca808x_secy_software_en_set(secy_id, enable);
 
 	return ERROR_OK;
 }
@@ -3304,6 +3302,7 @@ g_error_t qca808x_secy_init(u32 secy_id)
 	u32 sc, sa;
 	u32 pn = 1;
 
+	qca808x_secy_clock_en_set(secy_id, TRUE);
 	qca808x_secy_tx_mib_clear(secy_id);
 	qca808x_secy_rx_mib_clear(secy_id);
 	qca808x_secy_forward_az_pattern_en_set(secy_id, TRUE);
