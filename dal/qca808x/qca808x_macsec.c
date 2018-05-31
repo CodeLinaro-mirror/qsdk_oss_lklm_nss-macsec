@@ -2211,13 +2211,13 @@ g_error_t qca808x_secy_tx_sa_mib_get(u32 secy_id, u32 sc_index,
 
 	memset(mib, 0, sizeof(*mib));
 
-	MIB_READ(TX_SA_PROTECTED_PKTS_BASE, mib_low);
 	MIB_READ(TX_SA_PROTECTED_PKTS_HIGH_BASE, mib_high);
+	MIB_READ(TX_SA_PROTECTED_PKTS_BASE, mib_low);
 	mib->protected_pkts = ((u64)mib_high << 32) | (u64)mib_low;
 
 	mib_low = 0; mib_high = 0;
-	MIB_READ(TX_SA_ENCRYPTED_PKTS_BASE, mib_low);
 	MIB_READ(TX_SA_ENCRYPTED_PKTS_HIGH_BASE, mib_high);
+	MIB_READ(TX_SA_ENCRYPTED_PKTS_BASE, mib_low);
 	mib->encrypted_pkts = ((u64)mib_high << 32) | (u64)mib_low;
 
 	return ERROR_OK;
@@ -2273,32 +2273,32 @@ g_error_t qca808x_secy_rx_sa_mib_get(u32 secy_id, u32 sc_index,
 
 	memset(mib, 0, sizeof(*mib));
 
-	MIB_READ(RX_SA_UNUSED_PKTS_BASE, mib_low);
 	MIB_READ(RX_SA_UNUSED_PKTS_HIGH_BASE, mib_high);
+	MIB_READ(RX_SA_UNUSED_PKTS_BASE, mib_low);
 	mib->unused_sa = ((u64)mib_high << 32) | (u64)mib_low;
 
 	mib_low = 0;
 	mib_high = 0;
-	MIB_READ(RX_SA_NOUSING_PKTS_BASE, mib_low);
 	MIB_READ(RX_SA_NOUSING_PKTS_HIGH_BASE, mib_high);
+	MIB_READ(RX_SA_NOUSING_PKTS_BASE, mib_low);
 	mib->not_using_sa = ((u64)mib_high << 32) | (u64)mib_low;
 
 	mib_low = 0;
 	mib_high = 0;
-	MIB_READ(RX_SA_NOTVALID_PKTS_BASE, mib_low);
 	MIB_READ(RX_SA_NOTVALID_PKTS_HIGH_BASE, mib_high);
+	MIB_READ(RX_SA_NOTVALID_PKTS_BASE, mib_low);
 	mib->not_valid_pkts = ((u64)mib_high << 32) | (u64)mib_low;
 
 	mib_low = 0;
 	mib_high = 0;
-	MIB_READ(RX_SA_INVALID_PKTS_BASE, mib_low);
 	MIB_READ(RX_SA_INVALID_PKTS_HIGH_BASE, mib_high);
+	MIB_READ(RX_SA_INVALID_PKTS_BASE, mib_low);
 	mib->invalid_pkts = ((u64)mib_high << 32) | (u64)mib_low;
 
 	mib_low = 0;
 	mib_high = 0;
-	MIB_READ(RX_SA_OK_PKTS_BASE, mib_low);
 	MIB_READ(RX_SA_OK_PKTS_HIGH_BASE, mib_high);
+	MIB_READ(RX_SA_OK_PKTS_BASE, mib_low);
 	mib->ok_pkts = ((u64)mib_high << 32) | (u64)mib_low;
 
 	mib_low = 0;
