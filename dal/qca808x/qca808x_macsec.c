@@ -890,7 +890,8 @@ g_error_t qca808x_secy_rx_sak_set(u32 secy_id, u32 sc_index,
 			(key == NULL))
 		return ERROR_PARAM;
 
-	if ((key->len != SAK_LEN_128BITS) && (key->len != SAK_LEN_256BITS))
+	if ((key->len != SAK_LEN_128BITS) && (key->len != SAK_LEN_256BITS) &&
+			(key->len != SAK_LEN_LEGACY))
 		return ERROR_PARAM;
 
 	channel = sc_index * 2 + sa_index;
@@ -1671,7 +1672,8 @@ g_error_t qca808x_secy_tx_sak_set(u32 secy_id, u32 sc_index,
 		return ERROR_PARAM;
 	}
 
-	if ((key->len != SAK_LEN_128BITS) && (key->len != SAK_LEN_256BITS))
+	if ((key->len != SAK_LEN_128BITS) && (key->len != SAK_LEN_256BITS) &&
+			(key->len != SAK_LEN_LEGACY))
 		return ERROR_PARAM;
 
 	channel = sc_index * 2 + sa_index;

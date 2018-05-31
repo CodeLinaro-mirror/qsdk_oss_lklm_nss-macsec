@@ -57,6 +57,7 @@
 #define SECY_SC_IDX_MAX           15
 #define SECY_SA_IDX_MAX           1
 #define SECY_POLICY_IDX_MAX       15
+#define SAK_LEN_LEGACY	0
 #define SAK_LEN_128BITS	16
 #define SAK_LEN_256BITS	32
 
