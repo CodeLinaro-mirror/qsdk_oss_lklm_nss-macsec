@@ -56,11 +56,13 @@
 
 #define SECY_SC_IDX_MAX           15
 #define SECY_SA_IDX_MAX           1
+#define SECY_AN_IDX_MAX           3
 #define SECY_POLICY_IDX_MAX       15
 #define SAK_LEN_LEGACY	0
 #define SAK_LEN_128BITS	16
 #define SAK_LEN_256BITS	32
 #define SECY_FILTER_MAX_INDEX	0x3
+#define SECY_AN_TO_SA_MAPPING(an) (an%2)
 
 #define SC_BIND_MASK_DA           0x00000001
 #define SC_BIND_MASK_SA           0x00000002

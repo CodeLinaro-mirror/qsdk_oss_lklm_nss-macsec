@@ -182,13 +182,15 @@ u32 nss_macsec_secy_sc_sa_mapping_mode_set(u32 secy_id,
 		} else {
 			if (mode == FAL_SC_SA_MAP_1_1)
 				secy_sc_sa_mapping_mode = SECY_SC_SA_MAP_1_1;
-			else
+			else if (mode == FAL_SC_SA_MAP_1_2)
 				secy_sc_sa_mapping_mode = SECY_SC_SA_MAP_1_2;
-
+			else if (mode == FAL_SC_SA_MAP_1_4)
+				secy_sc_sa_mapping_mode = SECY_SC_SA_MAP_1_4;
+			else
+				return ERROR_NOT_SUPPORT;
 			rv = secy_drv->secy_sc_sa_mapping_mode_set(secy_id,
 				secy_sc_sa_mapping_mode);
-			g_secy_cfg[secy_id].sc_sa_map_mode =
-			(fal_sc_sa_mapping_mode_e)secy_sc_sa_mapping_mode;
+			g_secy_cfg[secy_id].sc_sa_map_mode = mode;
 		}
 		return rv;
 	}

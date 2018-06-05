@@ -32,9 +32,6 @@ struct secy_ctl_filt_t g_secy_rx_filt[MAX_SECY_ID];
 	phy_acces_reg_field_write(secy_id, phy_layer, reg_addr, \
 	field##_OFFSET, field##_LEN, (u16)fieldValue)
 
-#define MIB_READ(addr, mib) SHR_RET_ON_ERR(qca808x_secy_mib_read \
-	(secy_id, qca808x_addr(sc_index, sa_index, addr), &(mib)))
-
 static g_error_t phy_mii_reg_write(u32 secy_id, u32  reg_addr, u16 val16)
 {
 	i32 ret  = 0;
@@ -631,16 +628,18 @@ g_error_t qca808x_secy_rx_sc_policy_get(u32 secy_id, u32 rule_index,
 	return ERROR_OK;
 }
 g_error_t qca808x_secy_rx_sa_npn_set(u32 secy_id, u32 sc_index,
-	u32 sa_index, u32 next_pn)
+	u32 an, u32 next_pn)
 {
 	u16 val = 0;
 	u16 channel = 0;
+	u32 sa_index = 0;
 
 	if ((sc_index > SECY_SC_IDX_MAX) ||
-			(sa_index > SECY_SA_IDX_MAX)) {
+			(an > SECY_AN_IDX_MAX)) {
 		return ERROR_PARAM;
 	}
 
+	sa_index = SECY_AN_TO_SA_MAPPING(an);
 	channel = (sc_index * 2 + sa_index);
 	val = (u16)(next_pn & 0xffff);
 	SHR_RET_ON_ERR(phy_access_reg_write(secy_id, PHY_MMD3,
@@ -653,15 +652,17 @@ g_error_t qca808x_secy_rx_sa_npn_set(u32 secy_id, u32 sc_index,
 }
 
 g_error_t qca808x_secy_rx_sa_npn_get(u32 secy_id, u32 sc_index,
-	u32 sa_index, u32 *next_pn)
+	u32 an, u32 *next_pn)
 {
 	u16 val0 = 0, val1 = 0, channel = 0;
+	u32 sa_index = 0;
 
 	if ((sc_index > SECY_SC_IDX_MAX) ||
-			(sa_index > SECY_SA_IDX_MAX)) {
+			(an > SECY_AN_IDX_MAX)) {
 		return ERROR_PARAM;
 	}
 
+	sa_index = SECY_AN_TO_SA_MAPPING(an);
 	channel = (sc_index * 2 + sa_index);
 
 	SHR_RET_ON_ERR(phy_access_reg_read(secy_id, PHY_MMD3,
@@ -865,11 +866,13 @@ g_error_t qca808x_secy_rx_sa_create(u32 secy_id, u32 sc_index, u32 an)
 	u32 reg, sa_index;
 
 	if ((sc_index > SECY_SC_IDX_MAX) ||
-			(an > SECY_SA_IDX_MAX)) {
+			(an > SECY_AN_IDX_MAX)) {
 		return ERROR_PARAM;
 	}
 
-	sa_index = an;
+	SHR_RET_ON_ERR(qca808x_secy_rx_sa_npn_set(secy_id, sc_index, an, 1));
+
+	sa_index = SECY_AN_TO_SA_MAPPING(an);
 	reg = sc_index/4;
 	chan_shift = 2*((sc_index%4) * 2 + sa_index);
 
@@ -881,14 +884,14 @@ g_error_t qca808x_secy_rx_sa_create(u32 secy_id, u32 sc_index, u32 an)
 		(AN_MASK << chan_shift), val);
 }
 g_error_t qca808x_secy_rx_sak_set(u32 secy_id, u32 sc_index,
-	u32 sa_index, struct secy_sak_t *key)
+	u32 an, struct secy_sak_t *key)
 {
 	u16 val = 0;
 	u16 reg;
 	int i, j, reg_offset;
-	u32 channel;
+	u32 channel, sa_index;
 
-	if ((sc_index > SECY_SC_IDX_MAX) || (sa_index > SECY_SA_IDX_MAX) ||
+	if ((sc_index > SECY_SC_IDX_MAX) || (an > SECY_AN_IDX_MAX) ||
 			(key == NULL))
 		return ERROR_PARAM;
 
@@ -896,6 +899,7 @@ g_error_t qca808x_secy_rx_sak_set(u32 secy_id, u32 sc_index,
 			(key->len != SAK_LEN_LEGACY))
 		return ERROR_PARAM;
 
+	sa_index = SECY_AN_TO_SA_MAPPING(an);
 	channel = sc_index * 2 + sa_index;
 
 	if (key->len == SAK_LEN_256BITS) {
@@ -927,15 +931,15 @@ g_error_t qca808x_secy_rx_sak_set(u32 secy_id, u32 sc_index,
 	return ERROR_OK;
 }
 g_error_t qca808x_secy_rx_sak_get(u32 secy_id, u32 sc_index,
-	u32 sa_index, struct secy_sak_t *key)
+	u32 an, struct secy_sak_t *key)
 {
 	u16 val = 0;
 	u16 reg;
 	int i, j, reg_offset;
-	u32 channel;
+	u32 channel, sa_index;
 	enum secy_cipher_suite_t cipher_suite;
 
-	if ((sc_index > SECY_SC_IDX_MAX) || (sa_index > SECY_SA_IDX_MAX) ||
+	if ((sc_index > SECY_SC_IDX_MAX) || (an > SECY_AN_IDX_MAX) ||
 			(key == NULL)) {
 		return ERROR_PARAM;
 	}
@@ -947,6 +951,7 @@ g_error_t qca808x_secy_rx_sak_get(u32 secy_id, u32 sc_index,
 	else
 		key->len = 32;
 
+	sa_index = SECY_AN_TO_SA_MAPPING(an);
 	channel = sc_index * 2 + sa_index;
 	if (key->len == SAK_LEN_256BITS) {
 		for (i = 0; i < 16; i++) {
@@ -981,16 +986,18 @@ g_error_t qca808x_secy_rx_sak_get(u32 secy_id, u32 sc_index,
 }
 
 g_error_t qca808x_secy_rx_sa_en_set(u32 secy_id, u32 sc_index,
-	u32 sa_index, bool enable)
+	u32 an, bool enable)
 {
 	u16 val = 0;
 	u16 reg, chan_shift;
+	u32 sa_index;
 
 	if ((sc_index > SECY_SC_IDX_MAX) ||
-			(sa_index > SECY_SA_IDX_MAX)) {
+			(an > SECY_AN_IDX_MAX)) {
 		return ERROR_PARAM;
 	}
 
+	sa_index = SECY_AN_TO_SA_MAPPING(an);
 	reg = sc_index/8;
 	chan_shift = ((sc_index%8) * 2 + sa_index);
 
@@ -1006,16 +1013,18 @@ g_error_t qca808x_secy_rx_sa_en_set(u32 secy_id, u32 sc_index,
 }
 
 g_error_t qca808x_secy_rx_sa_en_get(u32 secy_id, u32 sc_index,
-	u32 sa_index, bool *enable)
+	u32 an, bool *enable)
 {
 	u16 val = 0;
 	u16 reg, chan_shift;
+	u32 sa_index;
 
 	if ((sc_index > SECY_SC_IDX_MAX) ||
-			(sa_index > SECY_SA_IDX_MAX)) {
+			(an > SECY_AN_IDX_MAX)) {
 		return ERROR_PARAM;
 	}
 
+	sa_index = SECY_AN_TO_SA_MAPPING(an);
 	reg = sc_index/8;
 	chan_shift = ((sc_index%8) * 2 + sa_index);
 
@@ -1149,11 +1158,11 @@ g_error_t qca808x_secy_rx_sa_del(u32 secy_id, u32 sc_index, u32 an)
 	u32 reg, sa_index;
 
 	if ((sc_index > SECY_SC_IDX_MAX) ||
-			(an > SECY_SA_IDX_MAX)) {
+			(an > SECY_AN_IDX_MAX)) {
 		return ERROR_PARAM;
 	}
 
-	sa_index = an;
+	sa_index = SECY_AN_TO_SA_MAPPING(an);
 	reg = sc_index/4;
 	chan_shift = 2*((sc_index%4) * 2 + sa_index);
 
@@ -1166,25 +1175,25 @@ g_error_t qca808x_secy_rx_sa_del(u32 secy_id, u32 sc_index, u32 an)
 }
 g_error_t qca808x_secy_rx_sa_del_all(u32 secy_id)
 {
-	u32 sc_index = 0, sa_index = 0;
+	u32 sc_index = 0, an_index = 0;
 
 	for (sc_index = 0; sc_index <= SECY_SC_IDX_MAX; sc_index++) {
-		for (sa_index = 0; sa_index <= SECY_SA_IDX_MAX; sa_index++)
-			qca808x_secy_rx_sa_del(secy_id, sc_index, sa_index);
+		for (an_index = 0; an_index <= SECY_AN_IDX_MAX; an_index++)
+			qca808x_secy_rx_sa_del(secy_id, sc_index, an_index);
 	}
 
 	return ERROR_OK;
 }
 g_error_t qca808x_secy_rx_sa_in_used_get(u32 secy_id, u32 sc_index,
-	u32 sa_index, bool *p_in_used)
+	u32 an, bool *p_in_used)
 {
 	if ((sc_index > SECY_SC_IDX_MAX) ||
-			(sa_index > SECY_SA_IDX_MAX)) {
+			(an > SECY_AN_IDX_MAX)) {
 		return ERROR_PARAM;
 	}
 
 	SHR_RET_ON_ERR(qca808x_secy_rx_sa_en_get(secy_id, sc_index,
-		sa_index, p_in_used));
+		an, p_in_used));
 
 	return ERROR_OK;
 }
@@ -1397,16 +1406,18 @@ g_error_t qca808x_secy_tx_sc_policy_get(u32 secy_id, u32 rule_index,
 	return ERROR_OK;
 }
 g_error_t qca808x_secy_tx_sa_npn_set(u32 secy_id, u32 sc_index,
-	u32 sa_index, u32 next_pn)
+	u32 an, u32 next_pn)
 {
 	u16 val = 0;
 	u16 channel = 0;
+	u32 sa_index = 0;
 
 	if ((sc_index > SECY_SC_IDX_MAX) ||
-			(sa_index > SECY_SA_IDX_MAX)) {
+			(an > SECY_AN_IDX_MAX)) {
 		return ERROR_PARAM;
 	}
 
+	sa_index = SECY_AN_TO_SA_MAPPING(an);
 	channel = (sc_index * 2 + sa_index);
 	val = (u16)(next_pn & 0xffff);
 	SHR_RET_ON_ERR(phy_access_reg_write(secy_id, PHY_MMD3,
@@ -1418,15 +1429,17 @@ g_error_t qca808x_secy_tx_sa_npn_set(u32 secy_id, u32 sc_index,
 	return ERROR_OK;
 }
 g_error_t qca808x_secy_tx_sa_npn_get(u32 secy_id, u32 sc_index,
-	u32 sa_index, u32 *next_pn)
+	u32 an, u32 *next_pn)
 {
 	u16 val0 = 0, val1 = 0, channel = 0;
+	u32 sa_index = 0;
 
 	if ((sc_index > SECY_SC_IDX_MAX) ||
-			(sa_index > SECY_SA_IDX_MAX)) {
+			(an > SECY_AN_IDX_MAX)) {
 		return ERROR_PARAM;
 	}
 
+	sa_index = SECY_AN_TO_SA_MAPPING(an);
 	channel = (sc_index * 2 + sa_index);
 
 	SHR_RET_ON_ERR(phy_access_reg_read(secy_id, PHY_MMD3,
@@ -1660,16 +1673,16 @@ g_error_t qca808x_secy_tx_confidentiality_offset_get(u32 secy_id, u32 sc_index,
 	return ERROR_OK;
 }
 g_error_t qca808x_secy_tx_sak_set(u32 secy_id, u32 sc_index,
-	u32 sa_index, struct secy_sak_t *key)
+	u32 an, struct secy_sak_t *key)
 {
 	u16 val = 0;
 	u16 reg;
 	int i, j, reg_offset;
-	u32 channel;
+	u32 channel, sa_index;
 
 
 	if ((sc_index > SECY_SC_IDX_MAX) ||
-			(sa_index > SECY_SA_IDX_MAX) ||
+			(an > SECY_AN_IDX_MAX) ||
 			(key == NULL)) {
 		return ERROR_PARAM;
 	}
@@ -1678,6 +1691,7 @@ g_error_t qca808x_secy_tx_sak_set(u32 secy_id, u32 sc_index,
 			(key->len != SAK_LEN_LEGACY))
 		return ERROR_PARAM;
 
+	sa_index = SECY_AN_TO_SA_MAPPING(an);
 	channel = sc_index * 2 + sa_index;
 
 	if (key->len == SAK_LEN_256BITS) {
@@ -1710,16 +1724,16 @@ g_error_t qca808x_secy_tx_sak_set(u32 secy_id, u32 sc_index,
 	return ERROR_OK;
 }
 g_error_t qca808x_secy_tx_sak_get(u32 secy_id, u32 sc_index,
-	u32 sa_index, struct secy_sak_t *key)
+	u32 an, struct secy_sak_t *key)
 {
 	u16 val = 0;
 	u16 reg;
 	int i, j, reg_offset;
-	u32 channel;
+	u32 channel, sa_index;
 	enum secy_cipher_suite_t cipher_suite;
 
 	if ((sc_index > SECY_SC_IDX_MAX) ||
-			(sa_index > SECY_SA_IDX_MAX) ||
+			(an > SECY_AN_IDX_MAX) ||
 			(key == NULL)) {
 		return ERROR_PARAM;
 	}
@@ -1731,6 +1745,7 @@ g_error_t qca808x_secy_tx_sak_get(u32 secy_id, u32 sc_index,
 	else
 		key->len = 32;
 
+	sa_index = SECY_AN_TO_SA_MAPPING(an);
 	channel = sc_index * 2 + sa_index;
 	if (key->len == SAK_LEN_256BITS) {
 		for (i = 0; i < 16; i++) {
@@ -1819,17 +1834,19 @@ g_error_t qca808x_secy_tx_tci_7_2_get(u32 secy_id, u32 sc_index, u8 *tci)
 
 	return ERROR_OK;
 }
-g_error_t qca808x_secy_tx_sa_en_set(u32 secy_id, u32 sc_index, u32 sa_index,
+g_error_t qca808x_secy_tx_sa_en_set(u32 secy_id, u32 sc_index, u32 an,
 	bool enable)
 {
 	u16 val = 0;
 	u16 reg, chan_shift;
+	u32 sa_index;
 
 	if ((sc_index > SECY_SC_IDX_MAX) ||
-			(sa_index > SECY_SA_IDX_MAX)) {
+			(an > SECY_AN_IDX_MAX)) {
 		return ERROR_PARAM;
 	}
 
+	sa_index = SECY_AN_TO_SA_MAPPING(an);
 	reg = sc_index/8;
 	chan_shift = ((sc_index%8) * 2 + sa_index);
 
@@ -1844,17 +1861,19 @@ g_error_t qca808x_secy_tx_sa_en_set(u32 secy_id, u32 sc_index, u32 sa_index,
 		reg, (1<<chan_shift), val);
 }
 
-g_error_t qca808x_secy_tx_sa_en_get(u32 secy_id, u32 sc_index, u32 sa_index,
+g_error_t qca808x_secy_tx_sa_en_get(u32 secy_id, u32 sc_index, u32 an,
 	bool *enable)
 {
 	u16 val = 0;
 	u16 reg, chan_shift;
+	u32 sa_index;
 
 	if ((sc_index > SECY_SC_IDX_MAX) ||
-			(sa_index > SECY_SA_IDX_MAX)) {
+			(an > SECY_AN_IDX_MAX)) {
 		return ERROR_PARAM;
 	}
 
+	sa_index = SECY_AN_TO_SA_MAPPING(an);
 	reg = sc_index/8;
 	chan_shift = ((sc_index%8) * 2 + sa_index);
 
@@ -1877,11 +1896,11 @@ g_error_t qca808x_secy_tx_sc_an_set(u32 secy_id, u32 sc_index, u32 an)
 	u32 sa_index;
 
 	if ((sc_index > SECY_SC_IDX_MAX) ||
-			(an > SECY_SA_IDX_MAX)) {
+			(an > SECY_AN_IDX_MAX)) {
 		return ERROR_PARAM;
 	}
 
-	sa_index = an;
+	sa_index = SECY_AN_TO_SA_MAPPING(an);
 	reg = sc_index/4;
 	chan_shift = 2*((sc_index%4) * 2 + sa_index);
 
@@ -1898,20 +1917,21 @@ g_error_t qca808x_secy_tx_sc_an_get(u32 secy_id, u32 sc_index, u32 *an)
 	u16 val = 0;
 	u16 reg, chan_shift;
 	bool enable;
-	u32 i, sa_index = 0;
+	u32 i, an_index = 0, sa_index = 0;
 
-	for (i = 0; i < 2; i++) {
+	for (i = 0; i < 4; i++) {
 		SHR_RET_ON_ERR(qca808x_secy_tx_sa_en_get(secy_id,
 			sc_index, i, &enable));
 		if (enable == TRUE)
-			sa_index = i;
+			an_index = i;
 	}
 
 	if ((sc_index > SECY_SC_IDX_MAX) ||
-			(sa_index > SECY_SA_IDX_MAX)) {
+			(an_index > SECY_AN_IDX_MAX)) {
 		return ERROR_PARAM;
 	}
 
+	sa_index = SECY_AN_TO_SA_MAPPING(an_index);
 	reg = sc_index/4;
 	chan_shift = 2*((sc_index%4) * 2 + sa_index);
 
@@ -2022,11 +2042,11 @@ g_error_t qca808x_secy_tx_sa_create(u32 secy_id, u32 sc_index, u32 an)
 	u32 sa_index;
 
 	if ((sc_index > SECY_SC_IDX_MAX) ||
-			(an > SECY_SA_IDX_MAX)) {
+			(an > SECY_AN_IDX_MAX)) {
 		return ERROR_PARAM;
 	}
 
-	sa_index = an;
+	sa_index = SECY_AN_TO_SA_MAPPING(an);
 	reg = sc_index/4;
 	chan_shift = 2*((sc_index%4) * 2 + sa_index);
 
@@ -2044,11 +2064,11 @@ g_error_t qca808x_secy_tx_sa_del(u32 secy_id, u32 sc_index, u32 an)
 	u32 reg, sa_index;
 
 	if ((sc_index > SECY_SC_IDX_MAX) ||
-			(an > SECY_SA_IDX_MAX)) {
+			(an > SECY_AN_IDX_MAX)) {
 		return ERROR_PARAM;
 	}
 
-	sa_index = an;
+	sa_index = SECY_AN_TO_SA_MAPPING(an);
 	reg = sc_index/4;
 	chan_shift = 2*((sc_index%4) * 2 + sa_index);
 
@@ -2062,25 +2082,25 @@ g_error_t qca808x_secy_tx_sa_del(u32 secy_id, u32 sc_index, u32 an)
 }
 g_error_t qca808x_secy_tx_sa_del_all(u32 secy_id)
 {
-	u32 sc_index = 0, sa_index = 0;
+	u32 sc_index = 0, an_index = 0;
 
 	for (sc_index = 0; sc_index <= SECY_SC_IDX_MAX; sc_index++) {
-		for (sa_index = 0; sa_index <= SECY_SA_IDX_MAX; sa_index++)
-			qca808x_secy_tx_sa_del(secy_id, sc_index, sa_index);
+		for (an_index = 0; an_index <= SECY_AN_IDX_MAX; an_index++)
+			qca808x_secy_tx_sa_del(secy_id, sc_index, an_index);
 	}
 
 	return ERROR_OK;
 }
 g_error_t qca808x_secy_tx_sa_in_used_get(u32 secy_id, u32 sc_index,
-	u32 sa_index, bool *p_in_used)
+	u32 an, bool *p_in_used)
 {
 	if ((sc_index > SECY_SC_IDX_MAX) ||
-			(sa_index > SECY_SA_IDX_MAX)) {
+			(an > SECY_AN_IDX_MAX)) {
 		return ERROR_PARAM;
 	}
 
 	SHR_RET_ON_ERR(qca808x_secy_tx_sa_en_get(secy_id, sc_index,
-		sa_index, p_in_used));
+		an, p_in_used));
 
 	return ERROR_OK;
 }
@@ -2190,7 +2210,7 @@ static u32 qca808x_addr(u32 sc_index, u32 sa_index, u32 addr)
 	return reg;
 }
 
-g_error_t qca808x_secy_mib_read(u32 secy_id, u32 reg_addr, u32 *mib_val)
+static g_error_t qca808x_secy_mib_read(u32 secy_id, u32 reg_addr, u32 *mib_val)
 {
 	u16 val = 0;
 
@@ -2204,24 +2224,35 @@ g_error_t qca808x_secy_mib_read(u32 secy_id, u32 reg_addr, u32 *mib_val)
 	return ERROR_OK;
 }
 g_error_t qca808x_secy_tx_sa_mib_get(u32 secy_id, u32 sc_index,
-	u32 sa_index, struct secy_tx_sa_mib_t *mib)
+	u32 an, struct secy_tx_sa_mib_t *mib)
 {
 	u32 mib_low = 0, mib_high = 0;
+	u32 sa_index = 0;
 
 	if ((sc_index > SECY_SC_IDX_MAX) ||
-			(sa_index > SECY_SA_IDX_MAX) || (mib == NULL)) {
+			(an > SECY_AN_IDX_MAX) || (mib == NULL)) {
 		return ERROR_PARAM;
 	}
 
 	memset(mib, 0, sizeof(*mib));
 
-	MIB_READ(TX_SA_PROTECTED_PKTS_HIGH_BASE, mib_high);
-	MIB_READ(TX_SA_PROTECTED_PKTS_BASE, mib_low);
+	sa_index = SECY_AN_TO_SA_MAPPING(an);
+
+	SHR_RET_ON_ERR(qca808x_secy_mib_read(secy_id,
+		qca808x_addr(sc_index, sa_index,
+			TX_SA_PROTECTED_PKTS_HIGH_BASE), &mib_high));
+	SHR_RET_ON_ERR(qca808x_secy_mib_read(secy_id,
+		qca808x_addr(sc_index, sa_index,
+			TX_SA_PROTECTED_PKTS_BASE), &mib_low));
 	mib->protected_pkts = ((u64)mib_high << 32) | (u64)mib_low;
 
 	mib_low = 0; mib_high = 0;
-	MIB_READ(TX_SA_ENCRYPTED_PKTS_HIGH_BASE, mib_high);
-	MIB_READ(TX_SA_ENCRYPTED_PKTS_BASE, mib_low);
+	SHR_RET_ON_ERR(qca808x_secy_mib_read(secy_id,
+		qca808x_addr(sc_index, sa_index,
+			TX_SA_ENCRYPTED_PKTS_HIGH_BASE), &mib_high));
+	SHR_RET_ON_ERR(qca808x_secy_mib_read(secy_id,
+		qca808x_addr(sc_index, sa_index,
+			TX_SA_ENCRYPTED_PKTS_BASE), &mib_low));
 	mib->encrypted_pkts = ((u64)mib_high << 32) | (u64)mib_low;
 
 	return ERROR_OK;
@@ -2237,11 +2268,15 @@ g_error_t qca808x_secy_tx_sc_mib_get(u32 secy_id, u32 sc_index,
 
 	memset(mib, 0, sizeof(*mib));
 
-	MIB_READ(TX_SC_PROTECTED_OCTETS_BASE, val);
+	SHR_RET_ON_ERR(qca808x_secy_mib_read(secy_id,
+		qca808x_addr(sc_index, sa_index,
+			TX_SC_PROTECTED_OCTETS_BASE), &val));
 	mib->protected_octets = (u64)val;
 
 	val = 0;
-	MIB_READ(TX_SC_ENCRYPTED_OCTETS_BASE, val);
+	SHR_RET_ON_ERR(qca808x_secy_mib_read(secy_id,
+		qca808x_addr(sc_index, sa_index,
+			TX_SC_ENCRYPTED_OCTETS_BASE), &val));
 	mib->encrypted_octets = (u64)val;
 
 	return ERROR_OK;
@@ -2257,72 +2292,110 @@ g_error_t qca808x_secy_tx_mib_get(u32 secy_id, struct secy_tx_mib_t *mib)
 
 	memset(mib, 0, sizeof(*mib));
 
-	MIB_READ(TX_UNTAGGED_PKTS, val);
+	SHR_RET_ON_ERR(qca808x_secy_mib_read(secy_id,
+		qca808x_addr(sc_index, sa_index,
+			TX_UNTAGGED_PKTS), &val));
 	mib->untagged_pkts = (u64)val;
 	val = 0;
-	MIB_READ(TX_TOO_LONG_PKTS, val);
+
+	SHR_RET_ON_ERR(qca808x_secy_mib_read(secy_id,
+		qca808x_addr(sc_index, sa_index,
+			TX_TOO_LONG_PKTS), &val));
 	mib->too_long = (u64)val;
 
 	return ERROR_OK;
 }
 g_error_t qca808x_secy_rx_sa_mib_get(u32 secy_id, u32 sc_index,
-	u32 sa_index, struct secy_rx_sa_mib_t *mib)
+	u32 an, struct secy_rx_sa_mib_t *mib)
 {
 	u32 mib_low = 0, mib_high = 0;
+	u32 sa_index = 0;
 
 	if ((sc_index > SECY_SC_IDX_MAX) ||
-			(sa_index > SECY_SA_IDX_MAX) || (mib == NULL)) {
+			(an > SECY_AN_IDX_MAX) || (mib == NULL)) {
 		return ERROR_PARAM;
 	}
 
 	memset(mib, 0, sizeof(*mib));
 
-	MIB_READ(RX_SA_UNUSED_PKTS_HIGH_BASE, mib_high);
-	MIB_READ(RX_SA_UNUSED_PKTS_BASE, mib_low);
+	sa_index = SECY_AN_TO_SA_MAPPING(an);
+
+	SHR_RET_ON_ERR(qca808x_secy_mib_read(secy_id,
+		qca808x_addr(sc_index, sa_index,
+			RX_SA_UNUSED_PKTS_HIGH_BASE), &mib_high));
+	SHR_RET_ON_ERR(qca808x_secy_mib_read(secy_id,
+		qca808x_addr(sc_index, sa_index,
+			RX_SA_UNUSED_PKTS_BASE), &mib_low));
 	mib->unused_sa = ((u64)mib_high << 32) | (u64)mib_low;
 
 	mib_low = 0;
 	mib_high = 0;
-	MIB_READ(RX_SA_NOUSING_PKTS_HIGH_BASE, mib_high);
-	MIB_READ(RX_SA_NOUSING_PKTS_BASE, mib_low);
+	SHR_RET_ON_ERR(qca808x_secy_mib_read(secy_id,
+		qca808x_addr(sc_index, sa_index,
+			RX_SA_NOUSING_PKTS_HIGH_BASE), &mib_high));
+	SHR_RET_ON_ERR(qca808x_secy_mib_read(secy_id,
+		qca808x_addr(sc_index, sa_index,
+			RX_SA_NOUSING_PKTS_BASE), &mib_low));
 	mib->not_using_sa = ((u64)mib_high << 32) | (u64)mib_low;
 
 	mib_low = 0;
 	mib_high = 0;
-	MIB_READ(RX_SA_NOTVALID_PKTS_HIGH_BASE, mib_high);
-	MIB_READ(RX_SA_NOTVALID_PKTS_BASE, mib_low);
+	SHR_RET_ON_ERR(qca808x_secy_mib_read(secy_id,
+		qca808x_addr(sc_index, sa_index,
+			RX_SA_NOTVALID_PKTS_HIGH_BASE), &mib_high));
+	SHR_RET_ON_ERR(qca808x_secy_mib_read(secy_id,
+		qca808x_addr(sc_index, sa_index,
+			RX_SA_NOTVALID_PKTS_BASE), &mib_low));
 	mib->not_valid_pkts = ((u64)mib_high << 32) | (u64)mib_low;
 
 	mib_low = 0;
 	mib_high = 0;
-	MIB_READ(RX_SA_INVALID_PKTS_HIGH_BASE, mib_high);
-	MIB_READ(RX_SA_INVALID_PKTS_BASE, mib_low);
+	SHR_RET_ON_ERR(qca808x_secy_mib_read(secy_id,
+		qca808x_addr(sc_index, sa_index,
+			RX_SA_INVALID_PKTS_HIGH_BASE), &mib_high));
+	SHR_RET_ON_ERR(qca808x_secy_mib_read(secy_id,
+		qca808x_addr(sc_index, sa_index,
+			RX_SA_INVALID_PKTS_BASE), &mib_low));
 	mib->invalid_pkts = ((u64)mib_high << 32) | (u64)mib_low;
 
 	mib_low = 0;
 	mib_high = 0;
-	MIB_READ(RX_SA_OK_PKTS_HIGH_BASE, mib_high);
-	MIB_READ(RX_SA_OK_PKTS_BASE, mib_low);
+	SHR_RET_ON_ERR(qca808x_secy_mib_read(secy_id,
+		qca808x_addr(sc_index, sa_index,
+			RX_SA_OK_PKTS_HIGH_BASE), &mib_high));
+	SHR_RET_ON_ERR(qca808x_secy_mib_read(secy_id,
+		qca808x_addr(sc_index, sa_index,
+			RX_SA_OK_PKTS_BASE), &mib_low));
 	mib->ok_pkts = ((u64)mib_high << 32) | (u64)mib_low;
 
 	mib_low = 0;
-	MIB_READ(RX_SC_LATE_PKTS_BASE, mib_low);
+	SHR_RET_ON_ERR(qca808x_secy_mib_read(secy_id,
+		qca808x_addr(sc_index, sa_index,
+			RX_SC_LATE_PKTS_BASE), &mib_low));
 	mib->late_pkts = (u64)mib_low;
 
 	mib_low = 0;
-	MIB_READ(RX_SC_DELAYED_PKTS_BASE, mib_low);
+	SHR_RET_ON_ERR(qca808x_secy_mib_read(secy_id,
+		qca808x_addr(sc_index, sa_index,
+			RX_SC_DELAYED_PKTS_BASE), &mib_low));
 	mib->delayed_pkts = (u64)mib_low;
 
 	mib_low = 0;
-	MIB_READ(RX_SC_UNCHECKED_PKTS_BASE, mib_low);
+	SHR_RET_ON_ERR(qca808x_secy_mib_read(secy_id,
+		qca808x_addr(sc_index, sa_index,
+			RX_SC_UNCHECKED_PKTS_BASE), &mib_low));
 	mib->unchecked_pkts = (u64)mib_low;
 
 	mib_low = 0;
-	MIB_READ(RX_SC_VALIDATED_PKTS_BASE, mib_low);
+	SHR_RET_ON_ERR(qca808x_secy_mib_read(secy_id,
+		qca808x_addr(sc_index, sa_index,
+			RX_SC_VALIDATED_PKTS_BASE), &mib_low));
 	mib->validated_octets = (u64)mib_low;
 
 	mib_low = 0;
-	MIB_READ(RX_SC_DECRYPTED_PKTS_BASE, mib_low);
+	SHR_RET_ON_ERR(qca808x_secy_mib_read(secy_id,
+		qca808x_addr(sc_index, sa_index,
+			RX_SC_DECRYPTED_PKTS_BASE), &mib_low));
 	mib->decrypted_octets = (u64)mib_low;
 
 	return ERROR_OK;
@@ -2338,46 +2411,58 @@ g_error_t qca808x_secy_rx_mib_get(u32 secy_id, struct secy_rx_mib_t *mib)
 
 	memset(mib, 0, sizeof(*mib));
 
-	MIB_READ(RX_UNTAGGED_PKTS, val);
+	SHR_RET_ON_ERR(qca808x_secy_mib_read(secy_id,
+		qca808x_addr(sc_index, sa_index,
+			RX_UNTAGGED_PKTS), &val));
 	mib->untagged_pkts = (u64)val;
 
 	val = 0;
-	MIB_READ(RX_NO_TAG_PKTS, val);
+	SHR_RET_ON_ERR(qca808x_secy_mib_read(secy_id,
+		qca808x_addr(sc_index, sa_index,
+			RX_NO_TAG_PKTS), &val));
 	mib->notag_pkts = (u64)val;
 
 	val = 0;
-	MIB_READ(RX_BAD_TAG_PKTS, val);
+	SHR_RET_ON_ERR(qca808x_secy_mib_read(secy_id,
+		qca808x_addr(sc_index, sa_index,
+			RX_BAD_TAG_PKTS), &val));
 	mib->bad_tag_pkts = (u64)val;
 
 	val = 0;
-	MIB_READ(RX_UNKNOWN_SCI_PKTS, val);
+	SHR_RET_ON_ERR(qca808x_secy_mib_read(secy_id,
+		qca808x_addr(sc_index, sa_index,
+			RX_UNKNOWN_SCI_PKTS), &val));
 	mib->unknown_sci_pkts = (u64)val;
 
 	val = 0;
-	MIB_READ(RX_NO_SCI_PKTS, val);
+	SHR_RET_ON_ERR(qca808x_secy_mib_read(secy_id,
+		qca808x_addr(sc_index, sa_index,
+			RX_NO_SCI_PKTS), &val));
 	mib->no_sci_pkts = (u64)val;
 
 	val = 0;
-	MIB_READ(RX_OVERRUN_PKTS, val);
+	SHR_RET_ON_ERR(qca808x_secy_mib_read(secy_id,
+		qca808x_addr(sc_index, sa_index,
+			RX_OVERRUN_PKTS), &val));
 	mib->too_long_packets = (u64)val;
 
 	return ERROR_OK;
 }
 
 g_error_t qca808x_secy_tx_sa_mib_clear(u32 secy_id, u32 sc_index,
-	u32 sa_index)
+	u32 an)
 {
 	struct secy_tx_sa_mib_t mib;
 
 	if ((sc_index > SECY_SC_IDX_MAX) ||
-			(sa_index > SECY_SA_IDX_MAX)) {
+			(an > SECY_AN_IDX_MAX)) {
 		return ERROR_PARAM;
 	}
 
 	memset(&mib, 0, sizeof(mib));
 
 	SHR_RET_ON_ERR(qca808x_secy_tx_sa_mib_get(secy_id, sc_index,
-		sa_index, &mib));
+		an, &mib));
 
 	return ERROR_OK;
 }
@@ -2405,20 +2490,20 @@ g_error_t qca808x_secy_tx_mib_clear(u32 secy_id)
 	return ERROR_OK;
 }
 g_error_t qca808x_secy_rx_sa_mib_clear(u32 secy_id, u32 sc_index,
-	u32 sa_index)
+	u32 an)
 {
 	struct secy_rx_sa_mib_t mib;
 
 
 	if ((sc_index > SECY_SC_IDX_MAX) ||
-			(sa_index > SECY_SA_IDX_MAX)) {
+			(an > SECY_AN_IDX_MAX)) {
 		return ERROR_PARAM;
 	}
 
 	memset(&mib, 0, sizeof(mib));
 
 	SHR_RET_ON_ERR(qca808x_secy_rx_sa_mib_get(secy_id, sc_index,
-		sa_index, &mib));
+		an, &mib));
 
 	return ERROR_OK;
 }
@@ -2454,14 +2539,16 @@ g_error_t qca808x_secy_xpn_en_get(u32 secy_id, bool *enable)
 }
 
 g_error_t qca808x_secy_rx_sa_xpn_set(u32 secy_id, u32 sc_index,
-	u32 sa_index, u32 next_pn)
+	u32 an, u32 next_pn)
 {
 	u16 val = 0;
 	u16 channel = 0;
+	u32 sa_index = 0;
 
-	if ((sc_index > SECY_SC_IDX_MAX) || (sa_index > SECY_SA_IDX_MAX))
+	if ((sc_index > SECY_SC_IDX_MAX) || (an > SECY_AN_IDX_MAX))
 		return ERROR_PARAM;
 
+	sa_index = SECY_AN_TO_SA_MAPPING(an);
 	channel = (sc_index * 2 + sa_index);
 	val = (u16)(next_pn & 0xffff);
 	SHR_RET_ON_ERR(phy_access_reg_write(secy_id, PHY_MMD3,
@@ -2474,13 +2561,15 @@ g_error_t qca808x_secy_rx_sa_xpn_set(u32 secy_id, u32 sc_index,
 }
 
 g_error_t qca808x_secy_rx_sa_xpn_get(u32 secy_id, u32 sc_index,
-	u32 sa_index, u32 *next_pn)
+	u32 an, u32 *next_pn)
 {
 	u16 val0 = 0, val1 = 0, channel = 0;
+	u32 sa_index = 0;
 
-	if ((sc_index > SECY_SC_IDX_MAX) || (sa_index > SECY_SA_IDX_MAX))
+	if ((sc_index > SECY_SC_IDX_MAX) || (an > SECY_AN_IDX_MAX))
 		return ERROR_PARAM;
 
+	sa_index = SECY_AN_TO_SA_MAPPING(an);
 	channel = (sc_index * 2 + sa_index);
 
 	SHR_RET_ON_ERR(phy_access_reg_read(secy_id, PHY_MMD3,
@@ -2493,14 +2582,16 @@ g_error_t qca808x_secy_rx_sa_xpn_get(u32 secy_id, u32 sc_index,
 }
 
 g_error_t qca808x_secy_tx_sa_xpn_set(u32 secy_id, u32 sc_index,
-	u32 sa_index, u32 next_pn)
+	u32 an, u32 next_pn)
 {
 	u16 val = 0;
 	u16 channel = 0;
+	u32 sa_index = 0;
 
-	if ((sc_index > SECY_SC_IDX_MAX) || (sa_index > SECY_SA_IDX_MAX))
+	if ((sc_index > SECY_SC_IDX_MAX) || (an > SECY_AN_IDX_MAX))
 		return ERROR_PARAM;
 
+	sa_index = SECY_AN_TO_SA_MAPPING(an);
 	channel = (sc_index * 2 + sa_index);
 	val = (u16)(next_pn & 0xffff);
 	SHR_RET_ON_ERR(phy_access_reg_write(secy_id, PHY_MMD3,
@@ -2513,13 +2604,15 @@ g_error_t qca808x_secy_tx_sa_xpn_set(u32 secy_id, u32 sc_index,
 }
 
 g_error_t qca808x_secy_tx_sa_xpn_get(u32 secy_id, u32 sc_index,
-	u32 sa_index, u32 *next_pn)
+	u32 an, u32 *next_pn)
 {
 	u16 val0 = 0, val1 = 0, channel = 0;
+	u32 sa_index = 0;
 
-	if ((sc_index > SECY_SC_IDX_MAX) || (sa_index > SECY_SA_IDX_MAX))
+	if ((sc_index > SECY_SC_IDX_MAX) || (an > SECY_AN_IDX_MAX))
 		return ERROR_PARAM;
 
+	sa_index = SECY_AN_TO_SA_MAPPING(an);
 	channel = (sc_index * 2 + sa_index);
 
 	SHR_RET_ON_ERR(phy_access_reg_read(secy_id, PHY_MMD3,
@@ -2623,19 +2716,20 @@ g_error_t qca808x_secy_tx_sc_ssci_get(u32 secy_id, u32 sc_index, u32 *ssci)
 	return ERROR_OK;
 }
 g_error_t qca808x_secy_rx_sa_ki_set(u32 secy_id, u32 sc_index,
-	u32 sa_index, struct secy_sa_ki_t *key_idendifier)
+	u32 an, struct secy_sa_ki_t *key_idendifier)
 {
 	u16 val = 0;
 	u16 reg;
 	int i;
-	u32 channel;
+	u32 channel, sa_index;
 
 	if ((sc_index > SECY_SC_IDX_MAX) ||
-		(sa_index > SECY_SA_IDX_MAX) ||
+		(an > SECY_AN_IDX_MAX) ||
 		(key_idendifier == NULL)) {
 		return ERROR_PARAM;
 	}
 
+	sa_index = SECY_AN_TO_SA_MAPPING(an);
 	channel = sc_index * 2 + sa_index;
 	reg = MACSEC_RX_KI_KEY0(channel);
 
@@ -2649,19 +2743,20 @@ g_error_t qca808x_secy_rx_sa_ki_set(u32 secy_id, u32 sc_index,
 	return ERROR_OK;
 }
 g_error_t qca808x_secy_rx_sa_ki_get(u32 secy_id, u32 sc_index,
-	u32 sa_index, struct secy_sa_ki_t *key_idendifier)
+	u32 an, struct secy_sa_ki_t *key_idendifier)
 {
 	u16 val = 0;
 	u16 reg;
 	int i;
-	u32 channel;
+	u32 channel, sa_index;
 
 	if ((sc_index > SECY_SC_IDX_MAX) ||
-		(sa_index > SECY_SA_IDX_MAX) ||
+		(an > SECY_AN_IDX_MAX) ||
 		(key_idendifier == NULL)) {
 		return ERROR_PARAM;
 	}
 
+	sa_index = SECY_AN_TO_SA_MAPPING(an);
 	channel = sc_index * 2 + sa_index;
 	reg = MACSEC_RX_KI_KEY0(channel);
 
@@ -2675,19 +2770,20 @@ g_error_t qca808x_secy_rx_sa_ki_get(u32 secy_id, u32 sc_index,
 	return ERROR_OK;
 }
 g_error_t qca808x_secy_tx_sa_ki_set(u32 secy_id, u32 sc_index,
-	u32 sa_index, struct secy_sa_ki_t *key_idendifier)
+	u32 an, struct secy_sa_ki_t *key_idendifier)
 {
 	u16 val = 0;
 	u16 reg;
 	int i;
-	u32 channel;
+	u32 channel, sa_index;
 
 	if ((sc_index > SECY_SC_IDX_MAX) ||
-		(sa_index > SECY_SA_IDX_MAX) ||
+		(an > SECY_AN_IDX_MAX) ||
 		(key_idendifier == NULL)) {
 		return ERROR_PARAM;
 	}
 
+	sa_index = SECY_AN_TO_SA_MAPPING(an);
 	channel = sc_index * 2 + sa_index;
 	reg = MACSEC_TX_KI_KEY0(channel);
 
@@ -2703,19 +2799,20 @@ g_error_t qca808x_secy_tx_sa_ki_set(u32 secy_id, u32 sc_index,
 
 
 g_error_t qca808x_secy_tx_sa_ki_get(u32 secy_id, u32 sc_index,
-	u32 sa_index, struct secy_sa_ki_t *key_idendifier)
+	u32 an, struct secy_sa_ki_t *key_idendifier)
 {
 	u16 val = 0;
 	u16 reg;
 	int i;
-	u32 channel;
+	u32 channel, sa_index;
 
 	if ((sc_index > SECY_SC_IDX_MAX) ||
-		(sa_index > SECY_SA_IDX_MAX) ||
+		(an > SECY_AN_IDX_MAX) ||
 		(key_idendifier == NULL)) {
 		return ERROR_PARAM;
 	}
 
+	sa_index = SECY_AN_TO_SA_MAPPING(an);
 	channel = sc_index * 2 + sa_index;
 	reg = MACSEC_TX_KI_KEY0(channel);
 
