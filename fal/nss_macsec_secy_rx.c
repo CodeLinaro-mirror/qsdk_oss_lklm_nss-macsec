@@ -922,6 +922,28 @@ u32 nss_macsec_secy_rx_sa_next_pn_get(u32 secy_id, u32 channel,
 
 	return ERROR_OK;
 }
+u32 nss_macsec_secy_rx_sa_next_pn_set(u32 secy_id, u32 channel,
+				      u32 an, u32 next_pn)
+{
+	g_error_t rv;
+	struct secy_drv_t *secy_drv;
+
+	SHR_PARAM_CHECK((secy_id < FAL_SECY_ID_NUM) &&
+			(channel < FAL_SECY_CHANNEL_NUM(secy_id)) &&
+			(an < FAL_SECY_SA_NUM_PER_SC(secy_id)));
+
+	secy_drv = nss_macsec_secy_ops_get(secy_id);
+	if (secy_drv != NULL) {
+		if (secy_drv->secy_rx_sa_next_pn_set == NULL)
+			rv = ERROR_NOT_SUPPORT;
+		else
+			rv = secy_drv->secy_rx_sa_next_pn_set(secy_id,
+				channel, an, next_pn);
+		return rv;
+	}
+
+	return ERROR_NOT_SUPPORT;
+}
 
 u32 nss_macsec_secy_rx_sa_del(u32 secy_id, u32 channel, u32 an)
 {

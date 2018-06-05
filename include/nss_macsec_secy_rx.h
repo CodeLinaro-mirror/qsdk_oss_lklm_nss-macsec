@@ -456,5 +456,7 @@ u32 nss_macsec_secy_rx_udf_ufilt_cfg_set(u32 secy_id,
 	struct fal_rx_udf_filt_cfg_t *cfg);
 u32 nss_macsec_secy_rx_udf_ufilt_cfg_get(u32 secy_id,
 	struct fal_rx_udf_filt_cfg_t *cfg);
+u32 nss_macsec_secy_rx_sa_next_pn_set(u32 secy_id, u32 channel,
+	u32 an, u32 next_pn);
 
 #endif /* _NSS_MACSEC_SECY_RX_H_ */

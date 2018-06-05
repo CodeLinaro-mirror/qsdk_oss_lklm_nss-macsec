@@ -130,6 +130,8 @@ typedef g_error_t (*secy_rx_sc_en_get_func)(u32 secy_id, u32 channel,
 	bool *penable);
 typedef g_error_t (*secy_rx_sc_en_set_func)(u32 secy_id, u32 channel,
 	bool enable);
+typedef g_error_t (*secy_rx_sa_next_pn_set_func)(u32 secy_id, u32 channel,
+	u32 an, u32 next_pn);
 
 
 /* tx */
@@ -307,6 +309,7 @@ struct secy_drv_t {
 	secy_rx_sc_en_set_func secy_rx_sc_en_set;
 	secy_rx_sa_del_func secy_rx_sa_del;
 	secy_rx_sa_del_all_func secy_rx_sa_del_all;
+	secy_rx_sa_next_pn_set_func secy_rx_sa_next_pn_set;
 
 	/*tx*/
 	secy_tx_sc_in_used_get_func secy_tx_sc_in_used_get;

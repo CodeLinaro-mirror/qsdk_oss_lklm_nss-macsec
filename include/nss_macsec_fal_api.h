@@ -187,6 +187,7 @@ enum {
 	NSS_MACSEC_SECY_RX_UDF_UFILT_CFG_SET_CMD,
 	NSS_MACSEC_SECY_TX_UDF_CFILT_CFG_GET_CMD,
 	NSS_MACSEC_SECY_TX_UDF_CFILT_CFG_SET_CMD,
+	NSS_MACSEC_SECY_RX_SA_NEXT_PN_SET_CMD,
 };
 
 struct nss_macsec_secy_interrupt_en_get_cmd {
@@ -1112,7 +1113,12 @@ struct nss_macsec_secy_tx_udf_cfilt_cfg_set_cmd {
 	u32 secy_id;
 	struct fal_tx_udf_filt_cfg_t pcfg;
 };
-
+struct nss_macsec_secy_rx_sa_next_pn_set_cmd {
+	u32 secy_id;
+	u32 channel;
+	u32 an;
+	u32 next_pn;
+};
 unsigned int nss_macsec_fal_msg_handle(struct sdk_msg_header *header);
 
 #endif

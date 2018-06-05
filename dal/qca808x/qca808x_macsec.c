@@ -3430,6 +3430,7 @@ static int qca808x_secy_ops_init(void)
 		qca808x_secy_rx_sa_in_used_get;
 	qca808x_secy_ops->secy_rx_sc_en_set = qca808x_secy_rx_sc_en_set;
 	qca808x_secy_ops->secy_rx_sc_en_get = qca808x_secy_rx_sc_en_get;
+	qca808x_secy_ops->secy_rx_sa_next_pn_set = qca808x_secy_rx_sa_npn_set;
 
 	/*tx */
 	qca808x_secy_ops->secy_tx_sc_in_used_get =

@@ -185,7 +185,8 @@ unsigned int nss_macsec_cmd_len[] = {
 	sizeof(struct nss_macsec_secy_tx_udf_cfilt_cfg_set_cmd),
 	sizeof(struct nss_macsec_secy_tx_udf_cfilt_cfg_get_cmd),
 	sizeof(struct nss_macsec_secy_rx_udf_ufilt_cfg_set_cmd),
-	sizeof(struct nss_macsec_secy_rx_udf_ufilt_cfg_get_cmd)
+	sizeof(struct nss_macsec_secy_rx_udf_ufilt_cfg_get_cmd),
+	sizeof(struct nss_macsec_secy_rx_sa_next_pn_set_cmd)
 };
 
 unsigned int nss_macsec_fal_msg_handle(struct sdk_msg_header *header)
@@ -1917,6 +1918,17 @@ unsigned int nss_macsec_fal_msg_handle(struct sdk_msg_header *header)
 			ret =
 			    nss_macsec_secy_rx_udf_ufilt_cfg_set(param->secy_id,
 							    &param->pcfg);
+		}
+		break;
+	case NSS_MACSEC_SECY_RX_SA_NEXT_PN_SET_CMD:{
+			struct nss_macsec_secy_rx_sa_next_pn_set_cmd *param =
+			    (struct nss_macsec_secy_rx_sa_next_pn_set_cmd
+			     *)(header + 1);
+			ret =
+			    nss_macsec_secy_rx_sa_next_pn_set(param->secy_id,
+							      param->channel,
+							      param->an,
+							      param->next_pn);
 		}
 		break;
 	default:
