@@ -95,7 +95,7 @@ int nss_macsec_reg_read(unsigned int dev_id, unsigned int reg_addr,
 			unsigned int *pvalue)
 {
 	if(macsec_ctx.macsec_base[dev_id] == NULL) {
-		return -1;
+		return ERROR_NOT_SUPPORT;
 	}
 
 	*pvalue =
@@ -108,7 +108,7 @@ int nss_macsec_reg_write(unsigned int dev_id, unsigned int reg_addr,
 			 unsigned int pvalue)
 {
 	if(macsec_ctx.macsec_base[dev_id] == NULL) {
-		return -1;
+		return ERROR_NOT_SUPPORT;
 	}
 	writel(pvalue,
 	       (unsigned char *)((uint32_t) macsec_ctx.macsec_base[dev_id] +
@@ -166,6 +166,7 @@ static void nss_macsec_netlink_recv(struct sk_buff *__skb)
 			return;
 		} else if (msg_type == SDK_CALL_MSG) {
 			ret = nss_macsec_msg_handle(msg_data, &sync);
+			header->ret = ret;
 		} else {
 			printk("Unexpected msg:0x%x received!\n", msg_type);
 			return;

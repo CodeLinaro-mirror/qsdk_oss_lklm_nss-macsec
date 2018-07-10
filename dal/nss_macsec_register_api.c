@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014, The Linux Foundation. All rights reserved.
+ * Copyright (c) 2014, 2018, The Linux Foundation. All rights reserved.
  * Permission to use, copy, modify, and/or distribute this software for
  * any purpose with or without fee is hereby granted, provided that the
  * above copyright notice and this permission notice appear in all copies.
@@ -34,8 +34,7 @@ int dal_reg_read(unsigned int dev_id, unsigned int reg_addr,
 #endif
 		return -1;
 	}
-	nss_macsec_reg_read(dev_id, reg_addr, pvalue);
-	return 0;
+	return nss_macsec_reg_read(dev_id, reg_addr, pvalue);
 }
 
 int dal_reg_write(unsigned int dev_id, unsigned int reg_addr,
@@ -49,8 +48,7 @@ int dal_reg_write(unsigned int dev_id, unsigned int reg_addr,
 #endif
 		return -1;
 	}
-	nss_macsec_reg_write(dev_id, reg_addr, value);
-	return 0;
+	return nss_macsec_reg_write(dev_id, reg_addr, value);
 }
 
 int dal_reg_tbl_read(unsigned int dev_id, unsigned int reg_addr,
@@ -59,13 +57,17 @@ int dal_reg_tbl_read(unsigned int dev_id, unsigned int reg_addr,
 	unsigned int i = 0;
 	unsigned int addr = reg_addr;
 	unsigned int *dst = pvalue;
+	int rv = 0;
 
 	for (i = 0; i < width; i++) {
-		dal_reg_read(dev_id, addr, dst);
+		rv = dal_reg_read(dev_id, addr, dst);
+		if (rv) {
+			return rv;
+		}
 		addr += sizeof(unsigned int);
 		dst++;
 	}
-	return 0;
+	return rv;
 }
 
 int dal_reg_tbl_write(unsigned int dev_id, unsigned int reg_addr,
@@ -74,13 +76,17 @@ int dal_reg_tbl_write(unsigned int dev_id, unsigned int reg_addr,
 	unsigned int i = 0;
 	unsigned int addr = reg_addr;
 	unsigned int *src = pvalue;
+	int rv = 0;
 
 	for (i = 0; i < width; i++) {
-		dal_reg_write(dev_id, addr, *src);
+		rv = dal_reg_write(dev_id, addr, *src);
+		if (rv) {
+			return rv;
+		}
 		addr += sizeof(unsigned int);
 		src++;
 	}
-	return 0;
+	return rv;
 }
 
 int dal_var_field_get(unsigned int field_offset,
@@ -645,15 +651,18 @@ int ig_indirect_table_set(unsigned int dev_id,
 			  unsigned int entry_len, unsigned int *pentry)
 {
 	unsigned int cmd = 0;
+	int rv = 0;
 
 	/* Update Table data */
-	ingress_reg_tbl_set(dev_id, IG_TABLE_DATA_ADDRESS, pentry, entry_len);
+	rv = ingress_reg_tbl_set(dev_id, IG_TABLE_DATA_ADDRESS,
+		pentry, entry_len);
+	if (rv) {
+		return rv;
+	}
 
 	/* Update Command word */
 	cmd = (TABLE_WRITE_OP << 30) | (table_type << 12) | index;
-	ig_table_cmd_set(dev_id, (union ig_table_cmd_u *)&cmd);
-
-	return 0;
+	return ig_table_cmd_set(dev_id, (union ig_table_cmd_u *)&cmd);
 }
 
 int ig_indirect_table_get(unsigned int dev_id,
@@ -662,15 +671,18 @@ int ig_indirect_table_get(unsigned int dev_id,
 			  unsigned int entry_len, unsigned int *pentry)
 {
 	unsigned int cmd = 0;
+	int rv = 0;
 
 	/* Update Command word */
 	cmd = (TABLE_READ_OP << 30) | (table_type << 12) | index;
-	ig_table_cmd_set(dev_id, (union ig_table_cmd_u *)&cmd);
+	rv = ig_table_cmd_set(dev_id, (union ig_table_cmd_u *)&cmd);
+	if (rv) {
+		return rv;
+	}
 
 	/* Read Table data */
-	ingress_reg_tbl_get(dev_id, IG_TABLE_DATA_ADDRESS, pentry, entry_len);
-
-	return 0;
+	return ingress_reg_tbl_get(dev_id, IG_TABLE_DATA_ADDRESS,
+		pentry, entry_len);
 }
 
 int ig_ctl_filt_table_set(unsigned int dev_id,
@@ -808,7 +820,7 @@ int ig_poc_lut_table_get(unsigned int dev_id,
 int ig_smib_table_sc_sa_get(unsigned int dev_id,
 			    unsigned int index, unsigned int *pentry)
 {
-	int i;
+	int i, rv = 0;
 	int entry_offset = 0;
 	unsigned int cmd = 0;
 
@@ -821,35 +833,47 @@ int ig_smib_table_sc_sa_get(unsigned int dev_id,
 		cmd =
 		    (TABLE_READ_OP << 30) | (IG_SMIB_TABLE_TYPE << 12) |
 		    ((index * IG_SMIB_ENTRY_LEN) + i);
-		ig_table_cmd_set(dev_id, (union ig_table_cmd_u *)&cmd);
+		rv = ig_table_cmd_set(dev_id, (union ig_table_cmd_u *)&cmd);
+		if (rv) {
+			return rv;
+		}
 
 		/* Read Table data */
-		ingress_reg_tbl_get(dev_id, IG_TABLE_DATA_ADDRESS,
+		rv = ingress_reg_tbl_get(dev_id, IG_TABLE_DATA_ADDRESS,
 				    (pentry + entry_offset), 2);
+		if (rv) {
+			return rv;
+		}
 		entry_offset += 2;
 	}
 
-	return 0;
+	return rv;
 }
 
 int ig_smib_table_common_get(unsigned int dev_id, unsigned int *pentry)
 {
-	int i;
+	int i, rv = 0;
 	int entry_offset = 0;
 	unsigned int cmd = 0;
 
 	for (i = IG_SMIB_COMMON_INDEX_MIN; i < IG_SMIB_COMMON_INDEX_MAX + 1; i++) {
 		/* Update Command word */
 		cmd = (TABLE_READ_OP << 30) | (IG_SMIB_TABLE_TYPE << 12) | i;
-		ig_table_cmd_set(dev_id, (union ig_table_cmd_u *)&cmd);
+		rv = ig_table_cmd_set(dev_id, (union ig_table_cmd_u *)&cmd);
+		if (rv) {
+			return rv;
+		}
 
 		/* Read Table data */
-		ingress_reg_tbl_get(dev_id, IG_TABLE_DATA_ADDRESS,
+		rv = ingress_reg_tbl_get(dev_id, IG_TABLE_DATA_ADDRESS,
 				    (pentry + entry_offset), 2);
+		if (rv) {
+			return rv;
+		}
 		entry_offset += 2;
 	}
 
-	return 0;
+	return rv;
 }
 
 int egress_reg_get(unsigned int dev_id,
@@ -1598,15 +1622,18 @@ int eg_indirect_table_set(unsigned int dev_id,
 			  unsigned int entry_len, unsigned int *pentry)
 {
 	unsigned int cmd = 0;
+	int rv = 0;
 
 	/* Update Table data */
-	egress_reg_tbl_set(dev_id, EG_TABLE_DATA_ADDRESS, pentry, entry_len);
+	rv = egress_reg_tbl_set(dev_id, EG_TABLE_DATA_ADDRESS,
+		pentry, entry_len);
+	if (rv) {
+		return rv;
+	}
 
 	/* Update Command word */
 	cmd = (TABLE_WRITE_OP << 30) | (table_type << 12) | index;
-	eg_table_cmd_set(dev_id, (union eg_table_cmd_u *)&cmd);
-
-	return 0;
+	return eg_table_cmd_set(dev_id, (union eg_table_cmd_u *)&cmd);
 }
 
 int eg_indirect_table_get(unsigned int dev_id,
@@ -1615,15 +1642,18 @@ int eg_indirect_table_get(unsigned int dev_id,
 			  unsigned int entry_len, unsigned int *pentry)
 {
 	unsigned int cmd = 0;
+	int rv = 0;
 
 	/* Update Command word */
 	cmd = (TABLE_READ_OP << 30) | (table_type << 12) | index;
-	eg_table_cmd_set(dev_id, (union eg_table_cmd_u *)&cmd);
+	rv = eg_table_cmd_set(dev_id, (union eg_table_cmd_u *)&cmd);
+	if (rv) {
+		return rv;
+	}
 
 	/* Read Table data */
-	egress_reg_tbl_get(dev_id, EG_TABLE_DATA_ADDRESS, pentry, entry_len);
-
-	return 0;
+	return egress_reg_tbl_get(dev_id, EG_TABLE_DATA_ADDRESS,
+		pentry, entry_len);
 }
 
 int eg_ctl_filt_table_set(unsigned int dev_id,
@@ -1741,7 +1771,7 @@ int eg_sak_table_get(unsigned int dev_id,
 int eg_smib_table_sc_sa_get(unsigned int dev_id,
 			    unsigned int index, unsigned int *pentry)
 {
-	int i;
+	int i, rv = 0;
 	int entry_offset = 0;
 	unsigned int cmd = 0;
 
@@ -1754,35 +1784,47 @@ int eg_smib_table_sc_sa_get(unsigned int dev_id,
 		cmd =
 		    (TABLE_READ_OP << 30) | (EG_SMIB_TABLE_TYPE << 12) |
 		    ((index * 8) + i);
-		eg_table_cmd_set(dev_id, (union eg_table_cmd_u *)&cmd);
+		rv = eg_table_cmd_set(dev_id, (union eg_table_cmd_u *)&cmd);
+		if (rv) {
+			return rv;
+		}
 
 		/* Read Table data */
-		egress_reg_tbl_get(dev_id, EG_TABLE_DATA_ADDRESS,
+		rv = egress_reg_tbl_get(dev_id, EG_TABLE_DATA_ADDRESS,
 				   (pentry + entry_offset), 2);
+		if (rv) {
+			return rv;
+		}
 		entry_offset += 2;
 	}
 
-	return 0;
+	return rv;
 }
 
 int eg_smib_table_common_get(unsigned int dev_id, unsigned int *pentry)
 {
-	int i;
+	int i, rv = 0;
 	int entry_offset = 0;
 	unsigned int cmd = 0;
 
 	for (i = EG_SMIB_COMMON_INDEX_MIN; i < EG_SMIB_COMMON_INDEX_MAX + 1; i++) {
 		/* Update Command word */
 		cmd = (TABLE_READ_OP << 30) | (EG_SMIB_TABLE_TYPE << 12) | i;
-		eg_table_cmd_set(dev_id, (union eg_table_cmd_u *)&cmd);
+		rv = eg_table_cmd_set(dev_id, (union eg_table_cmd_u *)&cmd);
+		if (rv) {
+			return rv;
+		}
 
 		/* Read Table data */
-		egress_reg_tbl_get(dev_id, EG_TABLE_DATA_ADDRESS,
+		rv = egress_reg_tbl_get(dev_id, EG_TABLE_DATA_ADDRESS,
 				   (pentry + entry_offset), 2);
+		if (rv) {
+			return rv;
+		}
 		entry_offset += 2;
 	}
 
-	return 0;
+	return rv;
 }
 
 int emac1_reg_get(unsigned int dev_id,
