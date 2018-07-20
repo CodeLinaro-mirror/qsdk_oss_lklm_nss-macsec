@@ -28,6 +28,229 @@ extern "C" {
 #define PHY_NAPA 0x004DD100
 #define MAX_SECY_ID      0x3
 
+enum secy_cipher_suite_t {
+	SECY_CIPHER_SUITE_128 = 0,
+	SECY_CIPHER_SUITE_256 = 1,
+	SECY_CIPHER_SUITE_XPN_128,
+	SECY_CIPHER_SUITE_XPN_256,
+	SECY_CIPHER_SUITE_MAX
+};
+enum secy_sc_sa_mapping_mode_t {
+	SECY_SC_SA_MAP_1_1 = 0,
+	SECY_SC_SA_MAP_1_2 = 1,
+	SECY_SC_SA_MAP_1_4 = 2,
+	SECY_SC_SA_MAP_MAX = 3
+};
+/** SecY special packet type */
+enum secy_packet_type_t {
+	PACKET_STP   = 0,   /*< Spanning Tree Protocol Packet */
+	PACKET_CDP   = 1,   /*< Cisco Discovery Protocol Packet */
+	PACKET_LLDP  = 2   /*< Link Layer Discovery Protocol Packet */
+};
+enum secy_packet_action_t {
+	PACKET_CRYPTO_OR_DISCARD = 0X0,
+	PACKET_CRYPTO_OR_UPLOAD  = 0X1,
+	PACKET_PLAIN_OR_DISCARD  = 0X2,
+	PACKET_PLAIN_OR_UPLOAD   = 0X3
+};
+/** SecY loopback type */
+enum secy_loopback_type_t {
+	MACSEC_NORMAL     = 0x0,
+	MACSEC_PHY_LB     = 0x1,
+	MACSEC_SWITCH_LB  = 0x2,
+	MACSEC_BYPASS     = 0x3
+};
+enum secy_rx_prc_lut_action_t {
+	SECY_RX_PRC_ACTION_PROCESS,
+	SECY_RX_PRC_ACTION_PROCESS_WITH_SECTAG,
+	SECY_RX_PRC_ACTION_BYPASS,
+	SECY_RX_PRC_ACTION_DROP,
+	SECY_RX_PRC_ACTION_MAX
+};
+struct secy_rx_prc_lut_t {
+	bool valid;
+	bool uncontrolled_port;
+	enum secy_rx_prc_lut_action_t action;
+	u32 channel;
+	u8 sci[8];
+	u8 sci_mask;		/* first 8 bits are useful */
+	u8 tci;
+	u8 tci_mask;		/* first 6 bits are useful */
+	u8 da[6];
+	u8 da_mask;		/* first 6 bits are useful */
+	u8 sa[6];
+	u8 sa_mask;		/* first 6 bits are useful */
+	u16 ether_type;
+	u8 ether_type_mask;	/* first 2 bits are useful */
+	u8 offset;
+	/*add for NAPA PHY*/
+	u16 outer_vlanid;
+	u16 inner_vlanid;
+	bool bc_flag;
+	u32 rule_mask;
+};
+enum secy_vf_t {
+	STRICT    = 0,
+	CHECKED   = 1,
+	DISABLED  = 2
+};
+struct secy_sak_t {
+	u8 sak[16];
+	u8 sak1[16];
+	u32 len;
+};
+struct secy_sa_ki_t {
+	u8 ki[16];
+};
+enum secy_cofidentiality_offset_t {
+	SECY_CONFIDENTIALITY_OFFSET_00 = 0, /**< 0  byte */
+	SECY_CONFIDENTIALITY_OFFSET_30 = 1, /**< 30 bytes */
+	SECY_CONFIDENTIALITY_OFFSET_50 = 2 /**< 50 bytes */
+};
+enum secy_tx_class_lut_action_t {
+	SECY_TX_CLASS_ACTION_FORWARD,
+	SECY_TX_CLASS_ACTION_BYPASS,
+	SECY_TX_CLASS_ACTION_DROP,
+	SECY_TX_CLASS_ACTION_MAX
+};
+struct secy_tx_class_lut_t {
+	bool valid;
+	enum secy_tx_class_lut_action_t action;
+	u32 channel;
+	u8 da[6];
+	u8 da_mask;		/* first 6 bits are useful */
+	u8 sa[6];
+	u8 sa_mask;		/* first 6 bits are useful */
+	u16 ether_type;
+	u8 ether_type_mask;	/* first 2 bits are useful */
+	bool udf0_valid;
+	u8 udf0_byte;
+	u8 udf0_location;	/* first 6 bits are useful */
+	bool udf1_valid;
+	u8 udf1_byte;
+	u8 udf1_location;	/* first 6 bits are useful */
+	bool udf2_valid;
+	u8 udf2_byte;
+	u8 udf2_location;	/* first 6 bits are useful */
+	bool udf3_valid;
+	u8 udf3_byte;
+	u8 udf3_location;	/* first 6 bits are useful */
+	bool vlan_valid;
+	u8 vlan_valid_mask;	/* first bit is useful */
+	u8 vlan_up;
+	u8 vlan_up_mask;	/* first bit is useful */
+	u16 vlan_id;
+	u8 vlan_id_mask;	/* first 2 bits are useful */
+	/*add for NAPA PHY*/
+	u16 outer_vlanid;
+	u8 sci[8];
+	u8 tci;
+	u8 offset;
+	bool bc_flag;
+	u32 rule_mask;
+};
+struct secy_tx_sa_mib_t {
+	u64 hit_drop_redirect;
+	u64 protected2_pkts;
+	u64 protected_pkts;
+	u64 encrypted_pkts;
+};
+struct secy_tx_sc_mib_t {
+	u64 protected_pkts;
+	u64 encrypted_pkts;
+	u64 protected_octets;
+	u64 encrypted_octets;
+};
+struct secy_tx_mib_t {
+	u64 ctl_pkts;
+	u64 unknown_sa_pkts;
+	u64 untagged_pkts;
+	u64 too_long;
+	u64 ecc_error_pkts;
+	u64 unctrl_hit_drop_redir_pkts;
+};
+struct secy_rx_sa_mib_t {
+	u64 untagged_hit_pkts;
+	u64 hit_drop_redir_pkts;
+	u64 not_using_sa;
+	u64 unused_sa;
+	u64 not_valid_pkts;
+	u64 invalid_pkts;
+	u64 ok_pkts;
+	u64 late_pkts;
+	u64 delayed_pkts;
+	u64 unchecked_pkts;
+	u64 validated_octets;
+	u64 decrypted_octets;
+};
+struct secy_rx_mib_t {
+	u64 unctrl_prt_tx_octets;
+	u64 ctl_pkts;
+	u64 tagged_miss_pkts;
+	u64 untagged_hit_pkts;
+	u64 notag_pkts;
+	u64 untagged_pkts;
+	u64 bad_tag_pkts;
+	u64 no_sci_pkts;
+	u64 unknown_sci_pkts;
+	u64 ctrl_prt_pass_pkts;
+	u64 unctrl_prt_pass_pkts;
+	u64 ctrl_prt_fail_pkts;
+	u64 unctrl_prt_fail_pkts;
+	u64 too_long_packets;
+	u64 igpoc_ctl_pkts;
+	u64 ecc_error_pkts;
+};
+enum secy_udf_filt_type_t {
+	SECY_FILTER_ANY_PACKET = 0,
+	SECY_FILTER_IP_PACKET = 1,
+	SECY_FILTER_TCP_PACKET = 2
+};
+enum secy_udf_filt_op_t {
+	SECY_FILTER_OPERATOR_EQUAL = 0,
+	SECY_FILTER_OPERATOR_LESS = 1
+};
+struct secy_udf_filt_t {
+	u16 udf_field0;
+	u16 udf_field1;
+	u16 udf_field2;
+	u16 mask;
+	enum secy_udf_filt_type_t type;
+	enum secy_udf_filt_op_t operator;
+	u16 offset;
+};
+enum secy_udf_filt_cfg_pattern_t {
+	SECY_FILTER_PATTERN_AND = 0,
+	SECY_FILTER_PATTERN_OR = 1,
+	SECY_FILTER_PATTERN_XOR = 2
+};
+struct secy_udf_filt_cfg_t {
+	bool enable;
+	u16 priority;
+	u16 inverse;
+	enum secy_udf_filt_cfg_pattern_t pattern0;
+	enum secy_udf_filt_cfg_pattern_t pattern1;
+	enum secy_udf_filt_cfg_pattern_t pattern2;
+};
+enum secy_ctl_match_type_t {
+	SECY_CTL_COMPARE_NO,
+	SECY_CTL_COMPARE_DA,
+	SECY_CTL_COMPARE_SA,
+	SECY_CTL_COMPARE_HALF_DA_SA,
+	SECY_CTL_COMPARE_ETHER_TYPE,
+	SECY_CTL_COMPARE_DA_ETHER_TYPE,
+	SECY_CTL_COMPARE_SA_ETHER_TYPE,
+	SECY_CTL_COMPARE_DA_RANGE,
+	SECY_CTL_COMPARE_MAX
+};
+struct secy_ctl_filt_t {
+	bool bypass;
+	enum secy_ctl_match_type_t match_type;
+	u16 match_mask;
+	u16 ether_type_da_range;
+	u8 sa_da_addr[6];
+};
+
 typedef g_error_t (*secy_init_func)(u32 secy_id);
 typedef g_error_t (*secy_en_set_func)(u32 secy_id, bool enable);
 typedef g_error_t (*secy_en_get_func)(u32 secy_id, bool *enable);
@@ -137,7 +360,7 @@ typedef g_error_t (*secy_rx_sa_next_pn_set_func)(u32 secy_id, u32 channel,
 /* tx */
 
 typedef g_error_t (*secy_tx_sc_in_used_get_func)(u32 secy_id, u32 channel,
-bool *p_in_used);
+	bool *p_in_used);
 typedef g_error_t (*secy_tx_sc_tci_7_2_get_func)(u32 secy_id, u32 channel,
 	u8 *ptci);
 typedef g_error_t (*secy_tx_sc_tci_7_2_set_func)(u32 secy_id, u32 channel,
@@ -246,6 +469,18 @@ typedef g_error_t (*secy_tx_udf_filt_set_func)(u32 secy_id, u32 index,
 	struct secy_udf_filt_t *filter);
 typedef g_error_t (*secy_tx_udf_filt_get_func)(u32 secy_id, u32 index,
 	struct secy_udf_filt_t *filter);
+typedef g_error_t (*secy_tx_ctl_filt_set_func)(u32 secy_id, u32 filt_id,
+	struct secy_ctl_filt_t *pfilt);
+typedef g_error_t (*secy_tx_ctl_filt_get_func)(u32 secy_id, u32 filt_id,
+	struct secy_ctl_filt_t *pfilt);
+typedef g_error_t (*secy_tx_ctl_filt_clear_func)(u32 secy_id, u32 filt_id);
+typedef g_error_t (*secy_tx_ctl_filt_clear_all_func)(u32 secy_id);
+typedef g_error_t (*secy_rx_ctl_filt_set_func)(u32 secy_id, u32 filt_id,
+	struct secy_ctl_filt_t *pfilt);
+typedef g_error_t (*secy_rx_ctl_filt_get_func)(u32 secy_id, u32 filt_id,
+	struct secy_ctl_filt_t *pfilt);
+typedef g_error_t (*secy_rx_ctl_filt_clear_func)(u32 secy_id, u32 filt_id);
+typedef g_error_t (*secy_rx_ctl_filt_clear_all_func)(u32 secy_id);
 
 struct secy_drv_t {
 	secy_init_func secy_init;
@@ -373,20 +608,26 @@ struct secy_drv_t {
 	secy_rx_udf_filt_get_func secy_rx_udf_filt_get;
 	secy_tx_udf_filt_set_func secy_tx_udf_filt_set;
 	secy_tx_udf_filt_get_func secy_tx_udf_filt_get;
-};
+	secy_tx_ctl_filt_set_func secy_tx_ctl_filt_set;
+	secy_tx_ctl_filt_get_func secy_tx_ctl_filt_get;
+	secy_tx_ctl_filt_clear_func secy_tx_ctl_filt_clear;
+	secy_tx_ctl_filt_clear_all_func secy_tx_ctl_filt_clear_all;
+	secy_rx_ctl_filt_set_func secy_rx_ctl_filt_set;
+	secy_rx_ctl_filt_get_func secy_rx_ctl_filt_get;
+	secy_rx_ctl_filt_clear_func secy_rx_ctl_filt_clear;
+	secy_rx_ctl_filt_clear_all_func secy_rx_ctl_filt_clear_all;
 
+};
 enum secy_phy_type_t {
 	NAPA_PHY_CHIP = 0,
 	MAX_PHY_CHIP,
 };
-
 struct secy_driver_instance_t {
 	enum secy_phy_type_t secy_phy_type;
 	struct secy_drv_t *secy_ops;
 	int (*init)(u32 secy_id);
 	int (*exit)(u32 secy_id);
 };
-
 struct secy_info_t {
 	u32 phy_addr;
 	enum secy_phy_type_t secy_phy_type;
