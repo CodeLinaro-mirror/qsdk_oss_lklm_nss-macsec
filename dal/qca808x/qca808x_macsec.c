@@ -802,7 +802,7 @@ g_error_t qca808x_secy_rx_prc_lut_get(u32 secy_id, u32 sc_index,
 	pentry->channel = rule.action.rx_sc_index;
 	pentry->tci = rule.rx_tci;
 	pentry->sci[6] = (u8)(rule.rx_sci.port >> 8);
-	pentry->sci[7] = (u8)(rule.rx_sci.port & 0xf);
+	pentry->sci[7] = (u8)(rule.rx_sci.port & 0xff);
 	pentry->rule_mask = rule.rule_mask;
 
 	return ERROR_OK;
