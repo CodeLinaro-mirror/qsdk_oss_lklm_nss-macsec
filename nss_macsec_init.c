@@ -283,7 +283,7 @@ static int nss_macsec_dt_init(uint32_t dev_id)
 	nss_macsec_node = of_find_node_by_name(NULL, dev_name);
 	if (!nss_macsec_node) {
 		printk(KERN_ERR "cannot find nss-macsec%d node\n", dev_id);
-		return -EIO;
+		return -ENODEV;
 	}
 	printk(KERN_INFO "%s DT exist!\n", dev_name);
 
@@ -451,6 +451,8 @@ static struct platform_driver nss_macsec_drv = {
 static int __init nss_macsec_init_module(void)
 {
 	uint32_t dev_id = 0;
+	int ret = 0;
+
 	for(dev_id=0; dev_id<MACSEC_DEVICE_NUM; dev_id++)
 		macsec_ctx.macsec_base[dev_id] = NULL;
 
@@ -459,7 +461,8 @@ static int __init nss_macsec_init_module(void)
 	if (cpu_is_ipq8066() || cpu_is_ipq8068() || cpu_is_ipq8069()) {
 #endif
 		for (dev_id = 0; dev_id < MACSEC_DEVICE_NUM; dev_id++) {
-			if (nss_macsec_dt_init(dev_id) != 0)
+			ret = nss_macsec_dt_init(dev_id);
+			if (ret && (ret != -ENODEV))
 				return -EIO;
 		}
 #ifdef MACSEC_IPQ806X_SUPPORT
@@ -473,7 +476,7 @@ static int __init nss_macsec_init_module(void)
 #endif
 	macsec_trace("%s done!\n", __func__);
 
-	return 0;
+	return ret;
 }
 
 static int __init nss_macsec_init(void)
