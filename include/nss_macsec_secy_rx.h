@@ -76,6 +76,8 @@ typedef enum {
 
 typedef struct {
 	u8 sak[16];
+	u8 sak1[16];
+	u32 sak_len;
 } fal_rx_sak_t;
 
 /**

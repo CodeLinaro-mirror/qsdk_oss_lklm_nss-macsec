@@ -34,7 +34,9 @@ typedef enum {
 } fal_sc_sa_mapping_mode_e;
 
 typedef enum {
-	FAL_CIPHER_SUITE_AES_GCM_128 = 0
+	FAL_CIPHER_SUITE_AES_GCM_128 = 0,
+	FAL_CIPHER_SUITE_AES_GCM_256,
+	FAL_CIPHER_SUITE_MAX
 } fal_cipher_suite_e;
 
 typedef struct {

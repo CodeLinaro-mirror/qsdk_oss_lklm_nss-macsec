@@ -81,6 +81,8 @@ typedef struct {
 
 typedef struct {
 	u8 sak[16];
+	u8 sak1[16];
+	u32 sak_len;
 } fal_tx_sak_t;
 
 typedef struct {
