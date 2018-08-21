@@ -81,6 +81,14 @@ typedef char sa_bool_t;
 /*
  * Basic data types
  */
+#define u64 u64_t
+#define i64 i64_t
+#define u32 u32_t
+#define i32 i32_t
+#define u16 u16_t
+#define i16 i16_t
+#define u8 u8_t
+#define i8 i8_t
 typedef unsigned long long u64;
 typedef long long i64;
 typedef unsigned int u32;

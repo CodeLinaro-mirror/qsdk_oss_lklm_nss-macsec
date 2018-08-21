@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014, The Linux Foundation. All rights reserved.
+ * Copyright (c) 2014, 2018, The Linux Foundation. All rights reserved.
  * Permission to use, copy, modify, and/or distribute this software for
  * any purpose with or without fee is hereby granted, provided that the
  * above copyright notice and this permission notice appear in all copies.
@@ -16,6 +16,10 @@
 #define _NSS_MACSEC_SECY_TX_H_
 
 #include "nss_macsec_types.h"
+
+#define NSS_SECY_CONFIDENTIALITY_OFFSET_00 0
+#define NSS_SECY_CONFIDENTIALITY_OFFSET_30 30
+#define NSS_SECY_CONFIDENTIALITY_OFFSET_50 50
 
 typedef enum {
 	EG_CTL_COMPARE_NO,
@@ -75,18 +79,65 @@ typedef struct {
 	u8 vlan_up_mask;	/* first bit is useful */
 	u16 vlan_id;
 	u8 vlan_id_mask;	/* first 2 bits are useful */
+	/*add for NAPA PHY*/
+	u16 outer_vlanid;
+	u8 sci[8];
+	u8 tci;
+	u8 offset;
+	bool bc_flag;
+	u32 rule_mask;
 } fal_tx_class_lut_t;
 
 #define FAL_TX_CLASS_LUT_NUM  48
 
 typedef struct {
 	u8 sak[16];
+	u8 sak1[16];
+	u32 sak_len;
 } fal_tx_sak_t;
 
 typedef struct {
 	bool parse_en;
 	u16 tpid;
 } fal_tx_vlan_parse_t;
+
+struct fal_tx_sa_ki_t {
+	u8 ki[16];
+};
+
+#define FAL_TX_UDF_FILT_MAX_ID     0x4
+
+enum fal_tx_udf_filt_cfg_pattern_e {
+	FAL_TX_FILTER_PATTERN_AND = 0,
+	FAL_TX_FILTER_PATTERN_OR = 1,
+	FAL_TX_FILTER_PATTERN_XOR = 2
+};
+struct fal_tx_udf_filt_cfg_t {
+	bool enable;
+	u16 priority;
+	u16 inverse;
+	enum fal_tx_udf_filt_cfg_pattern_e pattern0;
+	enum fal_tx_udf_filt_cfg_pattern_e pattern1;
+	enum fal_tx_udf_filt_cfg_pattern_e pattern2;
+};
+enum fal_tx_udf_filt_type_e {
+	FAL_TX_FILTER_ANY_PACKET = 0,
+	FAL_TX_FILTER_IP_PACKET = 1,
+	FAL_TX_FILTER_TCP_PACKET = 2
+};
+enum fal_tx_udf_filt_op_e {
+	FAL_TX_FILTER_OPERATOR_EQUAL = 0,
+	FAL_TX_FILTER_OPERATOR_LESS = 1
+};
+struct fal_tx_udf_filt_t {
+	u16 udf_field0;
+	u16 udf_field1;
+	u16 udf_field2;
+	u16 mask;
+	enum fal_tx_udf_filt_type_e type;
+	enum fal_tx_udf_filt_op_e operator;
+	u16 offset;
+};
 
 /**
 * @param[in] secy_id
@@ -493,5 +544,29 @@ u32 nss_macsec_secy_tx_pn_threshold_get(u32 secy_id, u32 *p_pn_threshold);
 * @param[in] pn_threshold
 **/
 u32 nss_macsec_secy_tx_pn_threshold_set(u32 secy_id, u32 pn_threshold);
+
+u32 nss_macsec_secy_tx_sa_next_xpn_get(u32 secy_id, u32 channel,
+u32 an, u32 *p_next_xpn);
+u32 nss_macsec_secy_tx_sa_next_xpn_set(u32 secy_id, u32 channel,
+u32 an, u32 next_xpn);
+u32 nss_macsec_secy_tx_sc_ssci_get(u32 secy_id, u32 channel, u32 *pssci);
+u32 nss_macsec_secy_tx_sc_ssci_set(u32 secy_id, u32 channel, u32 ssci);
+u32 nss_macsec_secy_tx_sa_ki_get(u32 secy_id, u32 channel, u32 an,
+	struct fal_tx_sa_ki_t *ki);
+u32 nss_macsec_secy_tx_sa_ki_set(u32 secy_id, u32 channel, u32 an,
+	struct fal_tx_sa_ki_t *ki);
+
+u32 nss_macsec_secy_tx_udf_filt_set(u32 secy_id, u32 filt_id,
+	struct fal_tx_udf_filt_t *pfilt);
+u32 nss_macsec_secy_tx_udf_filt_get(u32 secy_id, u32 filt_id,
+	struct fal_tx_udf_filt_t *pfilt);
+u32 nss_macsec_secy_tx_udf_ufilt_cfg_set(u32 secy_id,
+	struct fal_tx_udf_filt_cfg_t *cfg);
+u32 nss_macsec_secy_tx_udf_ufilt_cfg_get(u32 secy_id,
+	struct fal_tx_udf_filt_cfg_t *cfg);
+u32 nss_macsec_secy_tx_udf_cfilt_cfg_set(u32 secy_id,
+	struct fal_tx_udf_filt_cfg_t *cfg);
+u32 nss_macsec_secy_tx_udf_cfilt_cfg_get(u32 secy_id,
+	struct fal_tx_udf_filt_cfg_t *cfg);
 
 #endif /* _NSS_MACSEC_SECY_TX_H_ */

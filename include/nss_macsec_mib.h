@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014, The Linux Foundation. All rights reserved.
+ * Copyright (c) 2014, 2018, The Linux Foundation. All rights reserved.
  * Permission to use, copy, modify, and/or distribute this software for
  * any purpose with or without fee is hereby granted, provided that the
  * above copyright notice and this permission notice appear in all copies.
@@ -26,9 +26,9 @@ typedef struct {
 
 typedef struct {
 	u64 hit_drop_redirect;
-	u32 protected2_pkts;
-	u32 protected_pkts;
-	u32 encrypted_pkts;
+	u64 protected2_pkts;
+	u64 protected_pkts;
+	u64 encrypted_pkts;
 } fal_tx_sa_mib_t;
 
 typedef struct {
