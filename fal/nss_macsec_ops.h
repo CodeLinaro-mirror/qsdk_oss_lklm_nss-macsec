@@ -26,6 +26,7 @@ extern "C" {
 #include "qca808x_macsec.h"
 
 #define PHY_NAPA 0x004DD100
+#define PHY_NAPA_1_1 0x004DD101
 #define MAX_SECY_ID      0x3
 
 enum secy_cipher_suite_t {
