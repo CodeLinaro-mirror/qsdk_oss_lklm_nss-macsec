@@ -112,6 +112,9 @@
 #define MACSEC_SHADOW_DUPLEX_EN                    BIT_8
 #define MACSEC_SHADOW_DUPLEX_EN_OFFSET             8
 #define MACSEC_SHADOW_DUPLEX_EN_LEN                1
+#define MACSEC_SHADOW_LEGACY_DUPLEX_EN                    BIT_3
+#define MACSEC_SHADOW_LEGACY_DUPLEX_EN_OFFSET             3
+#define MACSEC_SHADOW_LEGACY_DUPLEX_EN_LEN                1
 
 /* system registers*/
 

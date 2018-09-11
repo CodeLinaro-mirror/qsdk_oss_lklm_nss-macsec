@@ -3848,7 +3848,25 @@ g_error_t qca808x_secy_rx_ctl_filt_clear_all(u32 secy_id)
 
 	return ERROR_OK;
 }
-
+static g_error_t qca808x_secy_shadow_register_en(u32 secy_id, bool enable)
+{
+	if (enable == TRUE) {
+		SHR_RET_ON_ERR(PHY_REG_FIELD_WRITE(
+			secy_id, PHY_MMD7, MACSEC_SHADOW_REGISTER,
+				MACSEC_SHADOW_DUPLEX_EN, TRUE));
+		SHR_RET_ON_ERR(PHY_REG_FIELD_WRITE(
+			secy_id, PHY_MMD7, MACSEC_SHADOW_REGISTER,
+				MACSEC_SHADOW_LEGACY_DUPLEX_EN, TRUE));
+	} else {
+		SHR_RET_ON_ERR(PHY_REG_FIELD_WRITE(
+			secy_id, PHY_MMD7, MACSEC_SHADOW_REGISTER,
+				MACSEC_SHADOW_DUPLEX_EN, FALSE));
+		SHR_RET_ON_ERR(PHY_REG_FIELD_WRITE(
+			secy_id, PHY_MMD7, MACSEC_SHADOW_REGISTER,
+				MACSEC_SHADOW_LEGACY_DUPLEX_EN, FALSE));
+	}
+	return ERROR_OK;
+}
 g_error_t qca808x_secy_init(u32 secy_id)
 {
 	u32 sc, sa;
@@ -3876,9 +3894,7 @@ g_error_t qca808x_secy_init(u32 secy_id)
 				sa, pn);
 		}
 	}
-
-	SHR_RET_ON_ERR(PHY_REG_FIELD_WRITE(secy_id, PHY_MMD7,
-		MACSEC_SHADOW_REGISTER, MACSEC_SHADOW_DUPLEX_EN, TRUE));
+	qca808x_secy_shadow_register_en(secy_id, TRUE);
 
 	return ERROR_OK;
 }
