@@ -63,6 +63,9 @@
 #define SAK_LEN_256BITS	32
 #define SECY_FILTER_MAX_INDEX	0x3
 #define SECY_AN_TO_SA_MAPPING(an) (an%2)
+#define SECY_PN_CHANNEL_MAX           \
+	((SECY_SC_IDX_MAX + 1) * (SECY_AN_IDX_MAX + 1))
+#define SECY_PN_QUERY_TIMES           4
 
 #define SC_BIND_MASK_DA           0x00000001
 #define SC_BIND_MASK_SA           0x00000002
@@ -767,6 +770,12 @@ struct secy_tx_sc_policy_rule_t {
 	u16   inner_vlanid;
 	bool  bc_flag;
 	struct secy_tx_sc_policy_action_t action;
+};
+struct secy_pn_table_t {
+	u32   rx_sa_pn;
+	u32   tx_sa_pn;
+	u32   rx_sa_xpn;
+	u32   tx_sa_xpn;
 };
 
 int nss_macsec_phy_mdio_write(u32 phy_addr, u32 reg_addr, u16 val16);

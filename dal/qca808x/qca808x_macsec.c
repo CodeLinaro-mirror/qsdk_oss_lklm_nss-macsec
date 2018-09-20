@@ -22,6 +22,7 @@ static u32 tx_ssci[MAX_SECY_ID][SECY_POLICY_IDX_MAX + 1];
 static u32 rx_ssci[MAX_SECY_ID][SECY_POLICY_IDX_MAX + 1];
 struct secy_ctl_filt_t g_secy_tx_filt[MAX_SECY_ID];
 struct secy_ctl_filt_t g_secy_rx_filt[MAX_SECY_ID];
+static struct secy_pn_table_t *secy_pn_table[MAX_SECY_ID];
 
 
 #define PHY_REG_FIELD_READ(secy_id, phy_layer, reg_addr, field, pFieldValue) \
@@ -632,13 +633,14 @@ g_error_t qca808x_secy_rx_sa_npn_set(u32 secy_id, u32 sc_index,
 {
 	u16 val = 0;
 	u16 channel = 0;
-	u32 sa_index = 0;
+	u32 sa_index = 0, pn_index = 0;
 
 	if ((sc_index > SECY_SC_IDX_MAX) ||
 			(an > SECY_AN_IDX_MAX)) {
 		return ERROR_PARAM;
 	}
 
+	pn_index = (sc_index * 4 + an);
 	sa_index = SECY_AN_TO_SA_MAPPING(an);
 	channel = (sc_index * 2 + sa_index);
 	val = (u16)(next_pn & 0xffff);
@@ -648,6 +650,8 @@ g_error_t qca808x_secy_rx_sa_npn_set(u32 secy_id, u32 sc_index,
 	SHR_RET_ON_ERR(phy_access_reg_write(secy_id, PHY_MMD3,
 		MACSEC_RX_NPN(channel) + 1, val));
 
+	secy_pn_table[secy_id][pn_index].rx_sa_pn = next_pn;
+
 	return ERROR_OK;
 }
 
@@ -655,21 +659,30 @@ g_error_t qca808x_secy_rx_sa_npn_get(u32 secy_id, u32 sc_index,
 	u32 an, u32 *next_pn)
 {
 	u16 val0 = 0, val1 = 0, channel = 0;
-	u32 sa_index = 0;
+	u32 sa_index = 0, i = 0, pn_index = 0;
 
 	if ((sc_index > SECY_SC_IDX_MAX) ||
 			(an > SECY_AN_IDX_MAX)) {
 		return ERROR_PARAM;
 	}
 
+	pn_index = (sc_index * 4 + an);
 	sa_index = SECY_AN_TO_SA_MAPPING(an);
 	channel = (sc_index * 2 + sa_index);
 
-	SHR_RET_ON_ERR(phy_access_reg_read(secy_id, PHY_MMD3,
-		MACSEC_RX_NPN(channel), &val0));
-	SHR_RET_ON_ERR(phy_access_reg_read(secy_id, PHY_MMD3,
-		MACSEC_RX_NPN(channel) + 1, &val1));
-	*next_pn = (((u32)val1 << 16) | val0);
+	for (i = 0; i < SECY_PN_QUERY_TIMES; i++) {
+		SHR_RET_ON_ERR(phy_access_reg_read(secy_id, PHY_MMD3,
+			MACSEC_RX_NPN(channel), &val0));
+		SHR_RET_ON_ERR(phy_access_reg_read(secy_id, PHY_MMD3,
+			MACSEC_RX_NPN(channel) + 1, &val1));
+		*next_pn = (((u32)val1 << 16) | val0);
+		if (*next_pn >= secy_pn_table[secy_id][pn_index].rx_sa_pn) {
+			secy_pn_table[secy_id][pn_index].rx_sa_pn = *next_pn;
+			break;
+		}
+	}
+	if (i >= SECY_PN_QUERY_TIMES)
+		*next_pn = secy_pn_table[secy_id][pn_index].rx_sa_pn;
 
 	return ERROR_OK;
 }
@@ -1410,13 +1423,14 @@ g_error_t qca808x_secy_tx_sa_npn_set(u32 secy_id, u32 sc_index,
 {
 	u16 val = 0;
 	u16 channel = 0;
-	u32 sa_index = 0;
+	u32 sa_index = 0, pn_index = 0;
 
 	if ((sc_index > SECY_SC_IDX_MAX) ||
 			(an > SECY_AN_IDX_MAX)) {
 		return ERROR_PARAM;
 	}
 
+	pn_index = (sc_index * 4 + an);
 	sa_index = SECY_AN_TO_SA_MAPPING(an);
 	channel = (sc_index * 2 + sa_index);
 	val = (u16)(next_pn & 0xffff);
@@ -1426,27 +1440,38 @@ g_error_t qca808x_secy_tx_sa_npn_set(u32 secy_id, u32 sc_index,
 	SHR_RET_ON_ERR(phy_access_reg_write(secy_id, PHY_MMD3,
 		MACSEC_TX_NPN(channel) + 1, val));
 
+	secy_pn_table[secy_id][pn_index].tx_sa_pn = next_pn;
+
 	return ERROR_OK;
 }
 g_error_t qca808x_secy_tx_sa_npn_get(u32 secy_id, u32 sc_index,
 	u32 an, u32 *next_pn)
 {
 	u16 val0 = 0, val1 = 0, channel = 0;
-	u32 sa_index = 0;
+	u32 sa_index = 0, i = 0, pn_index = 0;
 
 	if ((sc_index > SECY_SC_IDX_MAX) ||
 			(an > SECY_AN_IDX_MAX)) {
 		return ERROR_PARAM;
 	}
 
+	pn_index = (sc_index * 4 + an);
 	sa_index = SECY_AN_TO_SA_MAPPING(an);
 	channel = (sc_index * 2 + sa_index);
 
-	SHR_RET_ON_ERR(phy_access_reg_read(secy_id, PHY_MMD3,
-		MACSEC_TX_NPN(channel), &val0));
-	SHR_RET_ON_ERR(phy_access_reg_read(secy_id, PHY_MMD3,
-		MACSEC_TX_NPN(channel) + 1, &val1));
-	*next_pn = (((u32)val1 << 16) | val0);
+	for (i = 0; i < SECY_PN_QUERY_TIMES; i++) {
+		SHR_RET_ON_ERR(phy_access_reg_read(secy_id, PHY_MMD3,
+			MACSEC_TX_NPN(channel), &val0));
+		SHR_RET_ON_ERR(phy_access_reg_read(secy_id, PHY_MMD3,
+			MACSEC_TX_NPN(channel) + 1, &val1));
+		*next_pn = (((u32)val1 << 16) | val0);
+		if (*next_pn >= secy_pn_table[secy_id][pn_index].tx_sa_pn) {
+			secy_pn_table[secy_id][pn_index].tx_sa_pn = *next_pn;
+			break;
+		}
+	}
+	if (i >= SECY_PN_QUERY_TIMES)
+		*next_pn = secy_pn_table[secy_id][pn_index].tx_sa_pn;
 
 	return ERROR_OK;
 }
@@ -2543,11 +2568,12 @@ g_error_t qca808x_secy_rx_sa_xpn_set(u32 secy_id, u32 sc_index,
 {
 	u16 val = 0;
 	u16 channel = 0;
-	u32 sa_index = 0;
+	u32 sa_index = 0, pn_index = 0;
 
 	if ((sc_index > SECY_SC_IDX_MAX) || (an > SECY_AN_IDX_MAX))
 		return ERROR_PARAM;
 
+	pn_index = (sc_index * 4 + an);
 	sa_index = SECY_AN_TO_SA_MAPPING(an);
 	channel = (sc_index * 2 + sa_index);
 	val = (u16)(next_pn & 0xffff);
@@ -2557,6 +2583,8 @@ g_error_t qca808x_secy_rx_sa_xpn_set(u32 secy_id, u32 sc_index,
 	SHR_RET_ON_ERR(phy_access_reg_write(secy_id, PHY_MMD3,
 		MACSEC_RX_XPN(channel) + 1, val));
 
+	secy_pn_table[secy_id][pn_index].rx_sa_xpn = next_pn;
+
 	return ERROR_OK;
 }
 
@@ -2564,19 +2592,28 @@ g_error_t qca808x_secy_rx_sa_xpn_get(u32 secy_id, u32 sc_index,
 	u32 an, u32 *next_pn)
 {
 	u16 val0 = 0, val1 = 0, channel = 0;
-	u32 sa_index = 0;
+	u32 sa_index = 0, i = 0, pn_index = 0;
 
 	if ((sc_index > SECY_SC_IDX_MAX) || (an > SECY_AN_IDX_MAX))
 		return ERROR_PARAM;
 
+	pn_index = (sc_index * 4 + an);
 	sa_index = SECY_AN_TO_SA_MAPPING(an);
 	channel = (sc_index * 2 + sa_index);
 
-	SHR_RET_ON_ERR(phy_access_reg_read(secy_id, PHY_MMD3,
-		MACSEC_RX_XPN(channel), &val0));
-	SHR_RET_ON_ERR(phy_access_reg_read(secy_id, PHY_MMD3,
-		MACSEC_RX_XPN(channel) + 1, &val1));
-	*next_pn = (((u32)val1 << 16) | val0);
+	for (i = 0; i < SECY_PN_QUERY_TIMES; i++) {
+		SHR_RET_ON_ERR(phy_access_reg_read(secy_id, PHY_MMD3,
+			MACSEC_RX_XPN(channel), &val0));
+		SHR_RET_ON_ERR(phy_access_reg_read(secy_id, PHY_MMD3,
+			MACSEC_RX_XPN(channel) + 1, &val1));
+		*next_pn = (((u32)val1 << 16) | val0);
+		if (*next_pn >= secy_pn_table[secy_id][pn_index].rx_sa_xpn) {
+			secy_pn_table[secy_id][pn_index].rx_sa_xpn = *next_pn;
+			break;
+		}
+	}
+	if (i >= SECY_PN_QUERY_TIMES)
+		*next_pn = secy_pn_table[secy_id][pn_index].rx_sa_xpn;
 
 	return ERROR_OK;
 }
@@ -2586,11 +2623,12 @@ g_error_t qca808x_secy_tx_sa_xpn_set(u32 secy_id, u32 sc_index,
 {
 	u16 val = 0;
 	u16 channel = 0;
-	u32 sa_index = 0;
+	u32 sa_index = 0, pn_index = 0;
 
 	if ((sc_index > SECY_SC_IDX_MAX) || (an > SECY_AN_IDX_MAX))
 		return ERROR_PARAM;
 
+	pn_index = (sc_index * 4 + an);
 	sa_index = SECY_AN_TO_SA_MAPPING(an);
 	channel = (sc_index * 2 + sa_index);
 	val = (u16)(next_pn & 0xffff);
@@ -2600,6 +2638,8 @@ g_error_t qca808x_secy_tx_sa_xpn_set(u32 secy_id, u32 sc_index,
 	SHR_RET_ON_ERR(phy_access_reg_write(secy_id, PHY_MMD3,
 		MACSEC_TX_XPN(channel) + 1, val));
 
+	secy_pn_table[secy_id][pn_index].tx_sa_xpn = next_pn;
+
 	return ERROR_OK;
 }
 
@@ -2607,19 +2647,28 @@ g_error_t qca808x_secy_tx_sa_xpn_get(u32 secy_id, u32 sc_index,
 	u32 an, u32 *next_pn)
 {
 	u16 val0 = 0, val1 = 0, channel = 0;
-	u32 sa_index = 0;
+	u32 sa_index = 0, i = 0, pn_index = 0;
 
 	if ((sc_index > SECY_SC_IDX_MAX) || (an > SECY_AN_IDX_MAX))
 		return ERROR_PARAM;
 
+	pn_index = (sc_index * 4 + an);
 	sa_index = SECY_AN_TO_SA_MAPPING(an);
 	channel = (sc_index * 2 + sa_index);
 
-	SHR_RET_ON_ERR(phy_access_reg_read(secy_id, PHY_MMD3,
-		MACSEC_TX_XPN(channel), &val0));
-	SHR_RET_ON_ERR(phy_access_reg_read(secy_id, PHY_MMD3,
-		MACSEC_TX_XPN(channel) + 1, &val1));
-	*next_pn = (((u32)val1 << 16) | val0);
+	for (i = 0; i < SECY_PN_QUERY_TIMES; i++) {
+		SHR_RET_ON_ERR(phy_access_reg_read(secy_id, PHY_MMD3,
+			MACSEC_TX_XPN(channel), &val0));
+		SHR_RET_ON_ERR(phy_access_reg_read(secy_id, PHY_MMD3,
+			MACSEC_TX_XPN(channel) + 1, &val1));
+		*next_pn = (((u32)val1 << 16) | val0);
+		if (*next_pn >= secy_pn_table[secy_id][pn_index].tx_sa_xpn) {
+			secy_pn_table[secy_id][pn_index].tx_sa_xpn = *next_pn;
+			break;
+		}
+	}
+	if (i >= SECY_PN_QUERY_TIMES)
+		*next_pn = secy_pn_table[secy_id][pn_index].tx_sa_xpn;
 
 	return ERROR_OK;
 }
@@ -3903,6 +3952,12 @@ g_error_t qca808x_secy_init(u32 secy_id)
 	u32 sc, sa;
 	u32 pn = 1;
 
+	secy_pn_table[secy_id] = kzalloc(
+		SECY_PN_CHANNEL_MAX * sizeof(struct secy_pn_table_t),
+			GFP_KERNEL);
+	if (secy_pn_table[secy_id] == NULL)
+		return -ENOMEM;
+
 	qca808x_secy_clock_en_set(secy_id, TRUE);
 	qca808x_secy_tx_mib_clear(secy_id);
 	qca808x_secy_rx_mib_clear(secy_id);
@@ -4164,6 +4219,12 @@ int qca808x_secy_driver_exit(u32 secy_id)
 		kfree(qca808x_secy_ops);
 		qca808x_secy_ops = NULL;
 	}
+
+	if (secy_pn_table[secy_id] != NULL) {
+		kfree(secy_pn_table[secy_id]);
+		secy_pn_table[secy_id] = NULL;
+	}
+
 	return 0;
 }
 
