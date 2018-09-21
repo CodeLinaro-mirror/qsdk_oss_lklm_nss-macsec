@@ -310,16 +310,26 @@
 #define SOFTWARE_BYPASS               BIT_NULL
 #define SOFTWARE_EN               0x3
 
-	/* macsec forward az pattern register */
+/* macsec forward az pattern register */
 #define MACSEC_FORWARD_AZ_PATTERN_EN_CTRL      0xC062
-
+#define LPI_RCOVER_EN               BIT_15
+#define LPI_RCOVER_EN_OFFSET        15
+#define LPI_RCOVER_EN_LEN           1
 #define E_FORWARD_PATTERN_EN               BIT_13
 #define E_FORWARD_PATTERN_EN_OFFSET        13
 #define E_FORWARD_PATTERN_EN_LEN           1
-
 #define I_FORWARD_PATTERN_EN               BIT_12
 #define I_FORWARD_PATTERN_EN_OFFSET        12
 #define I_FORWARD_PATTERN_EN_LEN           1
+
+/*macsec local generate az pattern*/
+#define MACSEC_LOCAL_AZ_PATTERN_EN_CTRL      0xC064
+#define E_MAC_LPI_EN               BIT_15
+#define E_MAC_LPI_EN_OFFSET        15
+#define E_MAC_LPI_EN_LEN           1
+#define I_MAC_LPI_EN               BIT_14
+#define I_MAC_LPI_EN_OFFSET        14
+#define I_MAC_LPI_EN_LEN           1
 
 /* egress epr configure register */
 #define MACSEC_E_EPR_CONFIG           (MACSEC_SYS_BASE + 0x01)
