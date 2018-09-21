@@ -304,9 +304,9 @@ g_error_t qca808x_secy_loopback_set(u32 secy_id,
 	if (type == MACSEC_NORMAL)
 		val = SYS_MACSEC_EN;
 	else if (type == MACSEC_SWITCH_LB)
-		val = SYS_SWITCH_LB;
+		return ERROR_NOT_SUPPORT;
 	else if (type == MACSEC_PHY_LB)
-		val = SYS_PHY_LB;
+		return ERROR_NOT_SUPPORT;
 	else if (type == MACSEC_BYPASS)
 		val = SYS_BYPASS;
 	else
