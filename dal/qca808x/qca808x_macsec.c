@@ -3867,6 +3867,13 @@ static g_error_t qca808x_secy_shadow_register_en(u32 secy_id, bool enable)
 	}
 	return ERROR_OK;
 }
+g_error_t qca808x_secy_channel_number_get(u32 secy_id, u32 *number)
+{
+	*number = SECY_SC_IDX_MAX + 1;
+
+	return ERROR_OK;
+}
+
 g_error_t qca808x_secy_init(u32 secy_id)
 {
 	u32 sc, sa;
@@ -3946,6 +3953,8 @@ static int qca808x_secy_ops_init(void)
 		qca808x_secy_loopback_set;
 	qca808x_secy_ops->secy_loopback_get =
 		qca808x_secy_loopback_get;
+	qca808x_secy_ops->secy_channel_number_get =
+		qca808x_secy_channel_number_get;
 
 	/*rx*/
 	qca808x_secy_ops->secy_rx_prc_lut_set = qca808x_secy_rx_prc_lut_set;

@@ -287,6 +287,8 @@ typedef g_error_t (*secy_loopback_set_func)(u32 secy_id,
 	enum secy_loopback_type_t type);
 typedef g_error_t (*secy_loopback_get_func)(u32 secy_id,
 	enum secy_loopback_type_t *type);
+typedef g_error_t (*secy_channel_number_get_func)(u32 secy_id, u32 *number);
+
 
 /* rx */
 typedef g_error_t (*secy_rx_prc_lut_get_func)(u32 secy_id, u32 index,
@@ -505,6 +507,7 @@ struct secy_drv_t {
 	secy_udf_ethtype_get_func secy_udf_ethtype_get;
 	secy_loopback_set_func secy_loopback_set;
 	secy_loopback_get_func secy_loopback_get;
+	secy_channel_number_get_func secy_channel_number_get;
 
 
 	/*rx */
