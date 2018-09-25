@@ -16,6 +16,7 @@
 #include "nss_macsec.h"
 #include "nss_macsec_secy.h"
 #include "nss_macsec_utility.h"
+#include "nss_macsec_ops.h"
 
 struct mutex api_lock;
 
@@ -61,6 +62,20 @@ u32 fal_secy_get_sa_num_per_sc(u32 secy_id)
 
 u32 fal_secy_channel_num(u32 secy_id)
 {
+	g_error_t rv;
+	struct secy_drv_t *secy_drv;
+	u32 number = 0;
+
+	secy_drv = nss_macsec_secy_ops_get(secy_id);
+	if (secy_drv != NULL) {
+		if (secy_drv->secy_channel_number_get != NULL) {
+			rv = secy_drv->secy_channel_number_get(secy_id,
+				&number);
+			if (!rv)
+				return number;
+		}
+	}
+
 	return (32 >> (g_secy_cfg[secy_id].sc_sa_map_mode));
 }
 
