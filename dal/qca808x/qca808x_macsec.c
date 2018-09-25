@@ -2947,16 +2947,40 @@ g_error_t qca808x_secy_udf_ethtype_get(u32 secy_id, bool *enable, u16 *type)
 }
 g_error_t qca808x_secy_forward_az_pattern_en_set(u32 secy_id, bool enable)
 {
-
-	SHR_RET_ON_ERR(PHY_REG_FIELD_WRITE
-		(secy_id, PHY_MMD3, MACSEC_FORWARD_AZ_PATTERN_EN_CTRL,
-		E_FORWARD_PATTERN_EN, enable));
-	SHR_RET_ON_ERR(PHY_REG_FIELD_WRITE
-		(secy_id, PHY_MMD3, MACSEC_FORWARD_AZ_PATTERN_EN_CTRL,
-		I_FORWARD_PATTERN_EN, enable));
-
+	if (enable == TRUE) {
+		SHR_RET_ON_ERR(PHY_REG_FIELD_WRITE
+			(secy_id, PHY_MMD3, MACSEC_FORWARD_AZ_PATTERN_EN_CTRL,
+			LPI_RCOVER_EN, FALSE));
+		SHR_RET_ON_ERR(PHY_REG_FIELD_WRITE
+			(secy_id, PHY_MMD3, MACSEC_FORWARD_AZ_PATTERN_EN_CTRL,
+			E_FORWARD_PATTERN_EN, TRUE));
+		SHR_RET_ON_ERR(PHY_REG_FIELD_WRITE
+			(secy_id, PHY_MMD3, MACSEC_FORWARD_AZ_PATTERN_EN_CTRL,
+			I_FORWARD_PATTERN_EN, TRUE));
+		SHR_RET_ON_ERR(PHY_REG_FIELD_WRITE
+			(secy_id, PHY_MMD3, MACSEC_LOCAL_AZ_PATTERN_EN_CTRL,
+			E_MAC_LPI_EN, FALSE));
+		SHR_RET_ON_ERR(PHY_REG_FIELD_WRITE
+			(secy_id, PHY_MMD3, MACSEC_LOCAL_AZ_PATTERN_EN_CTRL,
+			I_MAC_LPI_EN, FALSE));
+	} else {
+		SHR_RET_ON_ERR(PHY_REG_FIELD_WRITE
+			(secy_id, PHY_MMD3, MACSEC_FORWARD_AZ_PATTERN_EN_CTRL,
+			LPI_RCOVER_EN, TRUE));
+		SHR_RET_ON_ERR(PHY_REG_FIELD_WRITE
+			(secy_id, PHY_MMD3, MACSEC_FORWARD_AZ_PATTERN_EN_CTRL,
+			E_FORWARD_PATTERN_EN, FALSE));
+		SHR_RET_ON_ERR(PHY_REG_FIELD_WRITE
+			(secy_id, PHY_MMD3, MACSEC_FORWARD_AZ_PATTERN_EN_CTRL,
+			I_FORWARD_PATTERN_EN, FALSE));
+		SHR_RET_ON_ERR(PHY_REG_FIELD_WRITE
+			(secy_id, PHY_MMD3, MACSEC_LOCAL_AZ_PATTERN_EN_CTRL,
+			E_MAC_LPI_EN, TRUE));
+		SHR_RET_ON_ERR(PHY_REG_FIELD_WRITE
+			(secy_id, PHY_MMD3, MACSEC_LOCAL_AZ_PATTERN_EN_CTRL,
+			I_MAC_LPI_EN, TRUE));
+	}
 	return ERROR_OK;
-
 }
 
 static g_error_t _qca808x_secy_tx_epr_property_set(u32 secy_id,
@@ -3875,7 +3899,7 @@ g_error_t qca808x_secy_init(u32 secy_id)
 	qca808x_secy_clock_en_set(secy_id, TRUE);
 	qca808x_secy_tx_mib_clear(secy_id);
 	qca808x_secy_rx_mib_clear(secy_id);
-	qca808x_secy_forward_az_pattern_en_set(secy_id, TRUE);
+	qca808x_secy_forward_az_pattern_en_set(secy_id, FALSE);
 	for (sc = 0; sc < SECY_SC_IDX_MAX + 1; sc++) {
 		qca808x_secy_tx_sc_mib_clear(secy_id, sc);
 		for (sa = 0; sa < SECY_SA_IDX_MAX + 1; sa++) {
