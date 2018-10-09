@@ -207,40 +207,51 @@ static int nss_macsec_netlink_init(void)
 	return 0;
 }
 
-static struct mii_bus *nss_macsec_miibus = NULL;
+static struct mii_bus *nss_macsec_miibus[MAX_SECY_ID] = {NULL, NULL, NULL};
 
-int nss_macsec_phy_mdio_write(u32 phy_addr, u32 reg_addr, u16 val)
+int nss_macsec_phy_mdio_write(u32 secy_id, u32 reg_addr, u16 val)
 {
-	if (!nss_macsec_miibus)
+	u32 phy_addr;
+
+	if (!nss_macsec_miibus[secy_id])
 		return -EIO;
 
-	mdiobus_write(nss_macsec_miibus, phy_addr, reg_addr, val);
+	phy_addr = secy_id_to_phy_addr(secy_id);
+	mdiobus_write(nss_macsec_miibus[secy_id], phy_addr, reg_addr, val);
 
 	return 0;
 }
 
-int nss_macsec_phy_mdio_read(u32 phy_addr, u32 reg_addr, u16 *val)
+int nss_macsec_phy_mdio_read(u32 secy_id, u32 reg_addr, u16 *val)
 {
-	if (!nss_macsec_miibus)
+	u32 phy_addr;
+
+	if (!nss_macsec_miibus[secy_id])
 		return -EIO;
 
-	*val = mdiobus_read(nss_macsec_miibus, phy_addr, reg_addr);
+	phy_addr = secy_id_to_phy_addr(secy_id);
+	*val = mdiobus_read(nss_macsec_miibus[secy_id], phy_addr, reg_addr);
 
 	return 0;
 }
 
 
-static int nss_macsec_mdiobus_init(void)
+static int nss_macsec_mdiobus_init(struct device_node *macsec_node, u32 secy_id)
 {
 	struct device_node *mdio_node = NULL;
 
-	mdio_node = of_find_compatible_node(NULL, NULL, "qcom,qca-mdio");
+	if (secy_id >= MAX_SECY_ID) {
+		macsec_warning("Invalid secy id:%d!\n", secy_id);
+		return -EINVAL;
+	}
+
+	mdio_node = of_parse_phandle(macsec_node, "mdiobus", 0);
 	if (!mdio_node) {
 		macsec_warning("Failed to find mdio node!\n");
 		return -EINVAL;
 	}
-	nss_macsec_miibus = of_mdio_find_bus(mdio_node);
-	if (!nss_macsec_miibus) {
+	nss_macsec_miibus[secy_id] = of_mdio_find_bus(mdio_node);
+	if (!nss_macsec_miibus[secy_id]) {
 		macsec_warning("Failed to find mdio bus!\n");
 		return -EIO;
 	}
@@ -277,6 +288,8 @@ static int nss_macsec_dt_init(uint32_t dev_id)
 		return -ENODEV;
 	}
 	printk(KERN_INFO "%s DT exist!\n", dev_name);
+
+	nss_macsec_mdiobus_init(nss_macsec_node, dev_id);
 
 /* add for Napa masec*/
 	if (!of_property_read_u32(nss_macsec_node, "phy_addr", &phy_address)) {
@@ -475,8 +488,6 @@ static int __init nss_macsec_init(void)
 	nss_macsec_netlink_init();
 
 	nss_macsec_mutex_init();
-
-	nss_macsec_mdiobus_init();
 
 	nss_macsec_init_module();
 
