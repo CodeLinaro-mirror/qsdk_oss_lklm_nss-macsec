@@ -34,28 +34,30 @@ struct secy_ctl_filt_t g_secy_rx_filt[MAX_SECY_ID];
 
 static g_error_t phy_mii_reg_write(u32 secy_id, u32  reg_addr, u16 val16)
 {
-	i32 ret  = 0;
-	u32 phy_addr;
+	int ret = 0;
 
-	phy_addr = secy_id_to_phy_addr(secy_id);
+	if (secy_id >= MAX_SECY_ID)
+		return ERROR_PARAM;
 
-	ret = nss_macsec_phy_mdio_write(phy_addr, reg_addr, val16);
-
-	return ret;
+	ret = nss_macsec_phy_mdio_write(secy_id, reg_addr, val16);
+	if (ret)
+		return ERROR_NOT_SUPPORT;
+	else
+		return ERROR_OK;
 }
 g_error_t phy_mii_reg_read(u32 secy_id, u32 reg_addr, u16 *p_val16)
 {
-	i32 ret = 0;
+	int ret = 0;
 	u16 reg_val = 0;
-	u32 phy_addr;
 
-	phy_addr = secy_id_to_phy_addr(secy_id);
+	ret = nss_macsec_phy_mdio_read(secy_id, reg_addr, &reg_val);
 
-	ret = nss_macsec_phy_mdio_read(phy_addr, reg_addr, &reg_val);
-
-	*p_val16 = reg_val;
-
-	return ret;
+	if (ret)
+		return ERROR_NOT_SUPPORT;
+	else {
+		*p_val16 = reg_val;
+		return ERROR_OK;
+	}
 }
 static g_error_t phy_dbg_reg_write(u32 secy_id, u32 reg_addr, u16 val16)
 {
