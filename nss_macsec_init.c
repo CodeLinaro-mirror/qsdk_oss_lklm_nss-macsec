@@ -143,13 +143,12 @@ static void nss_macsec_netlink_recv(struct sk_buff *__skb)
 	struct sdk_msg_header *header = NULL;
 	void *msg_data;
 	u32 pid = 0, msg_type = 0, sync = 0, ret = 0, msg_len = 0;
-#if (LINUX_VERSION_CODE >= KERNEL_VERSION(3, 14, 0))
-#define		MAX_PAYLOAD 2048
-	struct nlmsghdr *nlh2 = NULL;
-	struct sk_buff *skb2 = NULL;
-#endif
 
+#if (LINUX_VERSION_CODE >= KERNEL_VERSION(3, 14, 0))
+	if ((skb = skb_clone(__skb, GFP_KERNEL)) != NULL) {
+#else
 	if ((skb = skb_get(__skb)) != NULL) {
+#endif
 		nlh = nlmsg_hdr(skb);
 		pid = nlh->nlmsg_pid;
 		msg_data = NLMSG_DATA(nlh);
@@ -173,20 +172,12 @@ static void nss_macsec_netlink_recv(struct sk_buff *__skb)
 		}
 
 #if (LINUX_VERSION_CODE >= KERNEL_VERSION(3, 14, 0))
-		skb2 = nlmsg_new(MAX_PAYLOAD, GFP_KERNEL);
-		if (skb2 == NULL) {
-			printk(KERN_ERR "Failed to alloc skb\n");
-			return;
-		}
-
-		nlh2 = nlmsg_put(skb2, 0, 0, 0, MAX_PAYLOAD, 0);
-		memcpy(NLMSG_DATA(nlh2), msg_data, msg_len);
-		netlink_unicast(sdk_nl_sk, skb2, pid, 0);
+		NETLINK_CB(skb).portid = 0; /* from kernel */
 #else
 		NETLINK_CB(skb).pid = 0;		/* from kernel */
+#endif
 		NETLINK_CB(skb).dst_group = 0;	/* unicast */
 		netlink_unicast(sdk_nl_sk, skb, pid, MSG_DONTWAIT);
-#endif
 	}
 
 	return;

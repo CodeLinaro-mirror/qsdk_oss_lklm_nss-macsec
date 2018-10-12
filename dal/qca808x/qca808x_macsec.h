@@ -63,6 +63,9 @@
 #define SAK_LEN_256BITS	32
 #define SECY_FILTER_MAX_INDEX	0x3
 #define SECY_AN_TO_SA_MAPPING(an) (an%2)
+#define SECY_PN_CHANNEL_MAX           \
+	((SECY_SC_IDX_MAX + 1) * (SECY_AN_IDX_MAX + 1))
+#define SECY_PN_QUERY_TIMES           4
 
 #define SC_BIND_MASK_DA           0x00000001
 #define SC_BIND_MASK_SA           0x00000002
@@ -112,6 +115,9 @@
 #define MACSEC_SHADOW_DUPLEX_EN                    BIT_8
 #define MACSEC_SHADOW_DUPLEX_EN_OFFSET             8
 #define MACSEC_SHADOW_DUPLEX_EN_LEN                1
+#define MACSEC_SHADOW_LEGACY_DUPLEX_EN                    BIT_3
+#define MACSEC_SHADOW_LEGACY_DUPLEX_EN_OFFSET             3
+#define MACSEC_SHADOW_LEGACY_DUPLEX_EN_LEN                1
 
 /* system registers*/
 
@@ -307,16 +313,26 @@
 #define SOFTWARE_BYPASS               BIT_NULL
 #define SOFTWARE_EN               0x3
 
-	/* macsec forward az pattern register */
+/* macsec forward az pattern register */
 #define MACSEC_FORWARD_AZ_PATTERN_EN_CTRL      0xC062
-
+#define LPI_RCOVER_EN               BIT_15
+#define LPI_RCOVER_EN_OFFSET        15
+#define LPI_RCOVER_EN_LEN           1
 #define E_FORWARD_PATTERN_EN               BIT_13
 #define E_FORWARD_PATTERN_EN_OFFSET        13
 #define E_FORWARD_PATTERN_EN_LEN           1
-
 #define I_FORWARD_PATTERN_EN               BIT_12
 #define I_FORWARD_PATTERN_EN_OFFSET        12
 #define I_FORWARD_PATTERN_EN_LEN           1
+
+/*macsec local generate az pattern*/
+#define MACSEC_LOCAL_AZ_PATTERN_EN_CTRL      0xC064
+#define E_MAC_LPI_EN               BIT_15
+#define E_MAC_LPI_EN_OFFSET        15
+#define E_MAC_LPI_EN_LEN           1
+#define I_MAC_LPI_EN               BIT_14
+#define I_MAC_LPI_EN_OFFSET        14
+#define I_MAC_LPI_EN_LEN           1
 
 /* egress epr configure register */
 #define MACSEC_E_EPR_CONFIG           (MACSEC_SYS_BASE + 0x01)
@@ -754,6 +770,12 @@ struct secy_tx_sc_policy_rule_t {
 	u16   inner_vlanid;
 	bool  bc_flag;
 	struct secy_tx_sc_policy_action_t action;
+};
+struct secy_pn_table_t {
+	u32   rx_sa_pn;
+	u32   tx_sa_pn;
+	u32   rx_sa_xpn;
+	u32   tx_sa_xpn;
 };
 
 int nss_macsec_phy_mdio_write(u32 phy_addr, u32 reg_addr, u16 val16);

@@ -92,6 +92,7 @@ int nss_macsec_secy_driver_init(u32 secy_id)
 
 	switch (phy_id) {
 	case PHY_NAPA:
+	case PHY_NAPA_1_1:
 		phy_type = NAPA_PHY_CHIP;
 		secy_info[secy_id].secy_phy_type = phy_type;
 		break;
