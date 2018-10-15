@@ -778,8 +778,8 @@ struct secy_pn_table_t {
 	u32   tx_sa_xpn;
 };
 
-int nss_macsec_phy_mdio_write(u32 phy_addr, u32 reg_addr, u16 val16);
-int nss_macsec_phy_mdio_read(u32 phy_addr, u32 reg_addr, u16 *val16);
+int nss_macsec_phy_mdio_write(u32 secy_id, u32 reg_addr, u16 val16);
+int nss_macsec_phy_mdio_read(u32 secy_id, u32 reg_addr, u16 *val16);
 g_error_t phy_mii_reg_read(u32 secy_id, u32 reg_addr, u16 *p_val16);
 
 
