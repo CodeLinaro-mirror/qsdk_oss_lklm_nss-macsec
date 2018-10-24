@@ -217,11 +217,11 @@ u32 nss_macsec_secy_rx_prc_lut_get(u32 secy_id, u32 index,
 	struct secy_drv_t *secy_drv;
 	struct secy_rx_prc_lut_t secy_rx_prc_lut;
 
-	memset(pentry, 0, sizeof(fal_rx_prc_lut_t));
-	memset(&secy_rx_prc_lut, 0, sizeof(secy_rx_prc_lut));
-
 	SHR_PARAM_CHECK((secy_id < FAL_SECY_ID_NUM) &&
 			(index < FAL_RX_CLASS_LUT_NUM) && (pentry != NULL));
+
+	memset(pentry, 0, sizeof(fal_rx_prc_lut_t));
+	memset(&secy_rx_prc_lut, 0, sizeof(secy_rx_prc_lut));
 
 	secy_drv = nss_macsec_secy_ops_get(secy_id);
 	if (secy_drv != NULL) {
