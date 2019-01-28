@@ -618,6 +618,7 @@ int cli_str_2_list(const char *str, const sa_u32_t min, const sa_u32_t max,
 	sa_bool_t lastValValid = SA_FALSE;
 	char *endPtr;
 	sa_bool_t endFlag = SA_FALSE;
+	sa_u32_t **data_ptr;
 
 	/* parameter check */
 	if (NULL == str) {
@@ -673,7 +674,8 @@ int cli_str_2_list(const char *str, const sa_u32_t min, const sa_u32_t max,
 			}
 
 			if (pPortArray != NULL) {
-				array_insert_slot(pPortArray, (void *)val);
+				data_ptr = (sa_u32_t **)&val;
+				array_insert_slot(pPortArray, *data_ptr);
 			}
 
 			lastVal = val;
@@ -737,8 +739,8 @@ int cli_str_2_list(const char *str, const sa_u32_t min, const sa_u32_t max,
 			/* insert every number in the range to array */
 			for (i = start; i <= end; i++) {
 				if (pPortArray != NULL) {
-					array_insert_slot(pPortArray,
-							  (void *)i);
+					data_ptr = (sa_u32_t **)&i;
+					array_insert_slot(pPortArray, *data_ptr);
 				}
 			}
 		} else {	/* dashNum > 1 */
