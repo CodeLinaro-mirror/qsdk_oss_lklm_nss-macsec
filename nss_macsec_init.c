@@ -61,6 +61,7 @@ static uint32_t macsec_notifier_register_status = 0;
 static uint32_t nss_macsec_pre_init_flag = 0;
 
 
+#ifdef MACSEC_IPQ806X_SUPPORT
 static int macsec_ncb(struct notifier_block *nb, unsigned long value,
 		      void *priv)
 {
@@ -81,6 +82,7 @@ static int macsec_ncb(struct notifier_block *nb, unsigned long value,
 static struct notifier_block macsec_notifier = {
 	.notifier_call = macsec_ncb,
 };
+#endif
 
 unsigned int nss_macsec_device_exist(unsigned int dev_id)
 {
@@ -377,6 +379,7 @@ static int nss_macsec_clean(void)
 }
 #endif
 
+#if (LINUX_VERSION_CODE < KERNEL_VERSION(3, 14, 0))
 static int nss_macsec_probe(struct platform_device *pdev)
 {
 	int ret = 0;
@@ -451,6 +454,7 @@ static struct platform_driver nss_macsec_drv = {
 		   .owner = THIS_MODULE,
 		   },
 };
+#endif
 
 static int __init nss_macsec_init_module(void)
 {

@@ -545,7 +545,16 @@ int cli_str_2_hex(const char *str, sa_u32_t *pHex)
 
 int cli_str_2_long_hex(const char *str, sa_u64_t *pU64)
 {
-	*pU64 = 0;
+	char *endPtr;
+
+	if ((NULL == str) || (NULL == pU64)) {
+		return -1;
+	}
+
+	*pU64 = strtoull(str, &endPtr, 16);
+	if (*endPtr != '\0') {
+		return -1;
+	}
 
 	return 0;
 }
