@@ -38,6 +38,8 @@ typedef struct {
 
 int cli_str_2_hex(const char *str, sa_u32_t *pHex);
 
+int cli_str_2_long_hex(const char *str, sa_u64_t *pU64);
+
 int cli_str_2_mac(const char *str, sa_u8_t *mac);
 
 int cli_mac_2_str(const sa_u8_t *mac, char *str, unsigned int maxLen);
