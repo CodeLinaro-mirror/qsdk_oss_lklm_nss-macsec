@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014, 2018, The Linux Foundation. All rights reserved.
+ * Copyright (c) 2014, 2018-2019 The Linux Foundation. All rights reserved.
  * Permission to use, copy, modify, and/or distribute this software for
  * any purpose with or without fee is hereby granted, provided that the
  * above copyright notice and this permission notice appear in all copies.
@@ -79,7 +79,7 @@ static int macsec_ncb(struct notifier_block *nb, unsigned long value,
 	return result;
 }
 
-static struct notifier_block macsec_notifier = {
+static struct notifier_block macsec_notifier __attribute__ ((unused)) = {
 	.notifier_call = macsec_ncb,
 };
 #endif
@@ -101,7 +101,7 @@ int nss_macsec_reg_read(unsigned int dev_id, unsigned int reg_addr,
 	}
 
 	*pvalue =
-	    readl((unsigned char *)((uint32_t) macsec_ctx.macsec_base[dev_id] +
+	    readl((unsigned char *)((char *) macsec_ctx.macsec_base[dev_id] +
 				    (reg_addr)));
 	return 0;
 }
@@ -113,7 +113,7 @@ int nss_macsec_reg_write(unsigned int dev_id, unsigned int reg_addr,
 		return ERROR_NOT_SUPPORT;
 	}
 	writel(pvalue,
-	       (unsigned char *)((uint32_t) macsec_ctx.macsec_base[dev_id] +
+	       (unsigned char *)((char *) macsec_ctx.macsec_base[dev_id] +
 				 (reg_addr)));
 	return 0;
 }
@@ -446,7 +446,7 @@ static int nss_macsec_remove(struct platform_device *pdev)
 /**
  * @brief Linux Platform driver for MACSEC
  */
-static struct platform_driver nss_macsec_drv = {
+static struct platform_driver nss_macsec_drv __attribute__ ((unused)) = {
 	.probe = nss_macsec_probe,
 	.remove = nss_macsec_remove,
 	.driver = {
