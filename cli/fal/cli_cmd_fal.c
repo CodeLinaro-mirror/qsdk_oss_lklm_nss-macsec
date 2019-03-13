@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014, 2016, 2018, The Linux Foundation. All rights reserved.
+ * Copyright (c) 2014, 2016, 2018-2019, The Linux Foundation. All rights reserved.
  * Permission to use, copy, modify, and/or distribute this software for
  * any purpose with or without fee is hereby granted, provided that the
  * above copyright notice and this permission notice appear in all copies.
@@ -4488,8 +4488,6 @@ DEFCMD(nss_macsec_secy_tx_udf_filt_set_func,
 }
 void _dump_g_fal_tx_udf_filt_t(VTY_T *pVty, struct fal_tx_udf_filt_t *value)
 {
-	char mac_str[32] = { 0 };
-
 	vty_print("udf_field0 : 0x%x\n", value->udf_field0);
 	vty_print("udf_field1 : 0x%x\n", value->udf_field1);
 	vty_print("udf_field2 : 0x%x\n", value->udf_field2);
@@ -4628,8 +4626,6 @@ DEFCMD(nss_macsec_secy_rx_udf_filt_set_func,
 }
 void _dump_g_fal_rx_udf_filt_t(VTY_T *pVty, struct fal_rx_udf_filt_t *value)
 {
-	char mac_str[32] = { 0 };
-
 	vty_print("udf_field0 : 0x%x\n", value->udf_field0);
 	vty_print("udf_field1 : 0x%x\n", value->udf_field1);
 	vty_print("udf_field2 : 0x%x\n", value->udf_field2);
@@ -4759,8 +4755,6 @@ DEFCMD(nss_macsec_secy_tx_udf_ufilt_cfg_set_func,
 void _dump_g_fal_tx_udf_ufilt_cfg_t(VTY_T *pVty,
 	struct fal_tx_udf_filt_cfg_t *value)
 {
-	char mac_str[32] = { 0 };
-
 	vty_print("enable : 0x%x\n", value->enable);
 	vty_print("priority : 0x%x\n", value->priority);
 	vty_print("inverse : 0x%x\n", value->inverse);
@@ -4887,8 +4881,6 @@ DEFCMD(nss_macsec_secy_tx_udf_cfilt_cfg_set_func,
 void _dump_g_fal_tx_udf_cfilt_cfg_t(VTY_T *pVty,
 	struct fal_tx_udf_filt_cfg_t *value)
 {
-	char mac_str[32] = { 0 };
-
 	vty_print("enable : 0x%x\n", value->enable);
 	vty_print("priority : 0x%x\n", value->priority);
 	vty_print("inverse : 0x%x\n", value->inverse);
@@ -5015,8 +5007,6 @@ DEFCMD(nss_macsec_secy_rx_udf_ufilt_cfg_set_func,
 void _dump_g_fal_rx_udf_ufilt_cfg_t(VTY_T *pVty,
 	struct fal_rx_udf_filt_cfg_t *value)
 {
-	char mac_str[32] = { 0 };
-
 	vty_print("enable : 0x%x\n", value->enable);
 	vty_print("priority : 0x%x\n", value->priority);
 	vty_print("inverse : 0x%x\n", value->inverse);

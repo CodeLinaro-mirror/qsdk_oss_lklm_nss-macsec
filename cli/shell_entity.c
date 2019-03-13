@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014, The Linux Foundation. All rights reserved.
+ * Copyright (c) 2014, 2019 The Linux Foundation. All rights reserved.
  * Permission to use, copy, modify, and/or distribute this software for
  * any purpose with or without fee is hereby granted, provided that the
  * above copyright notice and this permission notice appear in all copies.
@@ -48,7 +48,7 @@ int shell_loop()
 	while (vty_entity->state != VTY_STATE_CLOSE) {
 		char cc = getc(stdin);
 
-		vty_input(vty_entity, &cc, 1);
+		vty_input(vty_entity, (sa_u8_t *)&cc, 1);
 	}
 
 	SHELL_RET_ON_ERR(_shell_fini());
