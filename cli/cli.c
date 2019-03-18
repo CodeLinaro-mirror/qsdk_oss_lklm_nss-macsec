@@ -1125,7 +1125,7 @@ static int _cli_split_line(const char *lineStr, ARRAY_T **ppArray)
 		return CLI_FAIL;
 	}
 
-	while (cp != '\0') {
+	while (*cp != '\0') {
 		/* get token from rest string */
 		token = _cli_token(&cp);
 		if (NULL == token) {
@@ -1879,7 +1879,7 @@ static int _cli_get_err_position(const char *lineStr, const int index)
 	cp = lineStr;
 	cp = _cli_trim_left(cp);
 
-	while (cp != '\0') {
+	while (*cp != '\0') {
 		if (i == index) {
 			errPosition = _cli_trim_left(cp) - lineStr;
 			break;
