@@ -688,6 +688,8 @@ int cli_str_2_list(const char *str, const sa_u32_t min, const sa_u32_t max,
 			}
 
 			pDash = strchr(sectionStr, '-');
+			if (pDash == NULL)
+				return -1;
 
 			/*
 			 * handle start number before '-'
