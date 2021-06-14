@@ -28,6 +28,7 @@ extern "C" {
 #define PHY_NAPA 0x004DD100
 #define PHY_NAPA_1_1 0x004DD101
 #define MAX_SECY_ID      0x3
+#define INVALID_SECY_ID  0xFFFFFFFF
 
 enum secy_cipher_suite_t {
 	SECY_CIPHER_SUITE_128 = 0,

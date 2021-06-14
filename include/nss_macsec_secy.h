@@ -150,6 +150,12 @@ u32 nss_macsec_secy_mtu_get(u32 secy_id, u32 *pmtu);
 u32 nss_macsec_secy_mtu_set(u32 secy_id, u32 mtu);
 
 /**
+* @param[in] dev_name
+* @param[out] secy_id
+**/
+u32 nss_macsec_secy_id_get(u8 *dev_name, u32 *secy_id);
+
+/**
 * @param[in] secy_id
 * @param[out] penable
 **/
@@ -187,5 +193,6 @@ u32 nss_macsec_secy_loopback_get(u32 secy_id,
 u32 nss_macsec_secy_loopback_set(u32 secy_id,
 	enum fal_loopback_type_t type);
 
+g_error_t nss_macsec_dt_secy_id_get(u8 *dev_name, u32 *secy_id);
 
 #endif /* _NSS_MACSEC_SECY_H_ */

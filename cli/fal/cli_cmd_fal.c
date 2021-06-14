@@ -3785,6 +3785,19 @@ DEFCMD(nss_macsec_secy_mtu_set_func,
 	return CLI_OK;
 }
 
+DEFCMD(nss_macsec_secy_id_get_func,
+	nss_macsec_secy_id_get_cmd,
+	"nss_macsec_secy_id get WORD",
+	"nss_macsec_secy_id\n get\n dev_name\n")
+{
+	u32 secy_id = 0;
+
+	CLI_EXEC_API(nss_macsec_secy_id_get((u8 *)argv[2], &secy_id));
+	vty_print("secy_id : 0x%x\n", secy_id);
+
+	return CLI_OK;
+}
+
 DEFCMD(nss_macsec_secy_en_get_func,
        nss_macsec_secy_en_get_cmd,
        "nss_macsec_secy_en get HEX", "nss_macsec_secy_en\n" "get\n" "secy_id\n")
@@ -5201,6 +5214,7 @@ int cli_cmd_fal_init(void)
 	cli_install_cmd(CLI_MODE_ENABLE, &nss_macsec_secy_cipher_suite_set_cmd);
 	cli_install_cmd(CLI_MODE_ENABLE, &nss_macsec_secy_mtu_get_cmd);
 	cli_install_cmd(CLI_MODE_ENABLE, &nss_macsec_secy_mtu_set_cmd);
+	cli_install_cmd(CLI_MODE_ENABLE, &nss_macsec_secy_id_get_cmd);
 	cli_install_cmd(CLI_MODE_ENABLE, &nss_macsec_secy_en_get_cmd);
 	cli_install_cmd(CLI_MODE_ENABLE, &nss_macsec_secy_en_set_cmd);
 	cli_install_cmd(CLI_MODE_ENABLE, &nss_macsec_secy_tx_sc_mib_get_cmd);

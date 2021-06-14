@@ -240,6 +240,42 @@ int nss_macsec_phy_mdio_read(u32 secy_id, u32 reg_addr, u16 *val)
 }
 
 
+g_error_t nss_macsec_dt_secy_id_get(u8 *dev_name, u32 *secy_id)
+{
+	u32 secy_idx, phy_addr = -1;
+	struct net_device *netdev = NULL;
+
+	/* get net device by ifname */
+	netdev = __dev_get_by_name(&init_net, (const char *)dev_name);
+	if (unlikely(!netdev)) {
+		*secy_id = INVALID_SECY_ID;
+		return ERROR_NOT_FOUND;
+	}
+
+	/* get phy address by net device */
+	if (netdev->phydev) {
+#if (LINUX_VERSION_CODE < KERNEL_VERSION(4, 5, 0))
+		phy_addr = netdev->phydev->addr;
+#else
+		phy_addr = netdev->phydev->mdio.addr;
+#endif
+	}
+
+	/* find secy_id by phy address */
+	if (phy_addr != -1) {
+		for (secy_idx = 0; secy_idx < MAX_SECY_ID; secy_idx++) {
+			if (phy_addr == secy_id_to_phy_addr(secy_idx)) {
+				*secy_id = secy_idx;
+				return ERROR_OK;
+			}
+		}
+	}
+
+	/* fail to find secy_id */
+	*secy_id = INVALID_SECY_ID;
+	return ERROR_NOT_FOUND;
+}
+
 static int nss_macsec_mdiobus_init(struct device_node *macsec_node, u32 secy_id)
 {
 	struct device_node *mdio_node = NULL;

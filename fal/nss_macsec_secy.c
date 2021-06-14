@@ -391,6 +391,30 @@ u32 nss_macsec_secy_mtu_set(u32 secy_id, u32 mtu)
 	return ERROR_OK;
 }
 
+u32 nss_macsec_secy_id_get(u8 *dev_name, u32 *secy_id)
+{
+	g_error_t rv;
+
+	rv = nss_macsec_dt_secy_id_get(dev_name, secy_id);
+	if (rv == ERROR_OK)
+		return rv;
+
+	/* static secy id mapping for ipq806x, secy_id = gmac_id - 1 */
+#ifdef MACSEC_IPQ806X_SUPPORT
+	if (!strncmp((const char *)dev_name, "eth2", 4)) {
+		*secy_id = 1;
+		rv = ERROR_OK;
+	} else if (!strncmp((const char *)dev_name, "eth3", 4)) {
+		*secy_id = 2;
+		rv = ERROR_OK;
+	} else {
+		*secy_id = INVALID_SECY_ID;
+		rv = ERROR_NOT_FOUND;
+	}
+#endif
+	return rv;
+}
+
 u32 nss_macsec_secy_en_get(u32 secy_id, bool *penable)
 {
 	g_error_t rv;

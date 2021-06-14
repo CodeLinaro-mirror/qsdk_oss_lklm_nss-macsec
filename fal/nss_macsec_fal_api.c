@@ -152,6 +152,7 @@ unsigned int nss_macsec_cmd_len[] = {
 	sizeof(struct nss_macsec_secy_cipher_suite_set_cmd),
 	sizeof(struct nss_macsec_secy_mtu_get_cmd),
 	sizeof(struct nss_macsec_secy_mtu_set_cmd),
+	sizeof(struct nss_macsec_secy_id_get_cmd),
 	sizeof(struct nss_macsec_secy_en_get_cmd),
 	sizeof(struct nss_macsec_secy_en_set_cmd),
 	sizeof(struct nss_macsec_secy_xpn_en_get_cmd),
@@ -1578,6 +1579,14 @@ unsigned int nss_macsec_fal_msg_handle(struct sdk_msg_header *header)
 			    (struct nss_macsec_secy_mtu_set_cmd *)(header + 1);
 			ret =
 			    nss_macsec_secy_mtu_set(param->secy_id, param->mtu);
+		}
+		break;
+	case NSS_MACSEC_SECY_ID_GET_CMD:{
+			struct nss_macsec_secy_id_get_cmd *param =
+			    (struct nss_macsec_secy_id_get_cmd *)(header + 1);
+			ret =
+			    nss_macsec_secy_id_get(param->dev_name,
+						   &param->secy_id);
 		}
 		break;
 	case NSS_MACSEC_SECY_EN_GET_CMD:{

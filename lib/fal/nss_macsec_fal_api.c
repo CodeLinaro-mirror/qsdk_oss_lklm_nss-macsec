@@ -3905,6 +3905,33 @@ u32 nss_macsec_secy_mtu_set(u32 secy_id, u32 mtu)
 	return ret;
 }
 
+u32 nss_macsec_secy_id_get(u8 *dev_name, u32 *secy_id)
+{
+	unsigned char
+	    buf[SDK_MSG_SIZE(sizeof(struct nss_macsec_secy_id_get_cmd))] = {
+		    0 };
+	struct sdk_msg_header *msg_header =
+	    (struct sdk_msg_header *)SDK_MSG_HEADER(buf);
+	struct nss_macsec_secy_id_get_cmd *param =
+	    (struct nss_macsec_secy_id_get_cmd *)SDK_MSG_DATA(buf);
+	int ret = 0;
+
+	msg_header->version = SDK_MSG_VER;
+	msg_header->cmd_type = SDK_FAL_CMD;
+	msg_header->sub_type = NSS_MACSEC_SECY_ID_GET_CMD;
+	msg_header->buf_len = sizeof(struct nss_macsec_secy_id_get_cmd);
+	strlcpy((char *)param->dev_name, (const char *)dev_name, 16);
+
+	ret =
+	    nss_macsec_sdk_netlink_msg(SDK_CALL_MSG, buf,
+				       sizeof(struct
+					      nss_macsec_secy_id_get_cmd),
+				       NETLINK_SDK);
+	if (ret == SDK_RET_SUCCESS)
+		*secy_id = param->secy_id;
+	return ret;
+}
+
 u32 nss_macsec_secy_en_get(u32 secy_id, bool *penable)
 {
 	unsigned char

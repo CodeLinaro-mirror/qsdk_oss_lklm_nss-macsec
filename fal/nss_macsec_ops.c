@@ -23,9 +23,9 @@ static struct secy_driver_instance_t secy_driver[] = {
 
 static u32 secy_max_num;
 static struct secy_info_t secy_info[MAX_SECY_ID] = {
-		{0, MAX_PHY_CHIP},
-		{0, MAX_PHY_CHIP},
-		{0, MAX_PHY_CHIP},
+		{INVALID_SECY_ID, MAX_PHY_CHIP},
+		{INVALID_SECY_ID, MAX_PHY_CHIP},
+		{INVALID_SECY_ID, MAX_PHY_CHIP},
 	};
 
 g_error_t secy_id_validate_check(u32 secy_id)

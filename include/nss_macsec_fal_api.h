@@ -153,6 +153,7 @@ enum {
 	NSS_MACSEC_SECY_CIPHER_SUITE_SET_CMD,
 	NSS_MACSEC_SECY_MTU_GET_CMD,
 	NSS_MACSEC_SECY_MTU_SET_CMD,
+	NSS_MACSEC_SECY_ID_GET_CMD,
 	NSS_MACSEC_SECY_EN_GET_CMD,
 	NSS_MACSEC_SECY_EN_SET_CMD,
 	NSS_MACSEC_SECY_XPN_EN_GET_CMD,
@@ -916,6 +917,11 @@ struct nss_macsec_secy_mtu_get_cmd {
 struct nss_macsec_secy_mtu_set_cmd {
 	u32 secy_id;
 	u32 mtu;
+};
+
+struct nss_macsec_secy_id_get_cmd {
+	u8 dev_name[16];
+	u32 secy_id;
 };
 
 struct nss_macsec_secy_en_get_cmd {
