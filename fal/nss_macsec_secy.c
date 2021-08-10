@@ -403,16 +403,13 @@ u32 nss_macsec_secy_id_get(u8 *dev_name, u32 *secy_id)
 #ifdef MACSEC_IPQ806X_SUPPORT
 	if (!strncmp((const char *)dev_name, "eth2", 4)) {
 		*secy_id = 1;
-		rv = ERROR_OK;
 	} else if (!strncmp((const char *)dev_name, "eth3", 4)) {
 		*secy_id = 2;
-		rv = ERROR_OK;
 	} else {
 		*secy_id = INVALID_SECY_ID;
-		rv = ERROR_NOT_FOUND;
 	}
 #endif
-	return rv;
+	return ERROR_OK;
 }
 
 u32 nss_macsec_secy_en_get(u32 secy_id, bool *penable)

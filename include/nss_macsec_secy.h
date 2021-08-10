@@ -17,6 +17,12 @@
 
 #include "nss_macsec_types.h"
 
+/* Macro indicate nss_macsec_secy_id_get() function is supported,
+ * used in hostap macsec package for backwards compatible with
+ * old nss macsec library which do not support this function.
+ */
+#define NSS_MACSEC_SECY_ID_GET_FUNC
+
 #define FAL_SECY_ID_NUM_MAX     3
 #define FAL_SECY_DEFAULT_MTU    1500
 #define FAL_SCI_LEN             8
