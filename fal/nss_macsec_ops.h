@@ -1,15 +1,18 @@
 /*
  * Copyright (c) 2018, The Linux Foundation. All rights reserved.
- * Permission to use, copy, modify, and/or distribute this software for
- * any purpose with or without fee is hereby granted, provided that the
- * above copyright notice and this permission notice appear in all copies.
+ * Copyright (c) 2022 Qualcomm Innovation Center, Inc. All rights reserved.
+ *
+ * Permission to use, copy, modify, and/or distribute this software for any
+ * purpose with or without fee is hereby granted, provided that the above
+ * copyright notice and this permission notice appear in all copies.
+ *
  * THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
  * WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
  * MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
  * ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
  * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
- * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT
- * OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
+ * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
+ * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
 
 /**
@@ -25,10 +28,12 @@ extern "C" {
 
 #include "qca808x_macsec.h"
 
-#define PHY_NAPA 0x004DD100
-#define PHY_NAPA_1_1 0x004DD101
-#define MAX_SECY_ID      0x3
+#define QCA8081_PHY 0x004DD100
+#define QCA8081_PHY_V1_1 0x004DD101
+#define QCA8084_PHY 0x004DD180
+#define MAX_SECY_ID      0x4
 #define INVALID_SECY_ID  0xFFFFFFFF
+#define INVALID_PHY_ADDR 0xFFFFFFFF
 
 enum secy_cipher_suite_t {
 	SECY_CIPHER_SUITE_128 = 0,
@@ -624,7 +629,7 @@ struct secy_drv_t {
 
 };
 enum secy_phy_type_t {
-	NAPA_PHY_CHIP = 0,
+	QCA808X_PHY_CHIP = 0,
 	MAX_PHY_CHIP,
 };
 struct secy_driver_instance_t {

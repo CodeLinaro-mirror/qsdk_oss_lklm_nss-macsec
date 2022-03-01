@@ -1,31 +1,35 @@
 /*
  * Copyright (c) 2018, The Linux Foundation. All rights reserved.
- * Permission to use, copy, modify, and/or distribute this software for
- * any purpose with or without fee is hereby granted, provided that the
- * above copyright notice and this permission notice appear in all copies.
+ * Copyright (c) 2022 Qualcomm Innovation Center, Inc. All rights reserved.
+ *
+ * Permission to use, copy, modify, and/or distribute this software for any
+ * purpose with or without fee is hereby granted, provided that the above
+ * copyright notice and this permission notice appear in all copies.
+ *
  * THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
  * WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
  * MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
  * ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
  * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
- * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT
- * OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
+ * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
+ * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
 
 
 #include "nss_macsec_ops.h"
 
 static struct secy_driver_instance_t secy_driver[] = {
-	{NAPA_PHY_CHIP, NULL, qca808x_secy_driver_init,
+	{QCA808X_PHY_CHIP, NULL, qca808x_secy_driver_init,
 		qca808x_secy_driver_exit},
 	{MAX_PHY_CHIP, NULL, NULL, NULL}
 };
 
 static u32 secy_max_num;
 static struct secy_info_t secy_info[MAX_SECY_ID] = {
-		{INVALID_SECY_ID, MAX_PHY_CHIP},
-		{INVALID_SECY_ID, MAX_PHY_CHIP},
-		{INVALID_SECY_ID, MAX_PHY_CHIP},
+		{INVALID_PHY_ADDR, MAX_PHY_CHIP},
+		{INVALID_PHY_ADDR, MAX_PHY_CHIP},
+		{INVALID_PHY_ADDR, MAX_PHY_CHIP},
+		{INVALID_PHY_ADDR, MAX_PHY_CHIP},
 	};
 
 g_error_t secy_id_validate_check(u32 secy_id)
@@ -91,9 +95,10 @@ int nss_macsec_secy_driver_init(u32 secy_id)
 	phy_id = (org_id<<16) | rev_id;
 
 	switch (phy_id) {
-	case PHY_NAPA:
-	case PHY_NAPA_1_1:
-		phy_type = NAPA_PHY_CHIP;
+	case QCA8081_PHY:
+	case QCA8081_PHY_V1_1:
+	case QCA8084_PHY:
+		phy_type = QCA808X_PHY_CHIP;
 		secy_info[secy_id].secy_phy_type = phy_type;
 		break;
 	default:

@@ -1,15 +1,18 @@
 /*
  * Copyright (c) 2014, 2018-2019 The Linux Foundation. All rights reserved.
- * Permission to use, copy, modify, and/or distribute this software for
- * any purpose with or without fee is hereby granted, provided that the
- * above copyright notice and this permission notice appear in all copies.
+ * Copyright (c) 2022 Qualcomm Innovation Center, Inc. All rights reserved.
+ *
+ * Permission to use, copy, modify, and/or distribute this software for any
+ * purpose with or without fee is hereby granted, provided that the above
+ * copyright notice and this permission notice appear in all copies.
+ *
  * THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
  * WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
  * MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
  * ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
  * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
- * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT
- * OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
+ * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
+ * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
 
 #include <linux/module.h>
@@ -46,11 +49,11 @@
 /* NSS MACSEC Base Addresses */
 #define NSS_MACSEC_BASE			0x37800000
 #define NSS_MACSEC_REG_LEN		0x00200000
-#define MACSEC_DEVICE_NUM 3
+#define MACSEC_DEVICE_NUM 4
 
 static struct sock *sdk_nl_sk = NULL;
 
-static bool phy_driver_flag[MACSEC_DEVICE_NUM] = {FALSE, FALSE, FALSE};
+static bool phy_driver_flag[MACSEC_DEVICE_NUM] = {FALSE, FALSE, FALSE, FALSE};
 static bool secy_phy_flag;
 /**
  * @brief MACSEC driver context
@@ -211,7 +214,8 @@ static int nss_macsec_netlink_init(void)
 	return 0;
 }
 
-static struct mii_bus *nss_macsec_miibus[MAX_SECY_ID] = {NULL, NULL, NULL};
+static struct mii_bus *nss_macsec_miibus[MAX_SECY_ID] = {
+	NULL, NULL, NULL, NULL};
 
 int nss_macsec_phy_mdio_write(u32 secy_id, u32 reg_addr, u16 val)
 {
@@ -499,7 +503,7 @@ static int __init nss_macsec_init_module(void)
 	uint32_t dev_id = 0;
 	int ret = 0;
 
-	for(dev_id=0; dev_id<MACSEC_DEVICE_NUM; dev_id++)
+	for (dev_id = 0; dev_id < MACSEC_DEVICE_NUM; dev_id++)
 		macsec_ctx.macsec_base[dev_id] = NULL;
 
 #if (LINUX_VERSION_CODE >= KERNEL_VERSION(3, 14, 0))
