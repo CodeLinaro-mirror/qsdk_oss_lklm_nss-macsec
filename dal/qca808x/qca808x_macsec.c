@@ -3968,7 +3968,7 @@ g_error_t qca808x_secy_init(u32 secy_id)
 	qca808x_secy_clock_en_set(secy_id, TRUE);
 	qca808x_secy_tx_mib_clear(secy_id);
 	qca808x_secy_rx_mib_clear(secy_id);
-	qca808x_secy_forward_az_pattern_en_set(secy_id, FALSE);
+	qca808x_secy_forward_az_pattern_en_set(secy_id, TRUE);
 	for (sc = 0; sc < SECY_SC_IDX_MAX + 1; sc++) {
 		qca808x_secy_tx_sc_mib_clear(secy_id, sc);
 		for (sa = 0; sa < SECY_SA_IDX_MAX + 1; sa++) {
