@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2014, 2018-2019 The Linux Foundation. All rights reserved.
- * Copyright (c) 2022 Qualcomm Innovation Center, Inc. All rights reserved.
+ * Copyright (c) 2022-2023, Qualcomm Innovation Center, Inc. All rights reserved.
  *
  * Permission to use, copy, modify, and/or distribute this software for any
  * purpose with or without fee is hereby granted, provided that the above
@@ -359,7 +359,7 @@ static int nss_macsec_dt_init(uint32_t dev_id)
 		return -EIO;
 	}
 
-	mmap_io_addr = ioremap_nocache(mem_start, mem_len);
+	mmap_io_addr = ioremap(mem_start, mem_len);
 	if (!mmap_io_addr) {
 		macsec_warning("%s ioremap fail.", __func__);
 		return -EIO;
