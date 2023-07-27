@@ -1,8 +1,11 @@
 /*
  * Copyright (c) 2014, The Linux Foundation. All rights reserved.
- * Permission to use, copy, modify, and/or distribute this software for
- * any purpose with or without fee is hereby granted, provided that the
- * above copyright notice and this permission notice appear in all copies.
+ * Copyright (c) 2023 Qualcomm Innovation Center, Inc. All rights reserved.
+ *
+ * Permission to use, copy, modify, and/or distribute this software for any
+ * purpose with or without fee is hereby granted, provided that the above
+ * copyright notice and this permission notice appear in all copies.
+ *
  * THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
  * WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
  * MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
@@ -57,6 +60,7 @@
 
 #endif // MACSEC_DEBUG
 
+#ifdef MACSEC_IPQ806X_SUPPORT
 /**
  * @brief Events from the NSS GMAC
  */
@@ -77,4 +81,6 @@ extern void nss_gmac_link_state_change_notify_register(struct notifier_block *nb
 extern void nss_gmac_link_state_change_notify_unregister(struct notifier_block *nb);
 
 unsigned int nss_macsec_device_exist(unsigned int dev_id);
+#endif
+
 #endif /* End of file */

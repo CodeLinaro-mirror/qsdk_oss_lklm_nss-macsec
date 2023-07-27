@@ -1,8 +1,11 @@
 /*
  * Copyright (c) 2014, 2018, The Linux Foundation. All rights reserved.
- * Permission to use, copy, modify, and/or distribute this software for
- * any purpose with or without fee is hereby granted, provided that the
- * above copyright notice and this permission notice appear in all copies.
+ * Copyright (c) 2023 Qualcomm Innovation Center, Inc. All rights reserved.
+ *
+ * Permission to use, copy, modify, and/or distribute this software for any
+ * purpose with or without fee is hereby granted, provided that the above
+ * copyright notice and this permission notice appear in all copies.
+ *
  * THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
  * WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
  * MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
@@ -14,7 +17,9 @@
 
 //#include "osal_common.h"
 #include "nss_macsec_types.h"
+#ifdef MACSEC_IPQ806X_SUPPORT
 #include "nss_macsec_register_api.h"
+#endif
 #include "nss_macsec_utility.h"
 #include "nss_macsec_mib.h"
 #include <linux/delay.h>
@@ -23,8 +28,6 @@
 u32 nss_macsec_secy_tx_sc_mib_get(u32 secy_id, u32 channel,
 				  fal_tx_sc_mib_t *pmib)
 {
-	u32 sc_id = 0;
-	struct eg_smib_sc_sa mib;
 	g_error_t rv;
 	struct secy_drv_t *secy_drv;
 	struct secy_tx_sc_mib_t secy_tx_sc_mib;
@@ -52,6 +55,9 @@ u32 nss_macsec_secy_tx_sc_mib_get(u32 secy_id, u32 channel,
 		}
 		return rv;
 	}
+#ifdef MACSEC_IPQ806X_SUPPORT
+	u32 sc_id = 0;
+	struct eg_smib_sc_sa mib;
 
 	sc_id = fal_tx_channel_2_sc_id(secy_id, channel);
 	eg_smib_table_sc_sa_get(secy_id, sc_id, (u32 *) (&mib));
@@ -64,15 +70,13 @@ u32 nss_macsec_secy_tx_sc_mib_get(u32 secy_id, u32 channel,
 	    (u64) (mib.sc_protected_octets_0);
 	pmib->encrypted_octets = ((u64) (mib.sc_encrypted_octets_1) << 32) +
 	    (u64) (mib.sc_encrypted_octets_0);
-
+#endif
 	return ERROR_OK;
 }
 
 u32 nss_macsec_secy_tx_sa_mib_get(u32 secy_id, u32 channel,
 				  u32 an, fal_tx_sa_mib_t *pmib)
 {
-	u32 sa_id = 0;
-	struct eg_smib_sc_sa mib;
 	g_error_t rv;
 	struct secy_drv_t *secy_drv;
 	struct secy_tx_sa_mib_t secy_tx_sa_mib;
@@ -101,6 +105,9 @@ u32 nss_macsec_secy_tx_sa_mib_get(u32 secy_id, u32 channel,
 		}
 		return rv;
 	}
+#ifdef MACSEC_IPQ806X_SUPPORT
+	u32 sa_id = 0;
+	struct eg_smib_sc_sa mib;
 
 	sa_id = fal_tx_channel_2_sc_id(secy_id, channel) + an;
 	eg_smib_table_sc_sa_get(secy_id, sa_id, (u32 *) (&mib));
@@ -113,13 +120,12 @@ u32 nss_macsec_secy_tx_sa_mib_get(u32 secy_id, u32 channel,
 	    (u64) (mib.sa_protected_pkts_0);
 	pmib->encrypted_pkts = ((u64) (mib.sa_encrypted_pkts_1) << 32) +
 	    (u64) (mib.sa_encrypted_pkts_0);
-
+#endif
 	return ERROR_OK;
 }
 
 u32 nss_macsec_secy_tx_mib_get(u32 secy_id, fal_tx_mib_t *pmib)
 {
-	struct eg_smib_common mib;
 	g_error_t rv;
 	struct secy_drv_t *secy_drv;
 	struct secy_tx_mib_t secy_tx_mib;
@@ -145,6 +151,9 @@ u32 nss_macsec_secy_tx_mib_get(u32 secy_id, fal_tx_mib_t *pmib)
 		}
 		return rv;
 	}
+#ifdef MACSEC_IPQ806X_SUPPORT
+	struct eg_smib_common mib;
+
 	eg_smib_table_common_get(secy_id, (u32 *) (&mib));
 
 	pmib->ctl_pkts = ((u64) (mib.ctl_pkts_1) << 32) +
@@ -165,15 +174,13 @@ u32 nss_macsec_secy_tx_mib_get(u32 secy_id, fal_tx_mib_t *pmib)
 	pmib->unctrl_hit_drop_redir_pkts =
 		((u64) (mib.unctrl_hit_drop_redir_pkts_1) << 32) +
 		(u64) (mib.unctrl_hit_drop_redir_pkts_0);
-
+#endif
 	return ERROR_OK;
 }
 
 u32 nss_macsec_secy_rx_sa_mib_get(u32 secy_id, u32 channel,
 				  u32 an, fal_rx_sa_mib_t *pmib)
 {
-	u32 sa_id = 0;
-	struct ig_smib_sc_sa mib;
 	g_error_t rv;
 	struct secy_drv_t *secy_drv;
 	struct secy_rx_sa_mib_t secy_rx_sa_mib;
@@ -212,6 +219,10 @@ u32 nss_macsec_secy_rx_sa_mib_get(u32 secy_id, u32 channel,
 		return rv;
 	}
 
+#ifdef MACSEC_IPQ806X_SUPPORT
+	u32 sa_id = 0;
+	struct ig_smib_sc_sa mib;
+
 	sa_id = fal_rx_channel_2_sc_id(secy_id, channel) + an;
 	ig_smib_table_sc_sa_get(secy_id, sa_id, (u32 *) (&mib));
 
@@ -240,13 +251,12 @@ u32 nss_macsec_secy_rx_sa_mib_get(u32 secy_id, u32 channel,
 	    (u64) (mib.sa_validated_octets_0);
 	pmib->decrypted_octets = ((u64) (mib.sa_decrypted_octets_1) << 32) +
 			    (u64) (mib.sa_decrypted_octets_0);
-
+#endif
 	return ERROR_OK;
 }
 
 u32 nss_macsec_secy_rx_mib_get(u32 secy_id, fal_rx_mib_t *pmib)
 {
-	struct ig_smib_common mib;
 	g_error_t rv;
 	struct secy_drv_t *secy_drv;
 	struct secy_rx_mib_t secy_rx_mib;
@@ -288,6 +298,8 @@ u32 nss_macsec_secy_rx_mib_get(u32 secy_id, fal_rx_mib_t *pmib)
 		}
 		return rv;
 	}
+#ifdef MACSEC_IPQ806X_SUPPORT
+	struct ig_smib_common mib;
 
 	ig_smib_table_common_get(secy_id, (u32 *) (&mib));
 
@@ -340,13 +352,12 @@ u32 nss_macsec_secy_rx_mib_get(u32 secy_id, fal_rx_mib_t *pmib)
 
 	pmib->ecc_error_pkts = ((u64) (mib.ecc_error_pkts_1) << 32) +
 	    (u64) (mib.ecc_error_pkts_0);
-
+#endif
 	return ERROR_OK;
 }
 
 u32 nss_macsec_secy_tx_mib_clear(u32 secy_id)
 {
-	union egsy_l2sec_control_u  reg;
 	g_error_t rv;
 	struct secy_drv_t *secy_drv;
 
@@ -358,6 +369,8 @@ u32 nss_macsec_secy_tx_mib_clear(u32 secy_id)
 			rv = secy_drv->secy_tx_mib_clear(secy_id);
 		return rv;
 	}
+#ifdef MACSEC_IPQ806X_SUPPORT
+	union egsy_l2sec_control_u  reg;
 
 	egsy_l2sec_control_get(secy_id, &reg);
 
@@ -368,7 +381,7 @@ u32 nss_macsec_secy_tx_mib_clear(u32 secy_id)
 
 	reg.bf.csr_egsy_clr_cnt = 0;
 	egsy_l2sec_control_set(secy_id, &reg);
-
+#endif
 	return ERROR_OK;
 }
 
@@ -409,7 +422,6 @@ u32 nss_macsec_secy_tx_sa_mib_clear(u32 secy_id, u32 channel, u32 an)
 
 u32 nss_macsec_secy_rx_mib_clear(u32 secy_id)
 {
-	union csr_igsy_ctrl_u  reg;
 	g_error_t rv;
 	struct secy_drv_t *secy_drv;
 
@@ -421,6 +433,8 @@ u32 nss_macsec_secy_rx_mib_clear(u32 secy_id)
 			rv = secy_drv->secy_rx_mib_clear(secy_id);
 		return rv;
 	}
+#ifdef MACSEC_IPQ806X_SUPPORT
+	union csr_igsy_ctrl_u  reg;
 
 	csr_igsy_ctrl_get(secy_id, &reg);
 
@@ -431,6 +445,7 @@ u32 nss_macsec_secy_rx_mib_clear(u32 secy_id)
 
 	reg.bf.csr_insy_clr_cnt = 0;
 	csr_igsy_ctrl_set(secy_id, &reg);
+#endif
 
 	return ERROR_OK;
 }

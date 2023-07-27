@@ -1,9 +1,9 @@
 # Copyright (c) 2014, 2018-2019, 2021 The Linux Foundation. All rights reserved.
+# Copyright (c) 2023 Qualcomm Innovation Center, Inc. All rights reserved.
 #
 # Permission to use, copy, modify, and/or distribute this software for any
 # purpose with or without fee is hereby granted, provided that the above
 # copyright notice and this permission notice appear in all copies.
-#
 #
 # THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
 # WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY
@@ -22,9 +22,7 @@ obj ?= .
 obj-m +=qca-nss-macsec.o
 
 qca-nss-macsec-objs +=	nss_macsec_init.o \
-			dal/nss_macsec_register_api.o \
 			fal/nss_macsec_fal_api.o \
-			fal/nss_macsec_emac.o \
 			fal/nss_macsec_interrupt.o \
 			fal/nss_macsec.o \
 			fal/nss_macsec_mib.o \
@@ -34,6 +32,11 @@ qca-nss-macsec-objs +=	nss_macsec_init.o \
 			fal/nss_macsec_utility.o \
 			dal/qca808x/qca808x_macsec.o \
 			fal/nss_macsec_ops.o
+
+ifeq ($(SoC), ipq806x)
+qca-nss-macsec-objs +=	dal/nss_macsec_register_api.o \
+			fal/nss_macsec_emac.o
+endif
 
 NSS_MACSEC_INCLUDE = -I$(obj)/include -I$(obj)/dal -I$(obj)/fal -I$(obj)/dal/qca808x
 

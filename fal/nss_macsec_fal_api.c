@@ -1,8 +1,11 @@
 /*
  * Copyright (c) 2014, 2018, The Linux Foundation. All rights reserved.
- * Permission to use, copy, modify, and/or distribute this software for
- * any purpose with or without fee is hereby granted, provided that the
- * above copyright notice and this permission notice appear in all copies.
+ * Copyright (c) 2023 Qualcomm Innovation Center, Inc. All rights reserved.
+ *
+ * Permission to use, copy, modify, and/or distribute this software for any
+ * purpose with or without fee is hereby granted, provided that the above
+ * copyright notice and this permission notice appear in all copies.
+ *
  * THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
  * WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
  * MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
@@ -192,7 +195,7 @@ unsigned int nss_macsec_cmd_len[] = {
 
 unsigned int nss_macsec_fal_msg_handle(struct sdk_msg_header *header)
 {
-	unsigned int ret = SDK_RET_SUCCESS;
+	unsigned int ret = SDK_RET_NOT_SUPPORT;
 
 	if(header->sub_type >= sizeof(nss_macsec_cmd_len)/sizeof(nss_macsec_cmd_len[0])) {
 		printk("sub_type:0x%x is unvalid\n", header->sub_type);
@@ -230,32 +233,6 @@ unsigned int nss_macsec_fal_msg_handle(struct sdk_msg_header *header)
 			ret =
 			    nss_macsec_secy_interrupt_get(param->secy_id,
 							  &param->pint);
-		}
-		break;
-	case NSS_MACSEC_EMAC_INIT_CMD:{
-			struct nss_macsec_emac_init_cmd *param =
-			    (struct nss_macsec_emac_init_cmd *)(header + 1);
-			ret = nss_macsec_emac_init(param->secy_id);
-		}
-		break;
-	case NSS_MACSEC_SPEED_CMD:{
-			struct nss_macsec_speed_cmd *param =
-			    (struct nss_macsec_speed_cmd *)(header + 1);
-			ret = nss_macsec_speed(param->secy_id, param->speed);
-		}
-		break;
-	case NSS_MACSEC_EMAC_ENABLE_CMD:{
-			struct nss_macsec_emac_enable_cmd *param =
-			    (struct nss_macsec_emac_enable_cmd *)(header + 1);
-			ret =
-			    nss_macsec_emac_enable(param->secy_id,
-						   param->enable);
-		}
-		break;
-	case NSS_MACSEC_EMAC_RESET_CMD:{
-			struct nss_macsec_emac_reset_cmd *param =
-			    (struct nss_macsec_emac_reset_cmd *)(header + 1);
-			ret = nss_macsec_emac_reset(param->secy_id);
 		}
 		break;
 	case NSS_MACSEC_SECY_TX_SC_MIB_GET_CMD:{
@@ -590,68 +567,6 @@ unsigned int nss_macsec_fal_msg_handle(struct sdk_msg_header *header)
 							      p_in_used);
 		}
 		break;
-	case NSS_MACSEC_SECY_RX_SC_AN_ROLL_OVER_GET_CMD:{
-			struct nss_macsec_secy_rx_sc_an_roll_over_get_cmd *param
-			    =
-			    (struct nss_macsec_secy_rx_sc_an_roll_over_get_cmd
-			     *)(header + 1);
-			ret =
-			    nss_macsec_secy_rx_sc_an_roll_over_get(param->
-								   secy_id,
-								   param->
-								   channel,
-								   &param->
-								   penable);
-		}
-		break;
-	case NSS_MACSEC_SECY_RX_SC_AN_ROLL_OVER_SET_CMD:{
-			struct nss_macsec_secy_rx_sc_an_roll_over_set_cmd *param
-			    =
-			    (struct nss_macsec_secy_rx_sc_an_roll_over_set_cmd
-			     *)(header + 1);
-			ret =
-			    nss_macsec_secy_rx_sc_an_roll_over_set(param->
-								   secy_id,
-								   param->
-								   channel,
-								   param->
-								   enable);
-		}
-		break;
-	case NSS_MACSEC_SECY_RX_SC_START_STOP_TIME_GET_CMD:{
-			struct nss_macsec_secy_rx_sc_start_stop_time_get_cmd
-			    *param =
-			    (struct
-			     nss_macsec_secy_rx_sc_start_stop_time_get_cmd
-			     *)(header + 1);
-			ret =
-			    nss_macsec_secy_rx_sc_start_stop_time_get(param->
-								      secy_id,
-								      param->
-								      channel,
-								      &param->
-								      p_start_time,
-								      &param->
-								      p_stop_time);
-		}
-		break;
-	case NSS_MACSEC_SECY_RX_SC_START_STOP_TIME_SET_CMD:{
-			struct nss_macsec_secy_rx_sc_start_stop_time_set_cmd
-			    *param =
-			    (struct
-			     nss_macsec_secy_rx_sc_start_stop_time_set_cmd
-			     *)(header + 1);
-			ret =
-			    nss_macsec_secy_rx_sc_start_stop_time_set(param->
-								      secy_id,
-								      param->
-								      channel,
-								      param->
-								      start_time,
-								      param->
-								      stop_time);
-		}
-		break;
 	case NSS_MACSEC_SECY_RX_SA_CREATE_CMD:{
 			struct nss_macsec_secy_rx_sa_create_cmd *param =
 			    (struct nss_macsec_secy_rx_sa_create_cmd *)(header +
@@ -744,62 +659,6 @@ unsigned int nss_macsec_fal_msg_handle(struct sdk_msg_header *header)
 							      p_in_used);
 		}
 		break;
-	case NSS_MACSEC_SECY_RX_SA_START_STOP_TIME_GET_CMD:{
-			struct nss_macsec_secy_rx_sa_start_stop_time_get_cmd
-			    *param =
-			    (struct
-			     nss_macsec_secy_rx_sa_start_stop_time_get_cmd
-			     *)(header + 1);
-			ret =
-			    nss_macsec_secy_rx_sa_start_stop_time_get(param->
-								      secy_id,
-								      param->
-								      channel,
-								      param->an,
-								      &param->
-								      p_start_time,
-								      &param->
-								      p_stop_time);
-		}
-		break;
-	case NSS_MACSEC_SECY_RX_SA_START_STOP_TIME_SET_CMD:{
-			struct nss_macsec_secy_rx_sa_start_stop_time_set_cmd
-			    *param =
-			    (struct
-			     nss_macsec_secy_rx_sa_start_stop_time_set_cmd
-			     *)(header + 1);
-			ret =
-			    nss_macsec_secy_rx_sa_start_stop_time_set(param->
-								      secy_id,
-								      param->
-								      channel,
-								      param->an,
-								      param->
-								      start_time,
-								      param->
-								      stop_time);
-		}
-		break;
-	case NSS_MACSEC_SECY_RX_PN_THRESHOLD_GET_CMD:{
-			struct nss_macsec_secy_rx_pn_threshold_get_cmd *param =
-			    (struct nss_macsec_secy_rx_pn_threshold_get_cmd
-			     *)(header + 1);
-			ret =
-			    nss_macsec_secy_rx_pn_threshold_get(param->secy_id,
-								&param->
-								p_pn_threshold);
-		}
-		break;
-	case NSS_MACSEC_SECY_RX_PN_THRESHOLD_SET_CMD:{
-			struct nss_macsec_secy_rx_pn_threshold_set_cmd *param =
-			    (struct nss_macsec_secy_rx_pn_threshold_set_cmd
-			     *)(header + 1);
-			ret =
-			    nss_macsec_secy_rx_pn_threshold_set(param->secy_id,
-								param->
-								pn_threshold);
-		}
-		break;
 	case NSS_MACSEC_SECY_RX_REPLAY_PROTECT_GET_CMD:{
 			struct nss_macsec_secy_rx_replay_protect_get_cmd *param
 			    =
@@ -864,117 +723,6 @@ unsigned int nss_macsec_fal_msg_handle(struct sdk_msg_header *header)
 			    nss_macsec_secy_tx_reg_set(param->secy_id,
 						       param->addr,
 						       param->value);
-		}
-		break;
-	case NSS_MACSEC_SECY_TX_DROP_SC_SA_INVLID_GET_CMD:{
-			struct nss_macsec_secy_tx_drop_sc_sa_invlid_get_cmd
-			    *param =
-			    (struct nss_macsec_secy_tx_drop_sc_sa_invlid_get_cmd
-			     *)(header + 1);
-			ret =
-			    nss_macsec_secy_tx_drop_sc_sa_invalid_get(param->
-								     secy_id,
-								     &param->
-								     penable);
-		}
-		break;
-	case NSS_MACSEC_SECY_TX_DROP_SC_SA_INVLID_SET_CMD:{
-			struct nss_macsec_secy_tx_drop_sc_sa_invlid_set_cmd
-			    *param =
-			    (struct nss_macsec_secy_tx_drop_sc_sa_invlid_set_cmd
-			     *)(header + 1);
-			ret =
-			    nss_macsec_secy_tx_drop_sc_sa_invalid_set(param->
-								     secy_id,
-								     param->
-								     enable);
-		}
-		break;
-	case NSS_MACSEC_SECY_TX_UNMATCHED_USE_SC_0_GET_CMD:{
-			struct nss_macsec_secy_tx_unmatched_use_sc_0_get_cmd
-			    *param =
-			    (struct
-			     nss_macsec_secy_tx_unmatched_use_sc_0_get_cmd
-			     *)(header + 1);
-			ret =
-			    nss_macsec_secy_tx_unmatched_use_sc_0_get(param->
-								      secy_id,
-								      &param->
-								      penable);
-		}
-		break;
-	case NSS_MACSEC_SECY_TX_UNMATCHED_USE_SC_0_SET_CMD:{
-			struct nss_macsec_secy_tx_unmatched_use_sc_0_set_cmd
-			    *param =
-			    (struct
-			     nss_macsec_secy_tx_unmatched_use_sc_0_set_cmd
-			     *)(header + 1);
-			ret =
-			    nss_macsec_secy_tx_unmatched_use_sc_0_set(param->
-								      secy_id,
-								      param->
-								      enable);
-		}
-		break;
-	case NSS_MACSEC_SECY_TX_GCM_START_GET_CMD:{
-			struct nss_macsec_secy_tx_gcm_start_get_cmd *param =
-			    (struct nss_macsec_secy_tx_gcm_start_get_cmd
-			     *)(header + 1);
-			ret =
-			    nss_macsec_secy_tx_gcm_start_get(param->secy_id,
-							     &param->penable);
-		}
-		break;
-	case NSS_MACSEC_SECY_TX_GCM_START_SET_CMD:{
-			struct nss_macsec_secy_tx_gcm_start_set_cmd *param =
-			    (struct nss_macsec_secy_tx_gcm_start_set_cmd
-			     *)(header + 1);
-			ret =
-			    nss_macsec_secy_tx_gcm_start_set(param->secy_id,
-							     param->enable);
-		}
-		break;
-	case NSS_MACSEC_SECY_TX_DROP_CLASS_MISS_GET_CMD:{
-			struct nss_macsec_secy_tx_drop_class_miss_get_cmd *param
-			    =
-			    (struct nss_macsec_secy_tx_drop_class_miss_get_cmd
-			     *)(header + 1);
-			ret =
-			    nss_macsec_secy_tx_drop_class_miss_get(param->
-								   secy_id,
-								   &param->
-								   penable);
-		}
-		break;
-	case NSS_MACSEC_SECY_TX_DROP_CLASS_MISS_SET_CMD:{
-			struct nss_macsec_secy_tx_drop_class_miss_set_cmd *param
-			    =
-			    (struct nss_macsec_secy_tx_drop_class_miss_set_cmd
-			     *)(header + 1);
-			ret =
-			    nss_macsec_secy_tx_drop_class_miss_set(param->
-								   secy_id,
-								   param->
-								   enable);
-		}
-		break;
-	case NSS_MACSEC_SECY_TX_DROP_KAY_PKT_GET_CMD:{
-			struct nss_macsec_secy_tx_drop_kay_pkt_get_cmd *param =
-			    (struct nss_macsec_secy_tx_drop_kay_pkt_get_cmd
-			     *)(header + 1);
-			ret =
-			    nss_macsec_secy_tx_drop_kay_pkt_get(param->secy_id,
-								&param->
-								penable);
-		}
-		break;
-	case NSS_MACSEC_SECY_TX_DROP_KAY_PKT_SET_CMD:{
-			struct nss_macsec_secy_tx_drop_kay_pkt_set_cmd *param =
-			    (struct nss_macsec_secy_tx_drop_kay_pkt_set_cmd
-			     *)(header + 1);
-			ret =
-			    nss_macsec_secy_tx_drop_kay_pkt_set(param->secy_id,
-								param->enable);
 		}
 		break;
 	case NSS_MACSEC_SECY_TX_CTL_FILT_GET_CMD:{
@@ -1122,36 +870,6 @@ unsigned int nss_macsec_fal_msg_handle(struct sdk_msg_header *header)
 							 param->an);
 		}
 		break;
-	case NSS_MACSEC_SECY_TX_SC_AN_ROLL_OVER_EN_GET_CMD:{
-			struct nss_macsec_secy_tx_sc_an_roll_over_en_get_cmd
-			    *param =
-			    (struct
-			     nss_macsec_secy_tx_sc_an_roll_over_en_get_cmd
-			     *)(header + 1);
-			ret =
-			    nss_macsec_secy_tx_sc_an_roll_over_en_get(param->
-								      secy_id,
-								      param->
-								      channel,
-								      &param->
-								      penable);
-		}
-		break;
-	case NSS_MACSEC_SECY_TX_SC_AN_ROLL_OVER_EN_SET_CMD:{
-			struct nss_macsec_secy_tx_sc_an_roll_over_en_set_cmd
-			    *param =
-			    (struct
-			     nss_macsec_secy_tx_sc_an_roll_over_en_set_cmd
-			     *)(header + 1);
-			ret =
-			    nss_macsec_secy_tx_sc_an_roll_over_en_set(param->
-								      secy_id,
-								      param->
-								      channel,
-								      param->
-								      enable);
-		}
-		break;
 	case NSS_MACSEC_SECY_TX_SC_IN_USED_GET_CMD:{
 			struct nss_macsec_secy_tx_sc_in_used_get_cmd *param =
 			    (struct nss_macsec_secy_tx_sc_in_used_get_cmd
@@ -1238,40 +956,6 @@ unsigned int nss_macsec_fal_msg_handle(struct sdk_msg_header *header)
 							  param->sci_len);
 		}
 		break;
-	case NSS_MACSEC_SECY_TX_SC_START_STOP_TIME_GET_CMD:{
-			struct nss_macsec_secy_tx_sc_start_stop_time_get_cmd
-			    *param =
-			    (struct
-			     nss_macsec_secy_tx_sc_start_stop_time_get_cmd
-			     *)(header + 1);
-			ret =
-			    nss_macsec_secy_tx_sc_start_stop_time_get(param->
-								      secy_id,
-								      param->
-								      channel,
-								      &param->
-								      p_start_time,
-								      &param->
-								      p_stop_time);
-		}
-		break;
-	case NSS_MACSEC_SECY_TX_SC_START_STOP_TIME_SET_CMD:{
-			struct nss_macsec_secy_tx_sc_start_stop_time_set_cmd
-			    *param =
-			    (struct
-			     nss_macsec_secy_tx_sc_start_stop_time_set_cmd
-			     *)(header + 1);
-			ret =
-			    nss_macsec_secy_tx_sc_start_stop_time_set(param->
-								      secy_id,
-								      param->
-								      channel,
-								      param->
-								      start_time,
-								      param->
-								      stop_time);
-		}
-		break;
 	case NSS_MACSEC_SECY_TX_SA_CREATE_CMD:{
 			struct nss_macsec_secy_tx_sa_create_cmd *param =
 			    (struct nss_macsec_secy_tx_sa_create_cmd *)(header +
@@ -1356,42 +1040,6 @@ unsigned int nss_macsec_fal_msg_handle(struct sdk_msg_header *header)
 							      p_in_used);
 		}
 		break;
-	case NSS_MACSEC_SECY_TX_SA_START_STOP_TIME_GET_CMD:{
-			struct nss_macsec_secy_tx_sa_start_stop_time_get_cmd
-			    *param =
-			    (struct
-			     nss_macsec_secy_tx_sa_start_stop_time_get_cmd
-			     *)(header + 1);
-			ret =
-			    nss_macsec_secy_tx_sa_start_stop_time_get(param->
-								      secy_id,
-								      param->
-								      channel,
-								      param->an,
-								      &param->
-								      p_start_time,
-								      &param->
-								      p_stop_time);
-		}
-		break;
-	case NSS_MACSEC_SECY_TX_SA_START_STOP_TIME_SET_CMD:{
-			struct nss_macsec_secy_tx_sa_start_stop_time_set_cmd
-			    *param =
-			    (struct
-			     nss_macsec_secy_tx_sa_start_stop_time_set_cmd
-			     *)(header + 1);
-			ret =
-			    nss_macsec_secy_tx_sa_start_stop_time_set(param->
-								      secy_id,
-								      param->
-								      channel,
-								      param->an,
-								      param->
-								      start_time,
-								      param->
-								      stop_time);
-		}
-		break;
 	case NSS_MACSEC_SECY_TX_SAK_GET_CMD:{
 			struct nss_macsec_secy_tx_sak_get_cmd *param =
 			    (struct nss_macsec_secy_tx_sak_get_cmd *)(header +
@@ -1412,75 +1060,6 @@ unsigned int nss_macsec_fal_msg_handle(struct sdk_msg_header *header)
 						       param->channel,
 						       param->an,
 						       &param->pentry);
-		}
-		break;
-	case NSS_MACSEC_SECY_TX_QTAG_PARSE_SET_CMD:{
-			struct nss_macsec_secy_tx_qtag_parse_set_cmd *param =
-			    (struct nss_macsec_secy_tx_qtag_parse_set_cmd
-			     *)(header + 1);
-			ret =
-			    nss_macsec_secy_tx_qtag_parse_set(param->secy_id,
-							      &param->pentry);
-		}
-		break;
-	case NSS_MACSEC_SECY_TX_QTAG_PARSE_GET_CMD:{
-			struct nss_macsec_secy_tx_qtag_parse_get_cmd *param =
-			    (struct nss_macsec_secy_tx_qtag_parse_get_cmd
-			     *)(header + 1);
-			ret =
-			    nss_macsec_secy_tx_qtag_parse_get(param->secy_id,
-							      &param->pentry);
-		}
-		break;
-	case NSS_MACSEC_SECY_TX_STAG_PARSE_SET_CMD:{
-			struct nss_macsec_secy_tx_stag_parse_set_cmd *param =
-			    (struct nss_macsec_secy_tx_stag_parse_set_cmd
-			     *)(header + 1);
-			ret =
-			    nss_macsec_secy_tx_stag_parse_set(param->secy_id,
-							      &param->pentry);
-		}
-		break;
-	case NSS_MACSEC_SECY_TX_STAG_PARSE_GET_CMD:{
-			struct nss_macsec_secy_tx_stag_parse_get_cmd *param =
-			    (struct nss_macsec_secy_tx_stag_parse_get_cmd
-			     *)(header + 1);
-			ret =
-			    nss_macsec_secy_tx_stag_parse_get(param->secy_id,
-							      &param->pentry);
-		}
-		break;
-	case NSS_MACSEC_SECY_TX_PN_THRESHOLD_GET_CMD:{
-			struct nss_macsec_secy_tx_pn_threshold_get_cmd *param =
-			    (struct nss_macsec_secy_tx_pn_threshold_get_cmd
-			     *)(header + 1);
-			ret =
-			    nss_macsec_secy_tx_pn_threshold_get(param->secy_id,
-								&param->
-								p_pn_threshold);
-		}
-		break;
-	case NSS_MACSEC_SECY_TX_PN_THRESHOLD_SET_CMD:{
-			struct nss_macsec_secy_tx_pn_threshold_set_cmd *param =
-			    (struct nss_macsec_secy_tx_pn_threshold_set_cmd
-			     *)(header + 1);
-			ret =
-			    nss_macsec_secy_tx_pn_threshold_set(param->secy_id,
-								param->
-								pn_threshold);
-		}
-		break;
-	case NSS_MACSEC_SECY_RESET_CMD:{
-			struct nss_macsec_secy_reset_cmd *param =
-			    (struct nss_macsec_secy_reset_cmd *)(header + 1);
-			ret = nss_macsec_secy_reset(param->secy_id);
-		}
-		break;
-	case NSS_MACSEC_SECY_TX_SW_RESET_CMD:{
-			struct nss_macsec_secy_tx_sw_reset_cmd *param =
-			    (struct nss_macsec_secy_tx_sw_reset_cmd *)(header +
-								       1);
-			ret = nss_macsec_secy_tx_sw_reset(param->secy_id);
 		}
 		break;
 	case NSS_MACSEC_SECY_INIT_CMD:{
@@ -1534,16 +1113,6 @@ unsigned int nss_macsec_fal_msg_handle(struct sdk_msg_header *header)
 								   secy_id,
 								   param->
 								   enable);
-		}
-		break;
-	case NSS_MACSEC_SECY_IP_VERSION_GET_CMD:{
-			struct nss_macsec_secy_ip_version_get_cmd *param =
-			    (struct nss_macsec_secy_ip_version_get_cmd *)(header
-									  + 1);
-			ret =
-			    nss_macsec_secy_ip_version_get(param->secy_id,
-							   param->ver_str,
-							   param->ver_str_len);
 		}
 		break;
 	case NSS_MACSEC_SECY_CIPHER_SUITE_GET_CMD:{
@@ -1940,6 +1509,446 @@ unsigned int nss_macsec_fal_msg_handle(struct sdk_msg_header *header)
 							      param->next_pn);
 		}
 		break;
+#ifdef MACSEC_IPQ806X_SUPPORT
+	case NSS_MACSEC_EMAC_INIT_CMD:{
+			struct nss_macsec_emac_init_cmd *param =
+			    (struct nss_macsec_emac_init_cmd *)(header + 1);
+
+			ret = nss_macsec_emac_init(param->secy_id);
+		}
+		break;
+	case NSS_MACSEC_SPEED_CMD:{
+			struct nss_macsec_speed_cmd *param =
+			    (struct nss_macsec_speed_cmd *)(header + 1);
+
+			ret = nss_macsec_speed(param->secy_id, param->speed);
+		}
+		break;
+	case NSS_MACSEC_EMAC_ENABLE_CMD:{
+			struct nss_macsec_emac_enable_cmd *param =
+			    (struct nss_macsec_emac_enable_cmd *)(header + 1);
+
+			ret =
+			    nss_macsec_emac_enable(param->secy_id,
+						   param->enable);
+		}
+		break;
+	case NSS_MACSEC_EMAC_RESET_CMD:{
+			struct nss_macsec_emac_reset_cmd *param =
+			    (struct nss_macsec_emac_reset_cmd *)(header + 1);
+
+			ret = nss_macsec_emac_reset(param->secy_id);
+		}
+		break;
+	case NSS_MACSEC_SECY_RX_SC_AN_ROLL_OVER_GET_CMD:{
+			struct nss_macsec_secy_rx_sc_an_roll_over_get_cmd *param
+			    =
+			    (struct nss_macsec_secy_rx_sc_an_roll_over_get_cmd
+			     *)(header + 1);
+			ret =
+			    nss_macsec_secy_rx_sc_an_roll_over_get(param->
+								   secy_id,
+								   param->
+								   channel,
+								   &param->
+								   penable);
+		}
+		break;
+	case NSS_MACSEC_SECY_RX_SC_AN_ROLL_OVER_SET_CMD:{
+			struct nss_macsec_secy_rx_sc_an_roll_over_set_cmd *param
+			    =
+			    (struct nss_macsec_secy_rx_sc_an_roll_over_set_cmd
+			     *)(header + 1);
+			ret =
+			    nss_macsec_secy_rx_sc_an_roll_over_set(param->
+								   secy_id,
+								   param->
+								   channel,
+								   param->
+								   enable);
+		}
+		break;
+	case NSS_MACSEC_SECY_RX_SC_START_STOP_TIME_GET_CMD:{
+			struct nss_macsec_secy_rx_sc_start_stop_time_get_cmd
+			    *param =
+			    (struct
+			     nss_macsec_secy_rx_sc_start_stop_time_get_cmd
+			     *)(header + 1);
+			ret =
+			    nss_macsec_secy_rx_sc_start_stop_time_get(param->
+								      secy_id,
+								      param->
+								      channel,
+								      &param->
+								      p_start_time,
+								      &param->
+								      p_stop_time);
+		}
+		break;
+	case NSS_MACSEC_SECY_RX_SC_START_STOP_TIME_SET_CMD:{
+			struct nss_macsec_secy_rx_sc_start_stop_time_set_cmd
+			    *param =
+			    (struct
+			     nss_macsec_secy_rx_sc_start_stop_time_set_cmd
+			     *)(header + 1);
+			ret =
+			    nss_macsec_secy_rx_sc_start_stop_time_set(param->
+								      secy_id,
+								      param->
+								      channel,
+								      param->
+								      start_time,
+								      param->
+								      stop_time);
+		}
+		break;
+	case NSS_MACSEC_SECY_RX_SA_START_STOP_TIME_GET_CMD:{
+			struct nss_macsec_secy_rx_sa_start_stop_time_get_cmd
+			    *param =
+			    (struct
+			     nss_macsec_secy_rx_sa_start_stop_time_get_cmd
+			     *)(header + 1);
+			ret =
+			    nss_macsec_secy_rx_sa_start_stop_time_get(param->
+								      secy_id,
+								      param->
+								      channel,
+								      param->an,
+								      &param->
+								      p_start_time,
+								      &param->
+								      p_stop_time);
+		}
+		break;
+	case NSS_MACSEC_SECY_RX_SA_START_STOP_TIME_SET_CMD:{
+			struct nss_macsec_secy_rx_sa_start_stop_time_set_cmd
+			    *param =
+			    (struct
+			     nss_macsec_secy_rx_sa_start_stop_time_set_cmd
+			     *)(header + 1);
+			ret =
+			    nss_macsec_secy_rx_sa_start_stop_time_set(param->
+								      secy_id,
+								      param->
+								      channel,
+								      param->an,
+								      param->
+								      start_time,
+								      param->
+								      stop_time);
+		}
+		break;
+	case NSS_MACSEC_SECY_RX_PN_THRESHOLD_GET_CMD:{
+			struct nss_macsec_secy_rx_pn_threshold_get_cmd *param =
+			    (struct nss_macsec_secy_rx_pn_threshold_get_cmd
+			     *)(header + 1);
+			ret =
+			    nss_macsec_secy_rx_pn_threshold_get(param->secy_id,
+								&param->
+								p_pn_threshold);
+		}
+		break;
+	case NSS_MACSEC_SECY_RX_PN_THRESHOLD_SET_CMD:{
+			struct nss_macsec_secy_rx_pn_threshold_set_cmd *param =
+			    (struct nss_macsec_secy_rx_pn_threshold_set_cmd
+			     *)(header + 1);
+			ret =
+			    nss_macsec_secy_rx_pn_threshold_set(param->secy_id,
+								param->
+								pn_threshold);
+		}
+		break;
+	case NSS_MACSEC_SECY_TX_DROP_SC_SA_INVLID_GET_CMD:{
+			struct nss_macsec_secy_tx_drop_sc_sa_invlid_get_cmd
+			    *param =
+			    (struct nss_macsec_secy_tx_drop_sc_sa_invlid_get_cmd
+			     *)(header + 1);
+			ret =
+			    nss_macsec_secy_tx_drop_sc_sa_invalid_get(param->
+								     secy_id,
+								     &param->
+								     penable);
+		}
+		break;
+	case NSS_MACSEC_SECY_TX_DROP_SC_SA_INVLID_SET_CMD:{
+			struct nss_macsec_secy_tx_drop_sc_sa_invlid_set_cmd
+			    *param =
+			    (struct nss_macsec_secy_tx_drop_sc_sa_invlid_set_cmd
+			     *)(header + 1);
+			ret =
+			    nss_macsec_secy_tx_drop_sc_sa_invalid_set(param->
+								     secy_id,
+								     param->
+								     enable);
+		}
+		break;
+	case NSS_MACSEC_SECY_TX_UNMATCHED_USE_SC_0_GET_CMD:{
+			struct nss_macsec_secy_tx_unmatched_use_sc_0_get_cmd
+			    *param =
+			    (struct
+			     nss_macsec_secy_tx_unmatched_use_sc_0_get_cmd
+			     *)(header + 1);
+			ret =
+			    nss_macsec_secy_tx_unmatched_use_sc_0_get(param->
+								      secy_id,
+								      &param->
+								      penable);
+		}
+		break;
+	case NSS_MACSEC_SECY_TX_UNMATCHED_USE_SC_0_SET_CMD:{
+			struct nss_macsec_secy_tx_unmatched_use_sc_0_set_cmd
+			    *param =
+			    (struct
+			     nss_macsec_secy_tx_unmatched_use_sc_0_set_cmd
+			     *)(header + 1);
+			ret =
+			    nss_macsec_secy_tx_unmatched_use_sc_0_set(param->
+								      secy_id,
+								      param->
+								      enable);
+		}
+		break;
+	case NSS_MACSEC_SECY_TX_GCM_START_GET_CMD:{
+			struct nss_macsec_secy_tx_gcm_start_get_cmd *param =
+			    (struct nss_macsec_secy_tx_gcm_start_get_cmd
+			     *)(header + 1);
+			ret =
+			    nss_macsec_secy_tx_gcm_start_get(param->secy_id,
+							     &param->penable);
+		}
+		break;
+	case NSS_MACSEC_SECY_TX_GCM_START_SET_CMD:{
+			struct nss_macsec_secy_tx_gcm_start_set_cmd *param =
+			    (struct nss_macsec_secy_tx_gcm_start_set_cmd
+			     *)(header + 1);
+			ret =
+			    nss_macsec_secy_tx_gcm_start_set(param->secy_id,
+							     param->enable);
+		}
+		break;
+	case NSS_MACSEC_SECY_TX_DROP_CLASS_MISS_GET_CMD:{
+			struct nss_macsec_secy_tx_drop_class_miss_get_cmd *param
+			    =
+			    (struct nss_macsec_secy_tx_drop_class_miss_get_cmd
+			     *)(header + 1);
+			ret =
+			    nss_macsec_secy_tx_drop_class_miss_get(param->
+								   secy_id,
+								   &param->
+								   penable);
+		}
+		break;
+	case NSS_MACSEC_SECY_TX_DROP_CLASS_MISS_SET_CMD:{
+			struct nss_macsec_secy_tx_drop_class_miss_set_cmd *param
+			    =
+			    (struct nss_macsec_secy_tx_drop_class_miss_set_cmd
+			     *)(header + 1);
+			ret =
+			    nss_macsec_secy_tx_drop_class_miss_set(param->
+								   secy_id,
+								   param->
+								   enable);
+		}
+		break;
+	case NSS_MACSEC_SECY_TX_DROP_KAY_PKT_GET_CMD:{
+			struct nss_macsec_secy_tx_drop_kay_pkt_get_cmd *param =
+			    (struct nss_macsec_secy_tx_drop_kay_pkt_get_cmd
+			     *)(header + 1);
+			ret =
+			    nss_macsec_secy_tx_drop_kay_pkt_get(param->secy_id,
+								&param->
+								penable);
+		}
+		break;
+	case NSS_MACSEC_SECY_TX_DROP_KAY_PKT_SET_CMD:{
+			struct nss_macsec_secy_tx_drop_kay_pkt_set_cmd *param =
+			    (struct nss_macsec_secy_tx_drop_kay_pkt_set_cmd
+			     *)(header + 1);
+			ret =
+			    nss_macsec_secy_tx_drop_kay_pkt_set(param->secy_id,
+								param->enable);
+		}
+		break;
+	case NSS_MACSEC_SECY_TX_SC_AN_ROLL_OVER_EN_GET_CMD:{
+			struct nss_macsec_secy_tx_sc_an_roll_over_en_get_cmd
+			    *param =
+			    (struct
+			     nss_macsec_secy_tx_sc_an_roll_over_en_get_cmd
+			     *)(header + 1);
+			ret =
+			    nss_macsec_secy_tx_sc_an_roll_over_en_get(param->
+								      secy_id,
+								      param->
+								      channel,
+								      &param->
+								      penable);
+		}
+		break;
+	case NSS_MACSEC_SECY_TX_SC_AN_ROLL_OVER_EN_SET_CMD:{
+			struct nss_macsec_secy_tx_sc_an_roll_over_en_set_cmd
+			    *param =
+			    (struct
+			     nss_macsec_secy_tx_sc_an_roll_over_en_set_cmd
+			     *)(header + 1);
+			ret =
+			    nss_macsec_secy_tx_sc_an_roll_over_en_set(param->
+								      secy_id,
+								      param->
+								      channel,
+								      param->
+								      enable);
+		}
+		break;
+	case NSS_MACSEC_SECY_TX_SC_START_STOP_TIME_GET_CMD:{
+			struct nss_macsec_secy_tx_sc_start_stop_time_get_cmd
+			    *param =
+			    (struct
+			     nss_macsec_secy_tx_sc_start_stop_time_get_cmd
+			     *)(header + 1);
+			ret =
+			    nss_macsec_secy_tx_sc_start_stop_time_get(param->
+								      secy_id,
+								      param->
+								      channel,
+								      &param->
+								      p_start_time,
+								      &param->
+								      p_stop_time);
+		}
+		break;
+	case NSS_MACSEC_SECY_TX_SC_START_STOP_TIME_SET_CMD:{
+			struct nss_macsec_secy_tx_sc_start_stop_time_set_cmd
+			    *param =
+			    (struct
+			     nss_macsec_secy_tx_sc_start_stop_time_set_cmd
+			     *)(header + 1);
+			ret =
+			    nss_macsec_secy_tx_sc_start_stop_time_set(param->
+								      secy_id,
+								      param->
+								      channel,
+								      param->
+								      start_time,
+								      param->
+								      stop_time);
+		}
+		break;
+	case NSS_MACSEC_SECY_TX_SA_START_STOP_TIME_GET_CMD:{
+			struct nss_macsec_secy_tx_sa_start_stop_time_get_cmd
+			    *param =
+			    (struct
+			     nss_macsec_secy_tx_sa_start_stop_time_get_cmd
+			     *)(header + 1);
+			ret =
+			    nss_macsec_secy_tx_sa_start_stop_time_get(param->
+								      secy_id,
+								      param->
+								      channel,
+								      param->an,
+								      &param->
+								      p_start_time,
+								      &param->
+								      p_stop_time);
+		}
+		break;
+	case NSS_MACSEC_SECY_TX_SA_START_STOP_TIME_SET_CMD:{
+			struct nss_macsec_secy_tx_sa_start_stop_time_set_cmd
+			    *param =
+			    (struct
+			     nss_macsec_secy_tx_sa_start_stop_time_set_cmd
+			     *)(header + 1);
+			ret =
+			    nss_macsec_secy_tx_sa_start_stop_time_set(param->
+								      secy_id,
+								      param->
+								      channel,
+								      param->an,
+								      param->
+								      start_time,
+								      param->
+								      stop_time);
+		}
+		break;
+	case NSS_MACSEC_SECY_TX_QTAG_PARSE_SET_CMD:{
+			struct nss_macsec_secy_tx_qtag_parse_set_cmd *param =
+			    (struct nss_macsec_secy_tx_qtag_parse_set_cmd
+			     *)(header + 1);
+			ret =
+			    nss_macsec_secy_tx_qtag_parse_set(param->secy_id,
+							      &param->pentry);
+		}
+		break;
+	case NSS_MACSEC_SECY_TX_QTAG_PARSE_GET_CMD:{
+			struct nss_macsec_secy_tx_qtag_parse_get_cmd *param =
+			    (struct nss_macsec_secy_tx_qtag_parse_get_cmd
+			     *)(header + 1);
+			ret =
+			    nss_macsec_secy_tx_qtag_parse_get(param->secy_id,
+							      &param->pentry);
+		}
+		break;
+	case NSS_MACSEC_SECY_TX_STAG_PARSE_SET_CMD:{
+			struct nss_macsec_secy_tx_stag_parse_set_cmd *param =
+			    (struct nss_macsec_secy_tx_stag_parse_set_cmd
+			     *)(header + 1);
+			ret =
+			    nss_macsec_secy_tx_stag_parse_set(param->secy_id,
+							      &param->pentry);
+		}
+		break;
+	case NSS_MACSEC_SECY_TX_STAG_PARSE_GET_CMD:{
+			struct nss_macsec_secy_tx_stag_parse_get_cmd *param =
+			    (struct nss_macsec_secy_tx_stag_parse_get_cmd
+			     *)(header + 1);
+			ret =
+			    nss_macsec_secy_tx_stag_parse_get(param->secy_id,
+							      &param->pentry);
+		}
+		break;
+	case NSS_MACSEC_SECY_TX_PN_THRESHOLD_GET_CMD:{
+			struct nss_macsec_secy_tx_pn_threshold_get_cmd *param =
+			    (struct nss_macsec_secy_tx_pn_threshold_get_cmd
+			     *)(header + 1);
+			ret =
+			    nss_macsec_secy_tx_pn_threshold_get(param->secy_id,
+								&param->
+								p_pn_threshold);
+		}
+		break;
+	case NSS_MACSEC_SECY_TX_PN_THRESHOLD_SET_CMD:{
+			struct nss_macsec_secy_tx_pn_threshold_set_cmd *param =
+			    (struct nss_macsec_secy_tx_pn_threshold_set_cmd
+			     *)(header + 1);
+			ret =
+			    nss_macsec_secy_tx_pn_threshold_set(param->secy_id,
+								param->
+								pn_threshold);
+		}
+		break;
+	case NSS_MACSEC_SECY_RESET_CMD:{
+			struct nss_macsec_secy_reset_cmd *param =
+			    (struct nss_macsec_secy_reset_cmd *)(header + 1);
+			ret = nss_macsec_secy_reset(param->secy_id);
+		}
+		break;
+	case NSS_MACSEC_SECY_TX_SW_RESET_CMD:{
+			struct nss_macsec_secy_tx_sw_reset_cmd *param =
+			    (struct nss_macsec_secy_tx_sw_reset_cmd *)(header +
+								       1);
+			ret = nss_macsec_secy_tx_sw_reset(param->secy_id);
+		}
+		break;
+	case NSS_MACSEC_SECY_IP_VERSION_GET_CMD:{
+			struct nss_macsec_secy_ip_version_get_cmd *param =
+			    (struct nss_macsec_secy_ip_version_get_cmd *)(header
+									  + 1);
+			ret =
+			    nss_macsec_secy_ip_version_get(param->secy_id,
+							   param->ver_str,
+							   param->ver_str_len);
+		}
+		break;
+#endif
 	default:
 		break;
 	}

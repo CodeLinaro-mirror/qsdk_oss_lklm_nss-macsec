@@ -23,23 +23,17 @@
 #include <net/sock.h>
 #include <asm/io.h>
 #include <linux/version.h>
-#if (LINUX_VERSION_CODE < KERNEL_VERSION(3, 14, 0))
-#include <mach/msm_iomap.h>
-#else
 #include <linux/of.h>
 #include <linux/of_mdio.h>
-#ifdef MACSEC_IPQ806X_SUPPORT
-#include <soc/qcom/socinfo.h>
-#endif
-#endif
-
 #include <linux/platform_device.h>
 #include <linux/resource.h>
 #include <linux/types.h>
 #include <linux/errno.h>
 #include <linux/notifier.h>
-
+#ifdef MACSEC_IPQ806X_SUPPORT
+#include <soc/qcom/socinfo.h>
 #include "nss_macsec_emac.h"
+#endif
 #include "nss_macsec_sdk_api.h"
 #include "nss_macsec_fal_api.h"
 #include "nss_macsec_utility.h"
@@ -55,6 +49,8 @@ static struct sock *sdk_nl_sk = NULL;
 
 static bool phy_driver_flag[MACSEC_DEVICE_NUM] = {FALSE, FALSE, FALSE, FALSE};
 static bool secy_phy_flag;
+
+#ifdef MACSEC_IPQ806X_SUPPORT
 /**
  * @brief MACSEC driver context
  */
@@ -66,7 +62,6 @@ static uint32_t macsec_notifier_register_status = 0;
 static uint32_t nss_macsec_pre_init_flag = 0;
 
 
-#ifdef MACSEC_IPQ806X_SUPPORT
 static int macsec_ncb(struct notifier_block *nb, unsigned long value,
 		      void *priv)
 {
@@ -87,7 +82,6 @@ static int macsec_ncb(struct notifier_block *nb, unsigned long value,
 static struct notifier_block macsec_notifier __attribute__ ((unused)) = {
 	.notifier_call = macsec_ncb,
 };
-#endif
 
 unsigned int nss_macsec_device_exist(unsigned int dev_id)
 {
@@ -122,6 +116,7 @@ int nss_macsec_reg_write(unsigned int dev_id, unsigned int reg_addr,
 				 (reg_addr)));
 	return 0;
 }
+#endif
 
 static unsigned int nss_macsec_msg_handle(void *msg_data, unsigned int *sync)
 {
@@ -151,11 +146,7 @@ static void nss_macsec_netlink_recv(struct sk_buff *__skb)
 	void *msg_data;
 	u32 pid = 0, msg_type = 0, sync = 0, ret = 0, msg_len = 0;
 
-#if (LINUX_VERSION_CODE >= KERNEL_VERSION(3, 14, 0))
 	if ((skb = skb_clone(__skb, GFP_KERNEL)) != NULL) {
-#else
-	if ((skb = skb_get(__skb)) != NULL) {
-#endif
 		nlh = nlmsg_hdr(skb);
 		pid = nlh->nlmsg_pid;
 		msg_data = NLMSG_DATA(nlh);
@@ -178,11 +169,7 @@ static void nss_macsec_netlink_recv(struct sk_buff *__skb)
 			return;
 		}
 
-#if (LINUX_VERSION_CODE >= KERNEL_VERSION(3, 14, 0))
 		NETLINK_CB(skb).portid = 0; /* from kernel */
-#else
-		NETLINK_CB(skb).pid = 0;		/* from kernel */
-#endif
 		NETLINK_CB(skb).dst_group = 0;	/* unicast */
 		netlink_unicast(sdk_nl_sk, skb, pid, MSG_DONTWAIT);
 	}
@@ -192,20 +179,11 @@ static void nss_macsec_netlink_recv(struct sk_buff *__skb)
 
 static int nss_macsec_netlink_init(void)
 {
-#if (LINUX_VERSION_CODE >= KERNEL_VERSION(3, 14, 0))
 	struct netlink_kernel_cfg cfg = {
 			.input			= nss_macsec_netlink_recv,
 	};
 
 	sdk_nl_sk = netlink_kernel_create(&init_net, NETLINK_SDK, &cfg);
-#else
-	sdk_nl_sk = netlink_kernel_create(&init_net,
-						NETLINK_SDK,
-						0,
-						nss_macsec_netlink_recv,
-						NULL, THIS_MODULE);
-#endif
-
 	if (sdk_nl_sk == NULL) {
 		printk("Create netlink socket fail\n");
 		return -ENODEV;
@@ -243,7 +221,6 @@ int nss_macsec_phy_mdio_read(u32 secy_id, u32 reg_addr, u16 *val)
 	return 0;
 }
 
-
 g_error_t nss_macsec_dt_secy_id_get(u8 *dev_name, u32 *secy_id)
 {
 	u32 secy_idx, phy_addr = -1;
@@ -258,11 +235,7 @@ g_error_t nss_macsec_dt_secy_id_get(u8 *dev_name, u32 *secy_id)
 
 	/* get phy address by net device */
 	if (netdev->phydev) {
-#if (LINUX_VERSION_CODE < KERNEL_VERSION(4, 5, 0))
-		phy_addr = netdev->phydev->addr;
-#else
 		phy_addr = netdev->phydev->mdio.addr;
-#endif
 	}
 
 	/* find secy_id by phy address */
@@ -311,15 +284,10 @@ static void nss_macsec_netlink_fini(void)
 	}
 }
 
-#if (LINUX_VERSION_CODE >= KERNEL_VERSION(3, 14, 0))
 static int nss_macsec_dt_init(uint32_t dev_id)
 {
 	int ret = 0;
-	unsigned int mem_start, mem_len;
-	void __iomem *mmap_io_addr = NULL;
 	struct device_node *nss_macsec_node = NULL;
-	const __be32 *reg_cfg;
-	unsigned int len = 0;
 	char dev_name[32];
 	unsigned int phy_address;
 
@@ -344,6 +312,12 @@ static int nss_macsec_dt_init(uint32_t dev_id)
 		return ret;
 	}
 /* end for Napa masec*/
+
+#ifdef MACSEC_IPQ806X_SUPPORT
+	unsigned int mem_start, mem_len;
+	void __iomem *mmap_io_addr = NULL;
+	const __be32 *reg_cfg;
+	unsigned int len = 0;
 
 	reg_cfg = of_get_property(nss_macsec_node, "reg", &len);
 	if (!reg_cfg) {
@@ -370,9 +344,7 @@ static int nss_macsec_dt_init(uint32_t dev_id)
 	macsec_ctx.macsec_base[dev_id] = mmap_io_addr;
 
 	if (nss_macsec_pre_init_flag == 0) {
-#ifdef MACSEC_IPQ806X_SUPPORT
 		nss_macsec_pre_init();
-#endif
 		nss_macsec_pre_init_flag = 1;
 	}
 
@@ -380,12 +352,10 @@ static int nss_macsec_dt_init(uint32_t dev_id)
 	nss_macsec_secy_init(dev_id);
 
 	if (macsec_notifier_register_status == 0) {
-#ifdef MACSEC_IPQ806X_SUPPORT
 		nss_gmac_link_state_change_notify_register(&macsec_notifier);
-#endif
 		macsec_notifier_register_status = 1;
 	}
-
+#endif
 	macsec_trace("macsec.%d probe done\n", dev_id);
 	return ret;
 
@@ -393,7 +363,6 @@ static int nss_macsec_dt_init(uint32_t dev_id)
 
 static int nss_macsec_clean(void)
 {
-	uint32_t dev_id = 0;
 	int ret = 0, secy_id = 0;
 
 	if (secy_phy_flag == TRUE) {
@@ -402,11 +371,12 @@ static int nss_macsec_clean(void)
 				nss_macsec_secy_driver_cleanup(secy_id);
 		}
 	} else {
-		if (macsec_notifier_register_status) {
 #ifdef MACSEC_IPQ806X_SUPPORT
+		uint32_t dev_id = 0;
+
+		if (macsec_notifier_register_status) {
 			nss_gmac_link_state_change_notify_unregister(
 				&macsec_notifier);
-#endif
 			macsec_notifier_register_status = 0;
 		}
 
@@ -416,97 +386,21 @@ static int nss_macsec_clean(void)
 				NSS_MACSEC_BASE+(NSS_MACSEC_REG_LEN*dev_id),
 					    NSS_MACSEC_REG_LEN);
 		}
+#endif
 	}
 	return ret;
 }
-#endif
-
-#if (LINUX_VERSION_CODE < KERNEL_VERSION(3, 14, 0))
-static int nss_macsec_probe(struct platform_device *pdev)
-{
-	int ret = 0;
-	unsigned int mem_start, mem_len;
-	void __iomem *mmap_io_addr = NULL;
-
-	if (nss_macsec_pre_init_flag == 0) {
-#ifdef MACSEC_IPQ806X_SUPPORT
-		nss_macsec_pre_init();
-#endif
-		nss_macsec_pre_init_flag = 1;
-	}
-
-	mem_start = pdev->resource[0].start;
-	mem_len = pdev->resource[0].end - mem_start + 1;
-	if (!request_mem_region(mem_start, mem_len, pdev->name)) {
-		macsec_warning("%s Unable to request resource.", __func__);
-		return -EIO;
-	}
-
-	mmap_io_addr = ioremap_nocache(mem_start, mem_len);
-	if (!mmap_io_addr) {
-		macsec_warning("%s ioremap fail.", __func__);
-		return -EIO;
-	}
-	macsec_trace("macsec.%d phy_addr:0x%x len:0x%x mem_start:%p\n",
-		     pdev->id, mem_start, mem_len, mmap_io_addr);
-
-	macsec_ctx.macsec_base[pdev->id] = mmap_io_addr;
-
-	/* Invoke Macsec Initialization API */
-	nss_macsec_secy_init(pdev->id);
-
-	if (macsec_notifier_register_status == 0) {
-#ifdef MACSEC_IPQ806X_SUPPORT
-		nss_gmac_link_state_change_notify_register(&macsec_notifier);
-#endif
-		macsec_notifier_register_status = 1;
-	}
-
-	macsec_trace("macsec.%d probe done\n", pdev->id);
-	return ret;
-}
-
-static int nss_macsec_remove(struct platform_device *pdev)
-{
-	unsigned int mem_start, mem_len;
-
-	macsec_trace("%s for dev_id:%d\n", __func__, pdev->id);
-	mem_start = pdev->resource[0].start;
-	mem_len = pdev->resource[0].end - mem_start + 1;
-
-	if (macsec_notifier_register_status) {
-#ifdef MACSEC_IPQ806X_SUPPORT
-		nss_gmac_link_state_change_notify_unregister(&macsec_notifier);
-#endif
-		macsec_notifier_register_status = 0;
-	}
-	iounmap(macsec_ctx.macsec_base[pdev->id]);
-	release_mem_region(mem_start, mem_len);
-	return 0;
-}
-
-/**
- * @brief Linux Platform driver for MACSEC
- */
-static struct platform_driver nss_macsec_drv __attribute__ ((unused)) = {
-	.probe = nss_macsec_probe,
-	.remove = nss_macsec_remove,
-	.driver = {
-		   .name = "nss-macsec",
-		   .owner = THIS_MODULE,
-		   },
-};
-#endif
 
 static int __init nss_macsec_init_module(void)
 {
 	uint32_t dev_id = 0;
 	int ret = 0;
 
+#ifdef MACSEC_IPQ806X_SUPPORT
 	for (dev_id = 0; dev_id < MACSEC_DEVICE_NUM; dev_id++)
 		macsec_ctx.macsec_base[dev_id] = NULL;
+#endif
 
-#if (LINUX_VERSION_CODE >= KERNEL_VERSION(3, 14, 0))
 #ifdef MACSEC_IPQ806X_SUPPORT
 	if (cpu_is_ipq8066() || cpu_is_ipq8068() || cpu_is_ipq8069()) {
 #endif
@@ -516,12 +410,6 @@ static int __init nss_macsec_init_module(void)
 				return -EIO;
 		}
 #ifdef MACSEC_IPQ806X_SUPPORT
-	}
-#endif
-#else
-	if (platform_driver_register(&nss_macsec_drv) != 0) {
-		macsec_warning("platform drv reg failure\n");
-		return -EIO;
 	}
 #endif
 	macsec_trace("%s done!\n", __func__);
@@ -547,18 +435,15 @@ static void __exit nss_macsec_fini(void)
 	nss_macsec_netlink_fini();
 
 	nss_macsec_mutex_destroy();
-#if (LINUX_VERSION_CODE < KERNEL_VERSION(3, 14, 0))
-	platform_driver_unregister(&nss_macsec_drv);
-#else
+
 	nss_macsec_clean();
-#endif
-	if (nss_macsec_pre_init_flag) {
+
 #ifdef MACSEC_IPQ806X_SUPPORT
+	if (nss_macsec_pre_init_flag) {
 		nss_macsec_pre_exit();
-#endif
 		nss_macsec_pre_init_flag = 0;
 	}
-
+#endif
 	printk("nss_macsec exit success\n");
 }
 

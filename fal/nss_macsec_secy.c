@@ -1,8 +1,11 @@
 /*
  * Copyright (c) 2014, 2018, The Linux Foundation. All rights reserved.
- * Permission to use, copy, modify, and/or distribute this software for
- * any purpose with or without fee is hereby granted, provided that the
- * above copyright notice and this permission notice appear in all copies.
+ * Copyright (c) 2023 Qualcomm Innovation Center, Inc. All rights reserved.
+ *
+ * Permission to use, copy, modify, and/or distribute this software for any
+ * purpose with or without fee is hereby granted, provided that the above
+ * copyright notice and this permission notice appear in all copies.
+ *
  * THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
  * WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
  * MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
@@ -15,9 +18,7 @@
 #include <linux/kernel.h>
 #include <linux/module.h>
 #include "nss_macsec_types.h"
-#include "nss_macsec_register_api.h"
 #include "nss_macsec_os.h"
-#include "nss_macsec_emac.h"
 #include "nss_macsec_secy_tx.h"
 #include "nss_macsec_secy_rx.h"
 #include "nss_macsec_utility.h"
@@ -25,18 +26,23 @@
 #include "nss_macsec_secy.h"
 #include "nss_macsec_ops.h"
 
-fal_secy_cfg_t g_secy_cfg[FAL_SECY_ID_NUM_MAX];
+#ifdef MACSEC_IPQ806X_SUPPORT
+#include "nss_macsec_register_api.h"
+#include "nss_macsec_emac.h"
 
 #define EG_SCTRL_DROP_EN 0x1
 #define EG_ECTRL_ENABLE  0xF
 
 #define IG_SCTRL_DROP_EN 0x7
 #define IG_ECTRL_ENABLE  0x103F
+#endif
+
+fal_secy_cfg_t g_secy_cfg[FAL_SECY_ID_NUM_MAX];
 
 
+#ifdef MACSEC_IPQ806X_SUPPORT
 u32 nss_macsec_secy_reset(u32 secy_id)
 {
-
 	union egsy_l2sec_control_u ctrl;
 
 	SHR_PARAM_CHECK((secy_id < FAL_SECY_ID_NUM));
@@ -50,7 +56,6 @@ u32 nss_macsec_secy_reset(u32 secy_id)
 	SHR_RET_ON_ERR(egsy_l2sec_control_set(secy_id, &ctrl));
 
 	//tiger: no ingress reset?
-
 	return ERROR_OK;
 }
 
@@ -59,15 +64,30 @@ u32 nss_macsec_secy_tx_sw_reset(u32 secy_id)	//tiger: is this API necessary?
 	return ERROR_OK;
 }
 
+u32 nss_macsec_secy_ip_version_get(u32 secy_id, char *ver_str, u32 ver_str_len)
+{
+	union igsy_l2sec_version_u ig_ver;
+	/* union egsy_l2sec_version_u eg_ver; */
+
+	SHR_PARAM_CHECK((secy_id < FAL_SECY_ID_NUM));
+
+	igsy_l2sec_version_get(secy_id, &ig_ver);
+
+	/* ig/eg version are same
+	   egsy_l2sec_version_get(secy_id, &eg_ver);
+	   osal_print("eg_ver=0x%x, ig_ver = 0x%x\r\n", eg_ver.val, ig_ver.val); */
+
+	snprintf(ver_str, ver_str_len,
+		 "ID:%d Version:%d Revision:%d",
+		 ig_ver.bf.igsy_l2sec_id,
+		 ig_ver.bf.igsy_l2sec_version, ig_ver.bf.igsy_l2sec_revision);
+
+	return ERROR_OK;
+}
+#endif
+
 u32 nss_macsec_secy_init(u32 secy_id)
 {
-	union egsy_emac_regs_u eg_emac;
-	union insy_emac_regs_u in_emac;
-	union egsy_sctrl_drop_en_u eg_drop;
-	union egsy_ectrl_enable_u  eg_enable;
-	union insy_sctrl_drop_en_u ig_drop;
-	union insy_ectrl_en_u      ig_enable;
-	union csr_igsy_ctrl_u reg_val;
 	g_error_t rv;
 	struct secy_drv_t *secy_drv;
 
@@ -82,6 +102,15 @@ u32 nss_macsec_secy_init(u32 secy_id)
 
 		return rv;
 	}
+
+#ifdef MACSEC_IPQ806X_SUPPORT
+	union egsy_emac_regs_u eg_emac;
+	union insy_emac_regs_u in_emac;
+	union egsy_sctrl_drop_en_u eg_drop;
+	union egsy_ectrl_enable_u  eg_enable;
+	union insy_sctrl_drop_en_u ig_drop;
+	union insy_ectrl_en_u      ig_enable;
+	union csr_igsy_ctrl_u reg_val;
 
 	/* EMAC 1 & 2 reset (include disable) */
 	nss_macsec_emac_reset(secy_id);
@@ -148,7 +177,7 @@ u32 nss_macsec_secy_init(u32 secy_id)
 
 	/* EMAC 1 & 2 enable */
 	nss_macsec_emac_enable(secy_id, TRUE);
-
+#endif
 	return ERROR_OK;
 }
 
@@ -242,27 +271,6 @@ u32 nss_macsec_secy_controlled_port_en_set(u32 secy_id, bool enable)
 	return ERROR_OK;
 }
 
-u32 nss_macsec_secy_ip_version_get(u32 secy_id, char *ver_str, u32 ver_str_len)
-{
-	union igsy_l2sec_version_u ig_ver;
-	/* union egsy_l2sec_version_u eg_ver; */
-
-	SHR_PARAM_CHECK((secy_id < FAL_SECY_ID_NUM));
-
-	igsy_l2sec_version_get(secy_id, &ig_ver);
-
-	/* ig/eg version are same
-	   egsy_l2sec_version_get(secy_id, &eg_ver);
-	   osal_print("eg_ver=0x%x, ig_ver = 0x%x\r\n", eg_ver.val, ig_ver.val); */
-
-	snprintf(ver_str, ver_str_len,
-		 "ID:%d Version:%d Revision:%d",
-		 ig_ver.bf.igsy_l2sec_id,
-		 ig_ver.bf.igsy_l2sec_version, ig_ver.bf.igsy_l2sec_revision);
-
-	return ERROR_OK;
-}
-
 u32 nss_macsec_secy_cipher_suite_get(u32 secy_id,
 				     fal_cipher_suite_e *p_cipher_suite)
 {
@@ -351,15 +359,14 @@ u32 nss_macsec_secy_mtu_get(u32 secy_id, u32 *pmtu)
 		return rv;
 	}
 
+#ifdef MACSEC_IPQ806X_SUPPORT
 	*pmtu = g_secy_cfg[secy_id].mtu;
-
+#endif
 	return ERROR_OK;
 }
 
 u32 nss_macsec_secy_mtu_set(u32 secy_id, u32 mtu)
 {
-	union csr_egsy_mtu_u eg_mtu;
-	union csr_igsy_mtu_u ig_mtu;
 	g_error_t rv;
 	struct secy_drv_t *secy_drv;
 
@@ -379,6 +386,10 @@ u32 nss_macsec_secy_mtu_set(u32 secy_id, u32 mtu)
 		return rv;
 	}
 
+#ifdef MACSEC_IPQ806X_SUPPORT
+	union csr_egsy_mtu_u eg_mtu;
+	union csr_igsy_mtu_u ig_mtu;
+
 	g_secy_cfg[secy_id].mtu = mtu;
 
 	eg_mtu.bf.csr_egsy_mtu = mtu;
@@ -387,7 +398,7 @@ u32 nss_macsec_secy_mtu_set(u32 secy_id, u32 mtu)
 	ig_mtu.bf.csr_igsy_mtu = mtu;
 	ig_mtu.bf.unctrl_csr_igsy_mtu = mtu;
 	csr_igsy_mtu_set(secy_id, &ig_mtu);
-
+#endif
 	return ERROR_OK;
 }
 
@@ -429,8 +440,9 @@ u32 nss_macsec_secy_en_get(u32 secy_id, bool *penable)
 		return rv;
 	}
 
+#ifdef MACSEC_IPQ806X_SUPPORT
 	*penable = g_secy_cfg[secy_id].enable;
-
+#endif
 	return ERROR_OK;
 }
 
@@ -451,6 +463,7 @@ u32 nss_macsec_secy_en_set(u32 secy_id, bool enable)
 		return rv;
 	}
 
+#ifdef MACSEC_IPQ806X_SUPPORT
 	if(nss_macsec_device_exist(secy_id) != ERROR_OK)
 		return ERROR_ERROR;
 
@@ -460,12 +473,10 @@ u32 nss_macsec_secy_en_set(u32 secy_id, bool enable)
 		}
 
 		/* call GMAC API to set by bypass status */
-#ifdef MACSEC_IPQ806X_SUPPORT
 		nss_macsec_bypass_en_set(secy_id + 1, !enable);
-#endif
 		g_secy_cfg[secy_id].enable = enable;
 	}
-
+#endif
 	return ERROR_OK;
 }
 
