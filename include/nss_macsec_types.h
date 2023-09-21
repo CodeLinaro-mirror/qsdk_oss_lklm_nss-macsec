@@ -1,7 +1,7 @@
 /*
  * Copyright (c) 2014, The Linux Foundation. All rights reserved.
  * Copyright (c) 2023 Qualcomm Innovation Center, Inc. All rights reserved.
- * 
+ *
  * Permission to use, copy, modify, and/or distribute this software for any
  * purpose with or without fee is hereby granted, provided that the above
  * copyright notice and this permission notice appear in all copies.
@@ -65,16 +65,6 @@ typedef unsigned char u8;
 #define TRUE 1
 #endif
 
-
-typedef int BOOL;
-//typedef  char sa_bool_t;
-#ifndef FALSE
-#define FALSE 0
-#endif
-#ifndef TRUE
-#define TRUE 1
-#endif
-
 typedef enum {
 	ERROR_OK = 0,
 	ERROR_RESOURCE = 1,
@@ -92,6 +82,10 @@ typedef enum {
 
 #ifndef ERROR
 #define ERROR                ERROR_ERROR
+#endif
+
+#ifndef NULL
+#define NULL                ((void *) 0)
 #endif
 
 #define SHR_RET_ON_ERR(f) \

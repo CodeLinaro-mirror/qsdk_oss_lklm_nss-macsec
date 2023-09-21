@@ -1,7 +1,7 @@
 /*
  * Copyright (c) 2014, 2018, The Linux Foundation. All rights reserved.
  * Copyright (c) 2023 Qualcomm Innovation Center, Inc. All rights reserved.
- * 
+ *
  * Permission to use, copy, modify, and/or distribute this software for any
  * purpose with or without fee is hereby granted, provided that the above
  * copyright notice and this permission notice appear in all copies.
@@ -14,6 +14,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
+
 
 #ifndef _NSS_MACSEC_SECY_RX_H_
 #define _NSS_MACSEC_SECY_RX_H_
@@ -124,20 +125,6 @@ struct fal_rx_udf_filt_t {
 	enum fal_rx_udf_filt_op_e operator;
 	u16 offset;
 };
-
-/**
-* @param[in] secy_id
-* @param[in] addr
-* @param[out] pvalue
-**/
-u32 nss_macsec_secy_rx_reg_get(u32 secy_id, u32 addr, u32 *pvalue);
-
-/**
-* @param[in] secy_id
-* @param[in] addr
-* @param[in] value
-**/
-u32 nss_macsec_secy_rx_reg_set(u32 secy_id, u32 addr, u32 value);
 
 /**
 * @param[in] secy_id
@@ -282,39 +269,6 @@ u32 nss_macsec_secy_rx_sc_in_used_get(u32 secy_id, u32 channel, bool *p_in_used)
 /**
 * @param[in] secy_id
 * @param[in] channel
-* @param[out] penable
-**/
-u32 nss_macsec_secy_rx_sc_an_roll_over_get(u32 secy_id, u32 channel,
-                                          bool *penable);
-
-/**
-* @param[in] secy_id
-* @param[in] channel
-* @param[in] enable
-**/
-u32 nss_macsec_secy_rx_sc_an_roll_over_set(u32 secy_id, u32 channel, bool enable);
-
-/**
-* @param[in] secy_id
-* @param[in] channel
-* @param[out] p_start_time
-* @param[out] p_stop_time
-**/
-u32 nss_macsec_secy_rx_sc_start_stop_time_get(u32 secy_id, u32 channel,
-                                         u32 *p_start_time, u32 *p_stop_time);
-
-/**
-* @param[in] secy_id
-* @param[in] channel
-* @param[in] start_time
-* @param[in] stop_time
-**/
-u32 nss_macsec_secy_rx_sc_start_stop_time_set(u32 secy_id, u32 channel,
-                                             u32 start_time, u32 stop_time);
-
-/**
-* @param[in] secy_id
-* @param[in] channel
 * @param[in] an
 **/
 u32 nss_macsec_secy_rx_sa_create(u32 secy_id, u32 channel, u32 an);
@@ -382,38 +336,6 @@ u32 nss_macsec_secy_rx_sak_set(u32 secy_id, u32 channel,
 **/
 u32 nss_macsec_secy_rx_sa_in_used_get(u32 secy_id, u32 channel,
                                      u32 an, bool *p_in_used);
-
-/**
-* @param[in] secy_id
-* @param[in] channel
-* @param[in] an
-* @param[out] p_start_time
-* @param[out] p_stop_time
-**/
-u32 nss_macsec_secy_rx_sa_start_stop_time_get(u32 secy_id, u32 channel, u32 an,
-                                         u32 *p_start_time, u32 *p_stop_time);
-
-/**
-* @param[in] secy_id
-* @param[in] channel
-* @param[in] an
-* @param[in] start_time
-* @param[in] stop_time
-**/
-u32 nss_macsec_secy_rx_sa_start_stop_time_set(u32 secy_id, u32 channel, u32 an,
-                                             u32 start_time, u32 stop_time);
-
-/**
-* @param[in] secy_id
-* @param[out] p_pn_threshold
-**/
-u32 nss_macsec_secy_rx_pn_threshold_get(u32 secy_id, u32 *p_pn_threshold);
-
-/**
-* @param[in] secy_id
-* @param[in] pn_threshold
-**/
-u32 nss_macsec_secy_rx_pn_threshold_set(u32 secy_id, u32 pn_threshold);
 
 /**
 * @param[in] secy_id

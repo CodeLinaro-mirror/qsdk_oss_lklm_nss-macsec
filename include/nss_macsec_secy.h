@@ -28,12 +28,10 @@
  */
 #define NSS_MACSEC_SECY_ID_GET_FUNC
 
-#define FAL_SECY_ID_NUM_MAX     4
 #define FAL_SECY_DEFAULT_MTU    1500
 #define FAL_SCI_LEN             8
 #define FAL_SECY_SC_MAX_NUM     32
 #define FAL_SAK_DEFAULT_LEN     16
-#define FAL_MACSEC_IP_VER_STR_LEN    32
 #define FAL_TX_RX_MTU_MAX 0x7fff
 #define FAL_AN_MAX  3
 
@@ -56,17 +54,6 @@ typedef struct {
 	u8 sci[FAL_SCI_LEN];
 } fal_tx_sc_t;
 
-typedef struct {
-	fal_sc_sa_mapping_mode_e sc_sa_map_mode;
-	fal_cipher_suite_e cipher_suite;
-	u32 mtu;
-	bool enable;		/* 1: the secy is enabled and
-				 *    GMAC bypass is disabled */
-	fal_tx_sc_t tx_sc[FAL_SECY_SC_MAX_NUM];
-} fal_secy_cfg_t;
-
-extern fal_secy_cfg_t g_secy_cfg[];
-
 enum fal_packet_type_t {
 	FAL_PACKET_STP   = 0,   /**< Spanning Tree Protocol Packet */
 	FAL_PACKET_CDP   = 1,   /**< Cisco Discovery Protocol Packet */
@@ -80,27 +67,34 @@ enum fal_packet_action_t {
 	FAL_PACKET_PLAIN_OR_UPLOAD   = 0X3
 };
 
-enum fal_loopback_type_t {
-	FAL_MACSEC_NORMAL     = 0x0,    /**< MACsec works normally */
-	FAL_MACSEC_PHY_LB     = 0x1,    /**< Phy side loopback */
-	FAL_MACSEC_SWITCH_LB  = 0x2,    /**< Switch side loopback */
-	FAL_MACSEC_BYPASS     = 0x3    /**< MACsec bypassed */
-};
 
 /**
 * @param[in] secy_id
+* @param[in] addr
+* @param[out] pvalue
 **/
-u32 nss_macsec_secy_reset(u32 secy_id);
+u32 nss_macsec_secy_genl_reg_get(u32 secy_id, u32 addr, u32 *pvalue);
 
 /**
 * @param[in] secy_id
+* @param[in] addr
+* @param[in] value
 **/
-u32 nss_macsec_secy_tx_sw_reset(u32 secy_id);	//tiger: is this API necessary?
+u32 nss_macsec_secy_genl_reg_set(u32 secy_id, u32 addr, u32 value);
 
 /**
 * @param[in] secy_id
+* @param[in] addr
+* @param[out] pvalue
 **/
-u32 nss_macsec_secy_init(u32 secy_id);
+u32 nss_macsec_secy_ext_reg_get(u32 secy_id, u32 addr, u32 *pvalue);
+
+/**
+* @param[in] secy_id
+* @param[in] addr
+* @param[in] value
+**/
+u32 nss_macsec_secy_ext_reg_set(u32 secy_id, u32 addr, u32 value);
 
 /**
 * @param[in] secy_id
@@ -126,13 +120,6 @@ u32 nss_macsec_secy_controlled_port_en_get(u32 secy_id, bool *penable);
 * @param[in] enable
 **/
 u32 nss_macsec_secy_controlled_port_en_set(u32 secy_id, bool enable);
-
-/**
-* @param[in] secy_id
-* @param[out] ver_str
-* @param[in] str_len
-**/
-u32 nss_macsec_secy_ip_version_get(u32 secy_id, char *ver_str, u32 ver_str_len); /* [64] */
 
 /**
 * @param[in] secy_id
@@ -197,12 +184,6 @@ u32 nss_macsec_secy_special_pkt_ctrl_set(u32 secy_id,
 u32 nss_macsec_secy_udf_ethtype_get(u32 secy_id, bool *penable, u16 *type);
 
 u32 nss_macsec_secy_udf_ethtype_set(u32 secy_id, bool enable, u16 type);
-
-u32 nss_macsec_secy_loopback_get(u32 secy_id,
-	enum fal_loopback_type_t *type);
-
-u32 nss_macsec_secy_loopback_set(u32 secy_id,
-	enum fal_loopback_type_t type);
 
 u32 nss_macsec_dt_secy_id_get(u8 *dev_name, u32 *secy_id);
 

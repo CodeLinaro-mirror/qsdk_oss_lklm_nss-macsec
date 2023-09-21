@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2014, 2018-2019 The Linux Foundation. All rights reserved.
- * Copyright (c) 2022-2023, Qualcomm Innovation Center, Inc. All rights reserved.
+ * Copyright (c) 2022-2023 Qualcomm Innovation Center, Inc. All rights reserved.
  *
  * Permission to use, copy, modify, and/or distribute this software for any
  * purpose with or without fee is hereby granted, provided that the above
@@ -18,105 +18,18 @@
 #include <linux/module.h>
 #include <linux/kernel.h>
 #include <linux/init.h>
-#include <linux/kernel.h>
+#include <linux/netdevice.h>
 #include <linux/phy.h>
 #include <net/sock.h>
-#include <asm/io.h>
-#include <linux/version.h>
-#include <linux/of.h>
-#include <linux/of_mdio.h>
-#include <linux/platform_device.h>
-#include <linux/resource.h>
 #include <linux/types.h>
 #include <linux/errno.h>
-#include <linux/notifier.h>
-#ifdef MACSEC_IPQ806X_SUPPORT
-#include <soc/qcom/socinfo.h>
-#include "nss_macsec_emac.h"
-#endif
 #include "nss_macsec_sdk_api.h"
 #include "nss_macsec_fal_api.h"
+#include "nss_macsec.h"
 #include "nss_macsec_utility.h"
-#include "nss_macsec_os.h"
-#include "nss_macsec_ops.h"
 
-/* NSS MACSEC Base Addresses */
-#define NSS_MACSEC_BASE			0x37800000
-#define NSS_MACSEC_REG_LEN		0x00200000
-#define MACSEC_DEVICE_NUM 4
 
 static struct sock *sdk_nl_sk = NULL;
-
-static bool phy_driver_flag[MACSEC_DEVICE_NUM] = {FALSE, FALSE, FALSE, FALSE};
-static bool secy_phy_flag;
-
-#ifdef MACSEC_IPQ806X_SUPPORT
-/**
- * @brief MACSEC driver context
- */
-struct nss_macsec_ctx {
-	char __iomem *macsec_base[MACSEC_DEVICE_NUM];
-};
-static struct nss_macsec_ctx macsec_ctx;
-static uint32_t macsec_notifier_register_status = 0;
-static uint32_t nss_macsec_pre_init_flag = 0;
-
-
-static int macsec_ncb(struct notifier_block *nb, unsigned long value,
-		      void *priv)
-{
-	int result = NOTIFY_OK;
-	struct nss_gmac_speed_ctx *gmac_speed_ctx_p = priv;
-	printk("macsec_ncb  mac_id:0x%x speed:0x%x\n",
-		gmac_speed_ctx_p->mac_id, gmac_speed_ctx_p->speed);
-	switch (value) {
-	case NSS_GMAC_SPEED_SET:
-		nss_macsec_speed(gmac_speed_ctx_p->mac_id - 1, gmac_speed_ctx_p->speed);
-		break;
-	default:
-		result = NOTIFY_BAD;
-	}
-	return result;
-}
-
-static struct notifier_block macsec_notifier __attribute__ ((unused)) = {
-	.notifier_call = macsec_ncb,
-};
-
-unsigned int nss_macsec_device_exist(unsigned int dev_id)
-{
-	if(macsec_ctx.macsec_base[dev_id] == NULL) {
-		printk("macsec[%d] doesn't exist, any operation for it is not permitted!\n", dev_id);
-		return ERROR_NOT_SUPPORT;
-	}
-	return ERROR_OK;
-}
-
-int nss_macsec_reg_read(unsigned int dev_id, unsigned int reg_addr,
-			unsigned int *pvalue)
-{
-	if(macsec_ctx.macsec_base[dev_id] == NULL) {
-		return ERROR_NOT_SUPPORT;
-	}
-
-	*pvalue =
-	    readl((unsigned char *)((char *) macsec_ctx.macsec_base[dev_id] +
-				    (reg_addr)));
-	return 0;
-}
-
-int nss_macsec_reg_write(unsigned int dev_id, unsigned int reg_addr,
-			 unsigned int pvalue)
-{
-	if(macsec_ctx.macsec_base[dev_id] == NULL) {
-		return ERROR_NOT_SUPPORT;
-	}
-	writel(pvalue,
-	       (unsigned char *)((char *) macsec_ctx.macsec_base[dev_id] +
-				 (reg_addr)));
-	return 0;
-}
-#endif
 
 static unsigned int nss_macsec_msg_handle(void *msg_data, unsigned int *sync)
 {
@@ -158,14 +71,14 @@ static void nss_macsec_netlink_recv(struct sk_buff *__skb)
 		msg_len += header->buf_len;
 
 		if(skb->len < msg_len) {
-			printk("Unexpected msg received! skb_len [0x%x] less than 0x%x\n",
+			osal_print("Unexpected msg received! skb_len [0x%x] less than 0x%x\n",
 				skb->len, msg_len);
 			return;
 		} else if (msg_type == SDK_CALL_MSG) {
 			ret = nss_macsec_msg_handle(msg_data, &sync);
 			header->ret = ret;
 		} else {
-			printk("Unexpected msg:0x%x received!\n", msg_type);
+			osal_print("Unexpected msg:0x%x received!\n", msg_type);
 			return;
 		}
 
@@ -180,100 +93,42 @@ static void nss_macsec_netlink_recv(struct sk_buff *__skb)
 static int nss_macsec_netlink_init(void)
 {
 	struct netlink_kernel_cfg cfg = {
-			.input			= nss_macsec_netlink_recv,
+			.input	= nss_macsec_netlink_recv,
 	};
 
 	sdk_nl_sk = netlink_kernel_create(&init_net, NETLINK_SDK, &cfg);
 	if (sdk_nl_sk == NULL) {
-		printk("Create netlink socket fail\n");
+		osal_print("Create netlink socket fail\n");
 		return -ENODEV;
 	}
 
 	return 0;
 }
 
-static struct mii_bus *nss_macsec_miibus[MAX_SECY_ID] = {
-	NULL, NULL, NULL, NULL};
-
-int nss_macsec_phy_mdio_write(u32 secy_id, u32 reg_addr, u16 val)
-{
-	u32 phy_addr;
-
-	if (!nss_macsec_miibus[secy_id])
-		return -EIO;
-
-	phy_addr = secy_id_to_phy_addr(secy_id);
-	mdiobus_write(nss_macsec_miibus[secy_id], phy_addr, reg_addr, val);
-
-	return 0;
-}
-
-int nss_macsec_phy_mdio_read(u32 secy_id, u32 reg_addr, u16 *val)
-{
-	u32 phy_addr;
-
-	if (!nss_macsec_miibus[secy_id])
-		return -EIO;
-
-	phy_addr = secy_id_to_phy_addr(secy_id);
-	*val = mdiobus_read(nss_macsec_miibus[secy_id], phy_addr, reg_addr);
-
-	return 0;
-}
-
 u32 nss_macsec_dt_secy_id_get(u8 *dev_name, u32 *secy_id)
 {
-	u32 secy_idx, phy_addr = -1;
+	u32 dev_id = INVALID_DEVICE_ID;
 	struct net_device *netdev = NULL;
+	g_error_t rv = 0;
 
 	/* get net device by ifname */
 	netdev = __dev_get_by_name(&init_net, (const char *)dev_name);
 	if (unlikely(!netdev)) {
-		*secy_id = INVALID_SECY_ID;
+		*secy_id = INVALID_DEVICE_ID;
 		return ERROR_NOT_FOUND;
 	}
 
-	/* get phy address by net device */
-	if (netdev->phydev) {
-		phy_addr = netdev->phydev->mdio.addr;
-	}
+	/* get phydev by net device */
+	if (netdev->phydev)
+		dev_id = macsec_get_device_id(netdev->phydev);
 
-	/* find secy_id by phy address */
-	if (phy_addr != -1) {
-		for (secy_idx = 0; secy_idx < MAX_SECY_ID; secy_idx++) {
-			if (phy_addr == secy_id_to_phy_addr(secy_idx)) {
-				*secy_id = secy_idx;
-				return ERROR_OK;
-			}
-		}
-	}
+	if (INVALID_DEVICE_ID == dev_id)
+		rv = ERROR_NOT_FOUND;
+	else
+		rv = ERROR_OK;
 
-	/* fail to find secy_id */
-	*secy_id = INVALID_SECY_ID;
-	return ERROR_NOT_FOUND;
-}
-
-static int nss_macsec_mdiobus_init(struct device_node *macsec_node, u32 secy_id)
-{
-	struct device_node *mdio_node = NULL;
-
-	if (secy_id >= MAX_SECY_ID) {
-		macsec_warning("Invalid secy id:%d!\n", secy_id);
-		return -EINVAL;
-	}
-
-	mdio_node = of_parse_phandle(macsec_node, "mdiobus", 0);
-	if (!mdio_node) {
-		macsec_warning("Failed to find mdio node!\n");
-		return -EINVAL;
-	}
-	nss_macsec_miibus[secy_id] = of_mdio_find_bus(mdio_node);
-	if (!nss_macsec_miibus[secy_id]) {
-		macsec_warning("Failed to find mdio bus!\n");
-		return -EIO;
-	}
-
-	return 0;
+	*secy_id = dev_id;
+	return rv;
 }
 
 static void nss_macsec_netlink_fini(void)
@@ -284,167 +139,80 @@ static void nss_macsec_netlink_fini(void)
 	}
 }
 
-static int nss_macsec_dt_init(uint32_t dev_id)
+static int nss_macsec_dev_event(struct notifier_block  *nb, unsigned long event, void  *info)
 {
-	int ret = 0;
-	struct device_node *nss_macsec_node = NULL;
-	char dev_name[32];
-	unsigned int phy_address;
-
-	memset(dev_name, 0, sizeof(dev_name));
-	snprintf(dev_name, sizeof(dev_name), "nss-macsec%d", dev_id);
-
-	nss_macsec_node = of_find_node_by_name(NULL, dev_name);
-	if (!nss_macsec_node) {
-		printk(KERN_ERR "cannot find nss-macsec%d node\n", dev_id);
-		return -ENODEV;
-	}
-	printk(KERN_INFO "%s DT exist!\n", dev_name);
-
-	nss_macsec_mdiobus_init(nss_macsec_node, dev_id);
-
-/* add for Napa masec*/
-	if (!of_property_read_u32(nss_macsec_node, "phy_addr", &phy_address)) {
-		nss_macsec_secy_info_set(dev_id, phy_address);
-		nss_macsec_secy_driver_init(dev_id);
-		phy_driver_flag[dev_id] = TRUE;
-		secy_phy_flag = TRUE;
-		return ret;
-	}
-/* end for Napa masec*/
-
-#ifdef MACSEC_IPQ806X_SUPPORT
-	unsigned int mem_start, mem_len;
-	void __iomem *mmap_io_addr = NULL;
-	const __be32 *reg_cfg;
-	unsigned int len = 0;
-
-	reg_cfg = of_get_property(nss_macsec_node, "reg", &len);
-	if (!reg_cfg) {
-		printk(KERN_ERR "%s: error reading device node properties for reg\n", dev_name);
-		return -EIO;
-	}
-
-	mem_start = be32_to_cpup(reg_cfg);
-	mem_len = be32_to_cpup(reg_cfg + 1);
-
-	if (!request_mem_region(mem_start, mem_len, dev_name)) {
-		macsec_warning("%s Unable to request resource.", __func__);
-		return -EIO;
-	}
-
-	mmap_io_addr = ioremap(mem_start, mem_len);
-	if (!mmap_io_addr) {
-		macsec_warning("%s ioremap fail.", __func__);
-		return -EIO;
-	}
-	macsec_trace("macsec.%d phy_addr:0x%x len:0x%x mem_start:%p\n",
-		     dev_id, mem_start, mem_len, mmap_io_addr);
-
-	macsec_ctx.macsec_base[dev_id] = mmap_io_addr;
-
-	if (nss_macsec_pre_init_flag == 0) {
-		nss_macsec_pre_init();
-		nss_macsec_pre_init_flag = 1;
-	}
-
-	/* Invoke Macsec Initialization API */
-	nss_macsec_secy_init(dev_id);
-
-	if (macsec_notifier_register_status == 0) {
-		nss_gmac_link_state_change_notify_register(&macsec_notifier);
-		macsec_notifier_register_status = 1;
-	}
-#endif
-	macsec_trace("macsec.%d probe done\n", dev_id);
-	return ret;
-
-}
-
-static int nss_macsec_clean(void)
-{
-	int ret = 0, secy_id = 0;
-
-	if (secy_phy_flag == TRUE) {
-		for (secy_id = 0; secy_id < MACSEC_DEVICE_NUM; secy_id++) {
-			if (phy_driver_flag[secy_id] == TRUE)
-				nss_macsec_secy_driver_cleanup(secy_id);
-		}
-	} else {
-#ifdef MACSEC_IPQ806X_SUPPORT
-		uint32_t dev_id = 0;
-
-		if (macsec_notifier_register_status) {
-			nss_gmac_link_state_change_notify_unregister(
-				&macsec_notifier);
-			macsec_notifier_register_status = 0;
-		}
-
-		for (dev_id = 0; dev_id < MACSEC_DEVICE_NUM; dev_id++) {
-			iounmap(macsec_ctx.macsec_base[dev_id]);
-			release_mem_region(
-				NSS_MACSEC_BASE+(NSS_MACSEC_REG_LEN*dev_id),
-					    NSS_MACSEC_REG_LEN);
-		}
-#endif
-	}
-	return ret;
-}
-
-static int __init nss_macsec_init_module(void)
-{
-	uint32_t dev_id = 0;
+	struct net_device *event_dev = netdev_notifier_info_to_dev(info);
 	int ret = 0;
 
-#ifdef MACSEC_IPQ806X_SUPPORT
-	for (dev_id = 0; dev_id < MACSEC_DEVICE_NUM; dev_id++)
-		macsec_ctx.macsec_base[dev_id] = NULL;
-#endif
+	if (NULL == event_dev->phydev)
+		return NOTIFY_DONE;
 
-#ifdef MACSEC_IPQ806X_SUPPORT
-	if (cpu_is_ipq8066() || cpu_is_ipq8068() || cpu_is_ipq8069()) {
-#endif
-		for (dev_id = 0; dev_id < MACSEC_DEVICE_NUM; dev_id++) {
-			ret = nss_macsec_dt_init(dev_id);
-			if (ret && (ret != -ENODEV))
-				return -EIO;
-		}
-#ifdef MACSEC_IPQ806X_SUPPORT
+	switch (event_dev->phydev->phy_id) {
+	case QCA8081_PHY:
+	case QCA8081_PHY_V1_1:
+	case QCA8084_PHY:
+		break;
+	default:
+		return NOTIFY_DONE;
 	}
-#endif
-	macsec_trace("%s done!\n", __func__);
+
+	switch (event) {
+	case NETDEV_REGISTER:
+		ret = qca_macsec_device_attach(event_dev->phydev);
+		if (ret)
+			ret = NOTIFY_DONE;
+		else
+			ret = NOTIFY_OK;
+		break;
+	case NETDEV_UNREGISTER:
+		ret = qca_macsec_device_detach(event_dev->phydev);
+		if (ret)
+			ret = NOTIFY_DONE;
+		else
+			ret = NOTIFY_OK;
+		break;
+	default:
+		ret = NOTIFY_DONE;
+		break;
+	}
 
 	return ret;
 }
+
+/*
+ * Linux Net device Notifier
+ */
+static struct notifier_block nss_macsec_netdev_notifier = {
+	.notifier_call = nss_macsec_dev_event,
+};
 
 static int __init nss_macsec_init(void)
 {
-	nss_macsec_netlink_init();
+	int ret = 0;
 
+	nss_macsec_netlink_init();
 	nss_macsec_mutex_init();
 
-	nss_macsec_init_module();
+	ret = register_netdevice_notifier(&nss_macsec_netdev_notifier);
+	if (ret) {
+		osal_print("Failed to register NETDEV notifier, error=%d\n", ret);
+		return ret;
+	}
 
-	printk("nss_macsec init success\n");
+	osal_print("nss_macsec init success\n");
 
 	return 0;
 }
 
 static void __exit nss_macsec_fini(void)
 {
+	unregister_netdevice_notifier(&nss_macsec_netdev_notifier);
+
 	nss_macsec_netlink_fini();
-
 	nss_macsec_mutex_destroy();
+	qca_macsec_device_cleanup();
 
-	nss_macsec_clean();
-
-#ifdef MACSEC_IPQ806X_SUPPORT
-	if (nss_macsec_pre_init_flag) {
-		nss_macsec_pre_exit();
-		nss_macsec_pre_init_flag = 0;
-	}
-#endif
-	printk("nss_macsec exit success\n");
+	osal_print("nss_macsec exit success\n");
 }
 
 module_init(nss_macsec_init);
