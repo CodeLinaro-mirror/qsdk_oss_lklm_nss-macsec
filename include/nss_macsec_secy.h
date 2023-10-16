@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2014, 2018, The Linux Foundation. All rights reserved.
- * Copyright (c) 2022 Qualcomm Innovation Center, Inc. All rights reserved.
+ * Copyright (c) 2022-2023 Qualcomm Innovation Center, Inc. All rights reserved.
  *
  * Permission to use, copy, modify, and/or distribute this software for any
  * purpose with or without fee is hereby granted, provided that the above
@@ -18,7 +18,9 @@
 #ifndef _NSS_MACSEC_SECY_H_
 #define _NSS_MACSEC_SECY_H_
 
-#include "nss_macsec_types.h"
+#ifndef __KERNEL__
+#include <fcntl.h>
+#endif
 
 /* Macro indicate nss_macsec_secy_id_get() function is supported,
  * used in hostap macsec package for backwards compatible with
@@ -202,6 +204,6 @@ u32 nss_macsec_secy_loopback_get(u32 secy_id,
 u32 nss_macsec_secy_loopback_set(u32 secy_id,
 	enum fal_loopback_type_t type);
 
-g_error_t nss_macsec_dt_secy_id_get(u8 *dev_name, u32 *secy_id);
+u32 nss_macsec_dt_secy_id_get(u8 *dev_name, u32 *secy_id);
 
 #endif /* _NSS_MACSEC_SECY_H_ */

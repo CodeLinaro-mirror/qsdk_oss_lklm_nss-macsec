@@ -221,7 +221,7 @@ int nss_macsec_phy_mdio_read(u32 secy_id, u32 reg_addr, u16 *val)
 	return 0;
 }
 
-g_error_t nss_macsec_dt_secy_id_get(u8 *dev_name, u32 *secy_id)
+u32 nss_macsec_dt_secy_id_get(u8 *dev_name, u32 *secy_id)
 {
 	u32 secy_idx, phy_addr = -1;
 	struct net_device *netdev = NULL;
