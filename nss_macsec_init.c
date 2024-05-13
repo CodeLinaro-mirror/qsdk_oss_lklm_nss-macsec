@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2014, 2018-2019 The Linux Foundation. All rights reserved.
- * Copyright (c) 2022-2023 Qualcomm Innovation Center, Inc. All rights reserved.
+ * Copyright (c) 2022-2024 Qualcomm Innovation Center, Inc. All rights reserved.
  *
  * Permission to use, copy, modify, and/or distribute this software for any
  * purpose with or without fee is hereby granted, provided that the above
@@ -109,26 +109,22 @@ u32 nss_macsec_dt_secy_id_get(u8 *dev_name, u32 *secy_id)
 {
 	u32 dev_id = INVALID_DEVICE_ID;
 	struct net_device *netdev = NULL;
-	g_error_t rv = 0;
 
 	/* get net device by ifname */
 	netdev = __dev_get_by_name(&init_net, (const char *)dev_name);
 	if (unlikely(!netdev)) {
 		*secy_id = INVALID_DEVICE_ID;
+		/* no net device, return not found */
 		return ERROR_NOT_FOUND;
 	}
 
-	/* get phydev by net device */
+	/* get phydev by net device and find secy_id */
 	if (netdev->phydev)
 		dev_id = macsec_get_device_id(netdev->phydev);
 
-	if (INVALID_DEVICE_ID == dev_id)
-		rv = ERROR_NOT_FOUND;
-	else
-		rv = ERROR_OK;
-
 	*secy_id = dev_id;
-	return rv;
+
+	return ERROR_OK;
 }
 
 static void nss_macsec_netlink_fini(void)
