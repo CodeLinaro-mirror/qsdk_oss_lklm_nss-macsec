@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2014, The Linux Foundation. All rights reserved.
- * Copyright (c) 2022-2023 Qualcomm Innovation Center, Inc. All rights reserved.
+ * Copyright (c) 2022-2024 Qualcomm Innovation Center, Inc. All rights reserved.
  *
  * Permission to use, copy, modify, and/or distribute this software for any
  * purpose with or without fee is hereby granted, provided that the above
@@ -544,27 +544,66 @@ g_error_t qca_macsec_controlled_port_en_get(struct macsec_port *port, bool *enab
 	return ERROR_OK;
 }
 
-g_error_t qca_macsec_rx_sa_npn_set(struct macsec_port *port, u32 sc_index,
-				   u32 an, u64 next_pn)
+g_error_t qca_macsec_rx_sa_xpn_set(struct macsec_port *port, u32 sc_index,
+				   u32 an, u32 next_xpn)
 {
 	u32 dev_id = 0;
 	u32 pn_index = 0;
-	u32 npn = 0;
-	u32 xpn = 0;
-	bool xpn_enable = FALSE;
 
 	SHR_PARAM_CHECK((port != NULL) &&
 			(sc_index <= SECY_SC_IDX_MAX) &&
 			(an <= SECY_AN_IDX_MAX));
 
-	SHR_RET_ON_ERR(qca808x_secy_xpn_en_get(port, &xpn_enable));
-	if (xpn_enable) {
-		xpn = (u32)((next_pn >> 16) >> 16);
-		SHR_RET_ON_ERR(qca808x_secy_rx_sa_xpn_set(port, sc_index, an, xpn));
-	}
+	SHR_RET_ON_ERR(qca808x_secy_rx_sa_xpn_set(port, sc_index, an, next_xpn));
 
-	npn = (u32)(next_pn & 0xffffffff);
-	SHR_RET_ON_ERR(qca808x_secy_rx_sa_npn_set(port, sc_index, an, npn));
+	pn_index = (sc_index * 4 + an);
+	dev_id = macsec_get_device_id(port->phydev);
+	if (dev_id != INVALID_DEVICE_ID)
+		p_macsec_device_cfg[dev_id]->secy_pn_table[pn_index].rx_sa_xpn = next_xpn;
+	return ERROR_OK;
+}
+
+g_error_t qca_macsec_rx_sa_xpn_get(struct macsec_port *port, u32 sc_index,
+				   u32 an, u32 *next_xpn)
+{
+	u32 dev_id = 0, pn_index = 0, i = 0;
+	u32 npn = 0;
+
+	SHR_PARAM_CHECK((port != NULL) &&
+			(sc_index <= SECY_SC_IDX_MAX) &&
+			(an <= SECY_AN_IDX_MAX) &&
+			(next_xpn != NULL));
+
+	pn_index = (sc_index * 4 + an);
+	dev_id = macsec_get_device_id(port->phydev);
+	if (dev_id == INVALID_DEVICE_ID)
+		return ERROR_NOT_FOUND;
+
+	for (i = 0; i < SECY_PN_QUERY_TIMES; i++) {
+		SHR_RET_ON_ERR(qca808x_secy_rx_sa_xpn_get(port, sc_index, an, &npn));
+		*next_xpn = npn;
+		if (npn >= p_macsec_device_cfg[dev_id]->secy_pn_table[pn_index].rx_sa_xpn) {
+			p_macsec_device_cfg[dev_id]->secy_pn_table[pn_index].rx_sa_xpn = npn;
+			break;
+		}
+	}
+	if (i >= SECY_PN_QUERY_TIMES)
+		*next_xpn = p_macsec_device_cfg[dev_id]->secy_pn_table[pn_index].rx_sa_xpn;
+
+	return ERROR_OK;
+}
+
+g_error_t qca_macsec_rx_sa_npn_set(struct macsec_port *port, u32 sc_index,
+				   u32 an, u32 next_pn)
+{
+	u32 dev_id = 0;
+	u32 pn_index = 0;
+
+	SHR_PARAM_CHECK((port != NULL) &&
+			(sc_index <= SECY_SC_IDX_MAX) &&
+			(an <= SECY_AN_IDX_MAX));
+
+	SHR_RET_ON_ERR(qca808x_secy_rx_sa_npn_set(port, sc_index, an, next_pn));
 
 	pn_index = (sc_index * 4 + an);
 	dev_id = macsec_get_device_id(port->phydev);
@@ -574,12 +613,10 @@ g_error_t qca_macsec_rx_sa_npn_set(struct macsec_port *port, u32 sc_index,
 }
 
 g_error_t qca_macsec_rx_sa_npn_get(struct macsec_port *port, u32 sc_index,
-				   u32 an, u64 *next_pn)
+				   u32 an, u32 *next_pn)
 {
 	u32 dev_id = 0, pn_index = 0, i = 0;
-	u32 npn = 0, xpn = 0;
-	u64 pn = 0;
-	bool xpn_enable = FALSE;
+	u32 npn = 0;
 
 	SHR_PARAM_CHECK((port != NULL) &&
 			(sc_index <= SECY_SC_IDX_MAX) &&
@@ -592,16 +629,10 @@ g_error_t qca_macsec_rx_sa_npn_get(struct macsec_port *port, u32 sc_index,
 		return ERROR_NOT_FOUND;
 
 	for (i = 0; i < SECY_PN_QUERY_TIMES; i++) {
-		SHR_RET_ON_ERR(qca808x_secy_xpn_en_get(port, &xpn_enable));
-		if (xpn_enable) {
-			SHR_RET_ON_ERR(qca808x_secy_rx_sa_xpn_get(port, sc_index, an, &xpn));
-			pn = xpn;
-		}
 		SHR_RET_ON_ERR(qca808x_secy_rx_sa_npn_get(port, sc_index, an, &npn));
-		pn = (pn << 32) | npn;
-		*next_pn = pn;
-		if (pn >= p_macsec_device_cfg[dev_id]->secy_pn_table[pn_index].rx_sa_pn) {
-			p_macsec_device_cfg[dev_id]->secy_pn_table[pn_index].rx_sa_pn = pn;
+		*next_pn = npn;
+		if (npn >= p_macsec_device_cfg[dev_id]->secy_pn_table[pn_index].rx_sa_pn) {
+			p_macsec_device_cfg[dev_id]->secy_pn_table[pn_index].rx_sa_pn = npn;
 			break;
 		}
 	}
@@ -1257,27 +1288,66 @@ g_error_t qca_macsec_rx_udf_ufilt_cfg_get(struct macsec_port *port,
 	return ERROR_OK;
 }
 
-g_error_t qca_macsec_tx_sa_npn_set(struct macsec_port *port, u32 sc_index,
-				   u32 an, u64 next_pn)
+g_error_t qca_macsec_tx_sa_xpn_set(struct macsec_port *port, u32 sc_index,
+				   u32 an, u32 next_xpn)
 {
 	u32 dev_id = 0;
 	u32 pn_index = 0;
-	u32 npn = 0;
-	u32 xpn = 0;
-	bool xpn_enable = FALSE;
 
 	SHR_PARAM_CHECK((port != NULL) &&
 			(sc_index <= SECY_SC_IDX_MAX) &&
 			(an <= SECY_AN_IDX_MAX));
 
-	SHR_RET_ON_ERR(qca808x_secy_xpn_en_get(port, &xpn_enable));
-	if (xpn_enable) {
-		xpn = (u32)((next_pn >> 16) >> 16);
-		SHR_RET_ON_ERR(qca808x_secy_tx_sa_xpn_set(port, sc_index, an, xpn));
-	}
+	SHR_RET_ON_ERR(qca808x_secy_tx_sa_xpn_set(port, sc_index, an, next_xpn));
 
-	npn = (u32)(next_pn & 0xffffffff);
-	SHR_RET_ON_ERR(qca808x_secy_tx_sa_npn_set(port, sc_index, an, npn));
+	pn_index = (sc_index * 4 + an);
+	dev_id = macsec_get_device_id(port->phydev);
+	if (dev_id != INVALID_DEVICE_ID)
+		p_macsec_device_cfg[dev_id]->secy_pn_table[pn_index].tx_sa_xpn = next_xpn;
+	return ERROR_OK;
+}
+
+g_error_t qca_macsec_tx_sa_xpn_get(struct macsec_port *port, u32 sc_index,
+				   u32 an, u32 *next_xpn)
+{
+	u32 dev_id = 0, pn_index = 0, i = 0;
+	u32 npn = 0;
+
+	SHR_PARAM_CHECK((port != NULL) &&
+			(sc_index <= SECY_SC_IDX_MAX) &&
+			(an <= SECY_AN_IDX_MAX) &&
+			(next_xpn != NULL));
+
+	pn_index = (sc_index * 4 + an);
+	dev_id = macsec_get_device_id(port->phydev);
+	if (dev_id == INVALID_DEVICE_ID)
+		return ERROR_NOT_FOUND;
+
+	for (i = 0; i < SECY_PN_QUERY_TIMES; i++) {
+		SHR_RET_ON_ERR(qca808x_secy_tx_sa_xpn_get(port, sc_index, an, &npn));
+		*next_xpn = npn;
+		if (npn >= p_macsec_device_cfg[dev_id]->secy_pn_table[pn_index].tx_sa_xpn) {
+			p_macsec_device_cfg[dev_id]->secy_pn_table[pn_index].tx_sa_xpn = npn;
+			break;
+		}
+	}
+	if (i >= SECY_PN_QUERY_TIMES)
+		*next_xpn = p_macsec_device_cfg[dev_id]->secy_pn_table[pn_index].tx_sa_xpn;
+
+	return ERROR_OK;
+}
+
+g_error_t qca_macsec_tx_sa_npn_set(struct macsec_port *port, u32 sc_index,
+				   u32 an, u32 next_pn)
+{
+	u32 dev_id = 0;
+	u32 pn_index = 0;
+
+	SHR_PARAM_CHECK((port != NULL) &&
+			(sc_index <= SECY_SC_IDX_MAX) &&
+			(an <= SECY_AN_IDX_MAX));
+
+	SHR_RET_ON_ERR(qca808x_secy_tx_sa_npn_set(port, sc_index, an, next_pn));
 
 	pn_index = (sc_index * 4 + an);
 	dev_id = macsec_get_device_id(port->phydev);
@@ -1287,12 +1357,10 @@ g_error_t qca_macsec_tx_sa_npn_set(struct macsec_port *port, u32 sc_index,
 }
 
 g_error_t qca_macsec_tx_sa_npn_get(struct macsec_port *port, u32 sc_index,
-				   u32 an, u64 *next_pn)
+				   u32 an, u32 *next_pn)
 {
 	u32 dev_id = 0, pn_index = 0, i = 0;
-	u32 npn = 0, xpn = 0;
-	u64 pn = 0;
-	bool xpn_enable = FALSE;
+	u32 npn = 0;
 
 	SHR_PARAM_CHECK((port != NULL) &&
 			(sc_index <= SECY_SC_IDX_MAX) &&
@@ -1305,16 +1373,10 @@ g_error_t qca_macsec_tx_sa_npn_get(struct macsec_port *port, u32 sc_index,
 		return ERROR_NOT_FOUND;
 
 	for (i = 0; i < SECY_PN_QUERY_TIMES; i++) {
-		SHR_RET_ON_ERR(qca808x_secy_xpn_en_get(port, &xpn_enable));
-		if (xpn_enable) {
-			SHR_RET_ON_ERR(qca808x_secy_tx_sa_xpn_get(port, sc_index, an, &xpn));
-			pn = xpn;
-		}
 		SHR_RET_ON_ERR(qca808x_secy_tx_sa_npn_get(port, sc_index, an, &npn));
-		pn = (pn << 32) | npn;
-		*next_pn = pn;
-		if (pn >= p_macsec_device_cfg[dev_id]->secy_pn_table[pn_index].tx_sa_pn) {
-			p_macsec_device_cfg[dev_id]->secy_pn_table[pn_index].tx_sa_pn = pn;
+		*next_pn = npn;
+		if (npn >= p_macsec_device_cfg[dev_id]->secy_pn_table[pn_index].tx_sa_pn) {
+			p_macsec_device_cfg[dev_id]->secy_pn_table[pn_index].tx_sa_pn = npn;
 			break;
 		}
 	}
