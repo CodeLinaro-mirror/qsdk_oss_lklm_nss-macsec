@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2014, 2018, The Linux Foundation. All rights reserved.
- * Copyright (c) 2023 Qualcomm Innovation Center, Inc. All rights reserved.
+ * Copyright (c) 2023-2024 Qualcomm Innovation Center, Inc. All rights reserved.
  *
  * Permission to use, copy, modify, and/or distribute this software for any
  * purpose with or without fee is hereby granted, provided that the above
@@ -386,6 +386,38 @@ u32 nss_macsec_secy_udf_ethtype_set(u32 secy_id, bool enable, u16 type)
 
 	rv = qca_macsec_udf_ethtype_set(FAL_SECY_ID_TO_PORT(secy_id),
 					enable, type);
+	return rv;
+}
+
+u32 nss_macsec_secy_mib_saturate_en_get(u32 secy_id, bool *penable)
+{
+	g_error_t rv;
+
+	SHR_PARAM_CHECK((secy_id < FAL_SECY_ID_NUM) && (penable != NULL));
+
+	rv = qca_macsec_mib_saturate_en_get(FAL_SECY_ID_TO_PORT(secy_id),
+						penable);
+	return rv;
+}
+
+u32 nss_macsec_secy_mib_saturate_en_set(u32 secy_id, bool enable)
+{
+	g_error_t rv;
+
+	SHR_PARAM_CHECK(secy_id < FAL_SECY_ID_NUM);
+
+	rv = qca_macsec_mib_saturate_en_set(FAL_SECY_ID_TO_PORT(secy_id),
+						enable);
+	return rv;
+}
+
+u32 nss_macsec_secy_xor_key_set(u32 secy_id,  bool enable, u16 key)
+{
+	g_error_t rv;
+
+	SHR_PARAM_CHECK(secy_id < FAL_SECY_ID_NUM);
+
+	rv = qca_macsec_xor_key_set(FAL_SECY_ID_TO_PORT(secy_id), enable, key);
 	return rv;
 }
 

@@ -22,6 +22,8 @@
 #define QCA8081_PHY      0x004DD100
 #define QCA8081_PHY_V1_1 0x004DD101
 #define QCA8084_PHY      0x004DD180
+#define QCA8111_PHY      0x004DD1C0
+
 
 #define MACSEC_DEVICE_MAXNUM 5
 #define INVALID_DEVICE_ID  0xFFFFFFFF
@@ -285,6 +287,7 @@ struct secy_udf_filt_cfg_t {
 void qca_macsec_device_cleanup(void);
 int qca_macsec_device_attach(void *dev);
 int qca_macsec_device_detach(void *dev);
+u32 macsec_get_phyid(struct phy_device *phydev);
 u32 macsec_get_device_id(struct phy_device *phydev);
 struct macsec_port *macsec_port_get_by_device_id(u32 dev_id);
 g_error_t qca_macsec_channel_number_get(struct macsec_port *port, u32 *number);
@@ -505,5 +508,11 @@ g_error_t qca_macsec_tx_udf_cfilt_cfg_set(struct macsec_port *port,
 				struct secy_udf_filt_cfg_t *cfg);
 g_error_t qca_macsec_tx_udf_cfilt_cfg_get(struct macsec_port *port,
 				struct secy_udf_filt_cfg_t *cfg);
+g_error_t qca_macsec_mib_saturate_en_set(struct macsec_port *port,
+						bool enable);
+g_error_t qca_macsec_mib_saturate_en_get(struct macsec_port *port,
+						bool *enable);
+g_error_t qca_macsec_xor_key_set(struct macsec_port *port,
+					bool enable, u16 key);
 
 #endif /* _NSS_MACSEC_MACSEC_H_ */

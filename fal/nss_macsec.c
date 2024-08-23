@@ -47,6 +47,25 @@ static u32 macsec_device_register(struct phy_device *phydev)
 	return assign_id;
 }
 
+static g_error_t macsec_sak_xor(struct secy_sak_t *key, u16 xorkey)
+{
+	u16 sak16 = 0;
+
+	for (int i = 0; i < 8; i++) {
+		sak16 = (key->sak[i * 2 + 1] << 8) | key->sak[i * 2];
+		sak16 ^= xorkey;
+		key->sak[i * 2] = sak16 & 0xFF;
+		key->sak[i * 2 + 1] = (sak16 >> 8) & 0xFF;
+		if (key->len == SAK_LEN_256BITS) {
+			sak16 = (key->sak1[i * 2 + 1] << 8) | key->sak1[i * 2];
+			sak16 ^= xorkey;
+			key->sak1[i * 2] = sak16 & 0xFF;
+			key->sak1[i * 2 + 1] = (sak16 >> 8) & 0xFF;
+		}
+	}
+	return ERROR_OK;
+}
+
 static g_error_t macsec_ctl_filt_mac_convert(struct secy_ctl_filt_t *secy_filt,
 						struct secy_udf_filt_t *filter)
 {
@@ -310,6 +329,18 @@ static g_error_t macsec_tx_ctl_filt_half_da_sa_set(struct macsec_port *port, u32
 	SHR_RET_ON_ERR(qca808x_secy_tx_udf_filt_set(port, 1, &filter1));
 
 	return ERROR_OK;
+}
+
+u32 macsec_get_phyid(struct phy_device *phydev)
+{
+	u32 phyid = 0;
+
+	if (phydev->is_c45)
+		phyid = phydev->c45_ids.device_ids[
+					__ffs(phydev->c45_ids.mmds_present)];
+	else
+		phyid = phydev->phy_id;
+	return phyid;
 }
 
 u32 macsec_get_device_id(struct phy_device *phydev)
@@ -721,6 +752,9 @@ g_error_t qca_macsec_rx_sa_en_get(struct macsec_port *port, u32 sc_index,
 g_error_t qca_macsec_rx_sak_set(struct macsec_port *port, u32 sc_index,
 				  u32 an, struct secy_sak_t *key)
 {
+	bool enable = FALSE;
+	u16 xorkey = 0;
+
 	SHR_PARAM_CHECK((port != NULL) &&
 			(sc_index <= SECY_SC_IDX_MAX) &&
 			(an <= SECY_AN_IDX_MAX) &&
@@ -730,6 +764,10 @@ g_error_t qca_macsec_rx_sak_set(struct macsec_port *port, u32 sc_index,
 		(key->len != SAK_LEN_256BITS) &&
 		(key->len != SAK_LEN_LEGACY))
 		return ERROR_PARAM;
+
+	SHR_RET_ON_ERR(qca81xx_secy_xor_key_get(port, &enable, &xorkey));
+	if (enable)
+		macsec_sak_xor(key, xorkey);
 
 	SHR_RET_ON_ERR(qca808x_secy_rx_sak_set(port, sc_index, an, key));
 	return ERROR_OK;
@@ -1458,6 +1496,9 @@ g_error_t qca_macsec_tx_sa_en_get(struct macsec_port *port, u32 sc_index, u32 an
 g_error_t qca_macsec_tx_sak_set(struct macsec_port *port, u32 sc_index,
 				  u32 an, struct secy_sak_t *key)
 {
+	bool enable = FALSE;
+	u16 xorkey = 0;
+
 	SHR_PARAM_CHECK((port != NULL) &&
 			(sc_index <= SECY_SC_IDX_MAX) &&
 			(an <= SECY_AN_IDX_MAX) &&
@@ -1467,6 +1508,10 @@ g_error_t qca_macsec_tx_sak_set(struct macsec_port *port, u32 sc_index,
 		(key->len != SAK_LEN_256BITS) &&
 		(key->len != SAK_LEN_LEGACY))
 		return ERROR_PARAM;
+
+	SHR_RET_ON_ERR(qca81xx_secy_xor_key_get(port, &enable, &xorkey));
+	if (enable)
+		macsec_sak_xor(key, xorkey);
 
 	SHR_RET_ON_ERR(qca808x_secy_tx_sak_set(port, sc_index, an, key));
 	return ERROR_OK;
@@ -2191,17 +2236,56 @@ g_error_t qca_macsec_tx_udf_cfilt_cfg_get(struct macsec_port *port,
 	return ERROR_OK;
 }
 
+g_error_t qca_macsec_mib_saturate_en_set(struct macsec_port *port, bool enable)
+{
+	SHR_PARAM_CHECK(port != NULL);
+
+	if (macsec_get_phyid(port->phydev) != QCA8111_PHY)
+		return ERROR_NOT_SUPPORT;
+
+	SHR_RET_ON_ERR(qca81xx_secy_mib_saturate_en_set(port, enable));
+	return ERROR_OK;
+}
+
+g_error_t qca_macsec_mib_saturate_en_get(struct macsec_port *port, bool *enable)
+{
+	SHR_PARAM_CHECK((port != NULL) &&
+			(enable != NULL));
+
+	if (macsec_get_phyid(port->phydev) != QCA8111_PHY)
+		return ERROR_NOT_SUPPORT;
+
+	SHR_RET_ON_ERR(qca81xx_secy_mib_saturate_en_get(port, enable));
+	return ERROR_OK;
+}
+
+g_error_t qca_macsec_xor_key_set(struct macsec_port *port,
+				    bool enable, u16 key)
+{
+	SHR_PARAM_CHECK(port != NULL);
+
+	if (macsec_get_phyid(port->phydev) != QCA8111_PHY)
+		return ERROR_NOT_SUPPORT;
+
+	SHR_RET_ON_ERR(qca81xx_secy_xor_key_set(port, enable, key));
+	return ERROR_OK;
+}
+
 g_error_t qca_macsec_secy_init(struct macsec_port *port)
 {
 	u32 sc, sa;
 	u32 pn = 1;
+	u32 phyid = 0;
 
 	SHR_PARAM_CHECK(port != NULL);
+
+	phyid = macsec_get_phyid(port->phydev);
 
 	qca808x_secy_clock_en_set(port, TRUE);
 	qca_macsec_tx_mib_clear(port);
 	qca_macsec_rx_mib_clear(port);
-	qca808x_secy_forward_az_pattern_en_set(port, TRUE);
+	if ((phyid == QCA8081_PHY_V1_1) || (phyid == QCA8084_PHY))
+		qca808x_secy_forward_az_pattern_en_set(port, TRUE);
 	for (sc = 0; sc < SECY_SC_IDX_MAX + 1; sc++) {
 		qca_macsec_tx_sc_mib_clear(port, sc);
 		qca_macsec_rx_sc_mib_clear(port, sc);
