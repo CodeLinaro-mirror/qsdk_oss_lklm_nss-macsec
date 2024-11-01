@@ -765,9 +765,12 @@ g_error_t qca_macsec_rx_sak_set(struct macsec_port *port, u32 sc_index,
 		(key->len != SAK_LEN_LEGACY))
 		return ERROR_PARAM;
 
-	SHR_RET_ON_ERR(qca81xx_secy_xor_key_get(port, &enable, &xorkey));
-	if (enable)
-		macsec_sak_xor(key, xorkey);
+	if (macsec_get_phyid(port->phydev) == QCA8111_PHY) {
+		SHR_RET_ON_ERR(qca81xx_secy_xor_key_get(port,
+							&enable, &xorkey));
+		if (enable)
+			macsec_sak_xor(key, xorkey);
+	}
 
 	SHR_RET_ON_ERR(qca808x_secy_rx_sak_set(port, sc_index, an, key));
 	return ERROR_OK;
@@ -1509,9 +1512,12 @@ g_error_t qca_macsec_tx_sak_set(struct macsec_port *port, u32 sc_index,
 		(key->len != SAK_LEN_LEGACY))
 		return ERROR_PARAM;
 
-	SHR_RET_ON_ERR(qca81xx_secy_xor_key_get(port, &enable, &xorkey));
-	if (enable)
-		macsec_sak_xor(key, xorkey);
+	if (macsec_get_phyid(port->phydev) == QCA8111_PHY) {
+		SHR_RET_ON_ERR(qca81xx_secy_xor_key_get(port,
+							&enable, &xorkey));
+		if (enable)
+			macsec_sak_xor(key, xorkey);
+	}
 
 	SHR_RET_ON_ERR(qca808x_secy_tx_sak_set(port, sc_index, an, key));
 	return ERROR_OK;
