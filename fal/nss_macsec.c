@@ -1,19 +1,9 @@
 /*
  * Copyright (c) 2014, The Linux Foundation. All rights reserved.
- * Copyright (c) 2022-2024 Qualcomm Innovation Center, Inc. All rights reserved.
- *
- * Permission to use, copy, modify, and/or distribute this software for any
- * purpose with or without fee is hereby granted, provided that the above
- * copyright notice and this permission notice appear in all copies.
- *
- * THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
- * WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
- * MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
- * ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
- * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
- * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
- * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
+ * Copyright (c) Qualcomm Technologies, Inc. and/or its subsidiaries.
+ * SPDX-License-Identifier: ISC
  */
+
 #include <linux/kernel.h>
 #include <linux/module.h>
 #include <linux/phy.h>
@@ -2244,9 +2234,13 @@ g_error_t qca_macsec_tx_udf_cfilt_cfg_get(struct macsec_port *port,
 
 g_error_t qca_macsec_mib_saturate_en_set(struct macsec_port *port, bool enable)
 {
+	u32 phyid = 0;
+
 	SHR_PARAM_CHECK(port != NULL);
 
-	if (macsec_get_phyid(port->phydev) != QCA8111_PHY)
+	phyid = macsec_get_phyid(port->phydev);
+
+	if (phyid != QCA8111_PHY && phyid != QCE1204_PHY)
 		return ERROR_NOT_SUPPORT;
 
 	SHR_RET_ON_ERR(qca81xx_secy_mib_saturate_en_set(port, enable));
@@ -2255,10 +2249,14 @@ g_error_t qca_macsec_mib_saturate_en_set(struct macsec_port *port, bool enable)
 
 g_error_t qca_macsec_mib_saturate_en_get(struct macsec_port *port, bool *enable)
 {
+	u32 phyid = 0;
+
 	SHR_PARAM_CHECK((port != NULL) &&
 			(enable != NULL));
 
-	if (macsec_get_phyid(port->phydev) != QCA8111_PHY)
+	phyid = macsec_get_phyid(port->phydev);
+
+	if (phyid != QCA8111_PHY && phyid != QCE1204_PHY)
 		return ERROR_NOT_SUPPORT;
 
 	SHR_RET_ON_ERR(qca81xx_secy_mib_saturate_en_get(port, enable));
@@ -2290,7 +2288,8 @@ g_error_t qca_macsec_secy_init(struct macsec_port *port)
 	qca808x_secy_clock_en_set(port, TRUE);
 	qca_macsec_tx_mib_clear(port);
 	qca_macsec_rx_mib_clear(port);
-	if ((phyid == QCA8081_PHY_V1_1) || (phyid == QCA8084_PHY))
+	if ((phyid == QCA8081_PHY) || (phyid == QCA8084_PHY) ||
+		(phyid == QCE1204_PHY))
 		qca808x_secy_forward_az_pattern_en_set(port, TRUE);
 	for (sc = 0; sc < SECY_SC_IDX_MAX + 1; sc++) {
 		qca_macsec_tx_sc_mib_clear(port, sc);
