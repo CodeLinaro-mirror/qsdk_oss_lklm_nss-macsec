@@ -13,11 +13,37 @@
 #include <net/sock.h>
 #include <linux/types.h>
 #include <linux/errno.h>
+#include <linux/debugfs.h>
+#include <linux/seq_file.h>
 #include "nss_macsec_sdk_api.h"
 #include "nss_macsec_fal_api.h"
 #include "nss_macsec.h"
 #include "nss_macsec_utility.h"
 
+/* DebugFS root directory */
+static struct dentry *macsec_debugfs_root;
+
+/* State string mapping - only used in this file */
+static const char *macsec_state_strings[MACSEC_STATE_MAX] = {
+	"Initial",
+	"Success",
+	"Netlink Init Failed",
+	"Notifier Registration Failed",
+	"Memory Allocation Failed",
+	"SecY Initialization Failed",
+	"Unregister Failed",
+	"Removed"
+};
+
+/* Module statistics - only used in this file */
+static struct macsec_module_stats macsec_stats = {
+	.current_state = MACSEC_INIT,
+	.register_count = ATOMIC_INIT(0),
+	.unregister_count = ATOMIC_INIT(0),
+};
+
+/* Device debug info - shared across files, defined here */
+struct macsec_device_debug macsec_device_debug[MACSEC_DEVICE_MAXNUM];
 
 static struct sock *sdk_nl_sk = NULL;
 
@@ -125,11 +151,86 @@ static void nss_macsec_netlink_fini(void)
 	}
 }
 
-static int nss_macsec_dev_event(struct notifier_block  *nb, unsigned long event, void  *info)
+static int nss_macsec_module_status_show(struct seq_file *m, void *v)
+{
+	u32 device_count = 0;
+	int i;
+	u32 dev_state;
+	const char *state_str;
+
+	/* Part 1: Global module state with aligned format */
+	if (macsec_stats.current_state < MACSEC_STATE_MAX) {
+		seq_printf(m, "%-27s : %s\n", "NSS_MACsec_Module_State",
+			  macsec_state_strings[macsec_stats.current_state]);
+	} else {
+		seq_printf(m, "%-27s : unknown state %u\n",
+				"NSS_MACsec_Module_State",
+				macsec_stats.current_state);
+	}
+
+	seq_printf(m, "%-27s : %u\n", "register_count",
+		   atomic_read(&macsec_stats.register_count));
+	seq_printf(m, "%-27s : %u\n", "unregister_count",
+		   atomic_read(&macsec_stats.unregister_count));
+
+	/* Get active device count */
+	device_count = qca_macsec_get_device_count();
+	seq_printf(m, "%-27s : %u\n", "MACsec_device_count", device_count);
+
+	/* Part 2: Device status - show all devices with debug state */
+	for (i = 0; i < MACSEC_DEVICE_MAXNUM; i++) {
+		if (macsec_device_debug[i].device_state != MACSEC_INIT) {
+			dev_state = macsec_device_debug[i].device_state;
+			state_str = (dev_state < MACSEC_STATE_MAX) ?
+				    macsec_state_strings[dev_state] : "unknown";
+
+			seq_printf(m, "Device %d\n", i);
+			seq_printf(m, "    %-23s : %s\n", "Interface",
+				   macsec_device_debug[i].interface_name);
+			seq_printf(m, "    %-23s : \"%s\"\n", "Driver",
+				   macsec_device_debug[i].drv_name);
+			seq_printf(m, "    %-23s : %s\n", "State", state_str);
+		}
+	}
+
+	return 0;
+}
+
+DEFINE_SHOW_ATTRIBUTE(nss_macsec_module_status);
+
+static int nss_macsec_debugfs_init(void)
+{
+	macsec_debugfs_root = debugfs_create_dir("qca-nss-macsec", NULL);
+	if (!macsec_debugfs_root) {
+		osal_print("Failed to create debugfs root directory\n");
+		return -ENOMEM;
+	}
+
+	if (!debugfs_create_file("module_state", 0444, macsec_debugfs_root,
+				NULL, &nss_macsec_module_status_fops)) {
+		osal_print("Failed to create module_status debugfs file\n");
+		debugfs_remove_recursive(macsec_debugfs_root);
+		return -ENOMEM;
+	}
+
+	return 0;
+}
+
+static void nss_macsec_debugfs_exit(void)
+{
+	debugfs_remove_recursive(macsec_debugfs_root);
+}
+
+static int nss_macsec_dev_event(struct notifier_block  *nb,
+				 unsigned long event, void  *info)
 {
 	struct net_device *event_dev = netdev_notifier_info_to_dev(info);
 	int ret = 0;
 	u32 phyid = 0;
+
+	/* Defensive check for event_dev */
+	if (unlikely(!event_dev))
+		return NOTIFY_DONE;
 
 	if (NULL == event_dev->phydev)
 		return NOTIFY_DONE;
@@ -148,18 +249,14 @@ static int nss_macsec_dev_event(struct notifier_block  *nb, unsigned long event,
 
 	switch (event) {
 	case NETDEV_REGISTER:
-		ret = qca_macsec_device_attach(event_dev->phydev);
-		if (ret)
-			ret = NOTIFY_DONE;
-		else
-			ret = NOTIFY_OK;
+		atomic_inc(&macsec_stats.register_count);
+		ret = qca_macsec_device_attach(event_dev);
+		ret = ret ? NOTIFY_DONE : NOTIFY_OK;
 		break;
 	case NETDEV_UNREGISTER:
-		ret = qca_macsec_device_detach(event_dev->phydev);
-		if (ret)
-			ret = NOTIFY_DONE;
-		else
-			ret = NOTIFY_OK;
+		atomic_inc(&macsec_stats.unregister_count);
+		ret = qca_macsec_device_detach(event_dev);
+		ret = ret ? NOTIFY_DONE : NOTIFY_OK;
 		break;
 	default:
 		ret = NOTIFY_DONE;
@@ -180,17 +277,36 @@ static int __init nss_macsec_init(void)
 {
 	int ret = 0;
 
-	nss_macsec_netlink_init();
+	/* Initialize statistics */
+	memset(&macsec_device_debug, 0, sizeof(macsec_device_debug));
+
+	/* Initialize debugfs FIRST - so we can always check status */
+	ret = nss_macsec_debugfs_init();
+	if (ret) {
+		osal_print("Failed to initialize debugfs, error=%d\n", ret);
+		/* Continue - debugfs is not critical for core functionality */
+	}
+
+	/* System resource initialization */
+	ret = nss_macsec_netlink_init();
+	if (ret) {
+		macsec_stats.current_state = MACSEC_NETLINK_INIT_FAILURE;
+		return ret;
+	}
+
 	nss_macsec_mutex_init();
 
 	ret = register_netdevice_notifier(&nss_macsec_netdev_notifier);
 	if (ret) {
-		osal_print("Failed to register NETDEV notifier, error=%d\n", ret);
+		macsec_stats.current_state = MACSEC_NET_NOTIFIER_FAILURE;
+		/* Cleanup resources before exit */
+		nss_macsec_netlink_fini();
+		nss_macsec_mutex_destroy();
 		return ret;
 	}
 
-	osal_print("nss_macsec init success\n");
-
+	/* Module initialization successful - set to SUCCESS state */
+	macsec_stats.current_state = MACSEC_SUCCESS;
 	return 0;
 }
 
@@ -199,6 +315,7 @@ static void __exit nss_macsec_fini(void)
 	unregister_netdevice_notifier(&nss_macsec_netdev_notifier);
 
 	nss_macsec_netlink_fini();
+	nss_macsec_debugfs_exit();
 	nss_macsec_mutex_destroy();
 	qca_macsec_device_cleanup();
 

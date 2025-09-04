@@ -7,6 +7,7 @@
 #include <linux/kernel.h>
 #include <linux/module.h>
 #include <linux/phy.h>
+#include <linux/netdevice.h>
 #include "nss_macsec_types.h"
 #include "nss_macsec.h"
 #include "qca808x_macsec.h"
@@ -1911,7 +1912,8 @@ g_error_t qca_macsec_tx_sc_confidentiality_offset_get(struct macsec_port *port, 
 	SHR_RET_ON_ERR(qca808x_secy_sram_dbg_en_get(port, &dbg_enable));
 
 	if (dbg_enable) {
-		SHR_RET_ON_ERR(qca808x_secy_tx_confidentiality_offset_get(port, sc_index, &encryption_offset));
+		SHR_RET_ON_ERR(qca808x_secy_tx_confidentiality_offset_get(port,
+			sc_index, &encryption_offset));
 	} else {
 		dev_id = macsec_get_device_id(port->phydev);
 		if (dev_id == INVALID_DEVICE_ID)
@@ -2275,17 +2277,24 @@ g_error_t qca_macsec_xor_key_set(struct macsec_port *port,
 	return ERROR_OK;
 }
 
-g_error_t qca_macsec_secy_init(struct macsec_port *port)
+int qca_macsec_secy_init(struct macsec_port *port)
 {
 	u32 sc, sa;
 	u32 pn = 1;
 	u32 phyid = 0;
+	g_error_t ret;
 
-	SHR_PARAM_CHECK(port != NULL);
+	if (port == NULL)
+		return -EINVAL;
 
 	phyid = macsec_get_phyid(port->phydev);
 
-	qca808x_secy_clock_en_set(port, TRUE);
+	ret = qca808x_secy_clock_en_set(port, TRUE);
+	if (ret != ERROR_OK) {
+		osal_print("Failed to enable secy clock, error=%d\n", ret);
+		return -EIO;
+	}
+
 	qca_macsec_tx_mib_clear(port);
 	qca_macsec_rx_mib_clear(port);
 	if ((phyid == QCA8081_PHY) || (phyid == QCA8084_PHY) ||
@@ -2313,33 +2322,68 @@ g_error_t qca_macsec_secy_init(struct macsec_port *port)
 				sa, pn);
 		}
 	}
-	return ERROR_OK;
+	return 0;
 }
 
 int qca_macsec_device_attach(void *dev)
 {
 	u32 dev_id = 0;
-	struct phy_device *phydev = (struct phy_device *)dev;
+	int ret = 0;
+	struct net_device *netdev;
+	struct phy_device *phydev;
+	const char *drv_name = "unknown";
 
-	if (NULL == phydev)
+	if (NULL == dev)
 		return -EINVAL;
+
+	netdev = (struct net_device *)dev;
+
+	if (NULL == netdev->phydev)
+		return -EINVAL;
+
+	phydev = netdev->phydev;
 
 	dev_id = macsec_device_register(phydev);
 	if (INVALID_DEVICE_ID == dev_id) {
 		osal_print("device:%p fail to register!\n", phydev);
 		return -ENODEV;
 	}
-	osal_print("phydev:%p register to macsec dev_id: %d\n", phydev, dev_id);
+
+	/* Set device to initial state - device allocated but not fully initialized */
+	macsec_device_debug[dev_id].device_state = MACSEC_INIT;
+
+	/* Store interface name for debugging */
+	strlcpy(macsec_device_debug[dev_id].interface_name, netdev->name,
+		sizeof(macsec_device_debug[dev_id].interface_name));
+
+	/* Save driver name safely for debugging */
+	if (phydev && phydev->drv && phydev->drv->name)
+		drv_name = phydev->drv->name;
+	strlcpy(macsec_device_debug[dev_id].drv_name, drv_name,
+		sizeof(macsec_device_debug[dev_id].drv_name));
 
 	p_macsec_device_cfg[dev_id] = devm_kzalloc(&(phydev->mdio.dev),
 						   sizeof(struct qca_macsec_device_t), GFP_KERNEL);
-	if (!p_macsec_device_cfg[dev_id])
+	if (!p_macsec_device_cfg[dev_id]) {
+		macsec_device_debug[dev_id].device_state =
+						MACSEC_MEMORY_ALLOC_FAILURE;
 		return -ENOMEM;
+	}
 
 	p_macsec_device_cfg[dev_id]->port.phydev = phydev;
 	p_macsec_device_cfg[dev_id]->port.type = MACSEC_IN_PHY;
 
-	qca_macsec_secy_init(&(p_macsec_device_cfg[dev_id]->port));
+	/* SecY initialization */
+	ret = qca_macsec_secy_init(&(p_macsec_device_cfg[dev_id]->port));
+	if (ret) {
+		macsec_device_debug[dev_id].device_state =
+						MACSEC_SECY_INIT_FAILURE;
+		/* No cleanup - preserve state for hardware failure analysis */
+		return ret;
+	}
+
+	/* Device attach successful */
+	macsec_device_debug[dev_id].device_state = MACSEC_SUCCESS;
 
 	return 0;
 }
@@ -2347,26 +2391,60 @@ int qca_macsec_device_attach(void *dev)
 int qca_macsec_device_detach(void *dev)
 {
 	u32 dev_id = 0;
-	struct phy_device *phydev = (struct phy_device *)dev;
+	struct net_device *netdev;
+	struct phy_device *phydev;
+	int ret;
 
-	if (NULL == phydev)
+	if (NULL == dev)
 		return -EINVAL;
+
+	netdev = (struct net_device *)dev;
+
+	if (NULL == netdev->phydev)
+		return -EINVAL;
+
+	phydev = netdev->phydev;
 
 	dev_id = macsec_get_device_id(phydev);
 	if (INVALID_DEVICE_ID == dev_id) {
-		osal_print("%s: fail to find dev_id for device:%p! \n", __func__, phydev);
+		osal_print("%s: fail to find dev_id for device:%p! \n",
+			   __func__, phydev);
 		return -ENODEV;
 	}
 
-	qca808x_secy_clock_en_set(&(p_macsec_device_cfg[dev_id]->port), FALSE);
-	if (NULL != p_macsec_device_cfg[dev_id]->offload_secy_cfg) {
-		devm_kfree(&(phydev->mdio.dev), p_macsec_device_cfg[dev_id]->offload_secy_cfg);
-		p_macsec_device_cfg[dev_id]->offload_secy_cfg = NULL;
+	/* Check if device configuration exists before accessing */
+	if (!p_macsec_device_cfg[dev_id]) {
+		osal_print("%s: device configuration is NULL for dev_id:%d! \n",
+			   __func__, dev_id);
+		return -EINVAL;
+	}
+
+	ret = qca808x_secy_clock_en_set(&(p_macsec_device_cfg[dev_id]->port),
+					FALSE);
+	if (ret) {
+		macsec_device_debug[dev_id].device_state =
+						MACSEC_UNREGISTER_FAILURE;
+		return ret;
 	}
 	devm_kfree(&(phydev->mdio.dev), p_macsec_device_cfg[dev_id]);
 	p_macsec_device_cfg[dev_id] = NULL;
+	/* Device detach successful */
+	macsec_device_debug[dev_id].device_state = MACSEC_DETACHED;
 
 	return 0;
+}
+
+int qca_macsec_get_device_count(void)
+{
+	int count = 0;
+	int i;
+
+	for (i = 0; i < MACSEC_DEVICE_MAXNUM; i++) {
+		if (p_macsec_device_cfg[i] != NULL) {
+			count++;
+		}
+	}
+	return count;
 }
 
 void qca_macsec_device_cleanup(void)
@@ -2375,12 +2453,10 @@ void qca_macsec_device_cleanup(void)
 
 	for (dev_id = 0; dev_id < MACSEC_DEVICE_MAXNUM; dev_id++) {
 		if (p_macsec_device_cfg[dev_id] != NULL) {
-			qca808x_secy_clock_en_set(&(p_macsec_device_cfg[dev_id]->port), FALSE);
-			if (NULL != p_macsec_device_cfg[dev_id]->offload_secy_cfg) {
-				devm_kfree(&(p_macsec_device_cfg[dev_id]->port.phydev->mdio.dev), p_macsec_device_cfg[dev_id]->offload_secy_cfg);
-				p_macsec_device_cfg[dev_id]->offload_secy_cfg = NULL;
-			}
-			devm_kfree(&(p_macsec_device_cfg[dev_id]->port.phydev->mdio.dev), p_macsec_device_cfg[dev_id]);
+			qca808x_secy_clock_en_set(&(p_macsec_device_cfg[dev_id]->port),
+				FALSE);
+			devm_kfree(&(p_macsec_device_cfg[dev_id]->port.phydev->mdio.dev),
+				p_macsec_device_cfg[dev_id]);
 			p_macsec_device_cfg[dev_id] = NULL;
 		}
 	}

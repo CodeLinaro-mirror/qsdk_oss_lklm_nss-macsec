@@ -8,6 +8,8 @@
 #ifndef _NSS_MACSEC_MACSEC_H_
 #define _NSS_MACSEC_MACSEC_H_
 
+#include <linux/atomic.h>
+
 
 #define QCA8081_PHY	0x004DD101
 #define QCA8084_PHY	0x004DD180
@@ -144,7 +146,6 @@ struct qca_macsec_device_t {
 	struct  secy_pn_table_t     secy_pn_table[SECY_PN_CHANNEL_MAX];
 	struct  secy_ctl_filt_t     tx_ctl_filt;
 	struct  secy_ctl_filt_t     rx_ctl_filt;
-	void    *offload_secy_cfg;
 };
 
 struct secy_sak_t {
@@ -273,10 +274,41 @@ struct secy_udf_filt_cfg_t {
 	enum secy_udf_filt_cfg_pattern_t pattern2;
 };
 
+/* Module state enumeration */
+enum macsec_module_state {
+	MACSEC_INIT = 0,		/* Initial/unused state */
+	MACSEC_SUCCESS,			/* Success state */
+	MACSEC_NETLINK_INIT_FAILURE,	/* Netlink initialization failed */
+	MACSEC_NET_NOTIFIER_FAILURE,	/* Network notifier registration failed */
+	MACSEC_MEMORY_ALLOC_FAILURE,	/* Memory allocation failed */
+	MACSEC_SECY_INIT_FAILURE,	/* SecY initialization failed */
+	MACSEC_UNREGISTER_FAILURE,	/* Unregister failed */
+	MACSEC_DETACHED,		/* Device detached */
+	MACSEC_STATE_MAX
+};
+
+/* Module statistics */
+struct macsec_module_stats {
+	u32 current_state;		/* Module state */
+	atomic_t register_count;	/* NETDEV_REGISTER event count */
+	atomic_t unregister_count;	/* NETDEV_UNREGISTER event count */
+};
+
+/* Device debug info - preserves information even after device removal */
+struct macsec_device_debug {
+	u32 device_state;		/* Current state, 0 means unused */
+	char interface_name[16];	/* Network interface name */
+	char drv_name[32];		/* Driver name copy for safety */
+};
+
+/* External declaration for debug array (used across files) */
+extern struct macsec_device_debug macsec_device_debug[MACSEC_DEVICE_MAXNUM];
+
 
 void qca_macsec_device_cleanup(void);
 int qca_macsec_device_attach(void *dev);
 int qca_macsec_device_detach(void *dev);
+int qca_macsec_get_device_count(void);
 u32 macsec_get_phyid(struct phy_device *phydev);
 u32 macsec_get_device_id(struct phy_device *phydev);
 struct macsec_port *macsec_port_get_by_device_id(u32 dev_id);
