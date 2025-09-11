@@ -140,6 +140,11 @@ u32 nss_macsec_dt_secy_id_get(u8 *dev_name, u32 *secy_id)
 
 	*secy_id = dev_id;
 
+	/* Update API statistics */
+	if (dev_id < MACSEC_DEVICE_MAXNUM) {
+		macsec_device_debug[dev_id].api_stats.ifname_to_devid_calls++;
+	}
+
 	return ERROR_OK;
 }
 
@@ -198,6 +203,493 @@ static int nss_macsec_module_status_show(struct seq_file *m, void *v)
 
 DEFINE_SHOW_ATTRIBUTE(nss_macsec_module_status);
 
+
+/* Helper function to get SC-SA mapping mode string */
+static const char *get_sc_sa_mapping_string(
+	enum macsec_sc_sa_mapping_mode_t mode)
+{
+	switch (mode) {
+	case MACSEC_SC_SA_MAP_1_1:
+		return "1:1";
+	case MACSEC_SC_SA_MAP_1_2:
+		return "1:2";
+	case MACSEC_SC_SA_MAP_1_4:
+		return "1:4";
+	default:
+		return "unknown";
+	}
+}
+
+/* Helper function to format SCI (MAC address + Port ID) */
+static void format_sci_string(char *buf, size_t buf_size, const u8 *sci)
+{
+	snprintf(buf, buf_size, "%02x:%02x:%02x:%02x:%02x:%02x:%04x",
+		 sci[0], sci[1], sci[2], sci[3], sci[4], sci[5],
+		 (sci[6] << 8) | sci[7]);
+}
+
+/* Helper function to format rule mask meaning */
+static void format_rule_mask_string(char *buf, size_t buf_size, u32 mask)
+{
+	char *pos = buf;
+	size_t remaining = buf_size;
+	int written = 0;
+	bool first = true;
+
+	if (mask & SECY_RULE_MASK_DA) {
+		written = snprintf(pos, remaining, "%sDA", first ? "" : "+");
+		if (written > 0 && written < remaining) {
+			pos += written;
+			remaining -= written;
+			first = false;
+		}
+	}
+	if (mask & SECY_RULE_MASK_SA) {
+		written = snprintf(pos, remaining, "%sSA", first ? "" : "+");
+		if (written > 0 && written < remaining) {
+			pos += written;
+			remaining -= written;
+			first = false;
+		}
+	}
+	if (mask & SECY_RULE_MASK_ETHTYPE) {
+		written = snprintf(pos, remaining, "%sEthType",
+				   first ? "" : "+");
+		if (written > 0 && written < remaining) {
+			pos += written;
+			remaining -= written;
+			first = false;
+		}
+	}
+	if (mask & SECY_RULE_MASK_OUTER_VLAN) {
+		written = snprintf(pos, remaining, "%sOuterVlan",
+				   first ? "" : "+");
+		if (written > 0 && written < remaining) {
+			pos += written;
+			remaining -= written;
+			first = false;
+		}
+	}
+	if (mask & SECY_RULE_MASK_INNER_VLAN) {
+		written = snprintf(pos, remaining, "%sInnerVlan",
+				   first ? "" : "+");
+		if (written > 0 && written < remaining) {
+			pos += written;
+			remaining -= written;
+			first = false;
+		}
+	}
+	if (mask & SECY_RULE_MASK_BROADCAST) {
+		written = snprintf(pos, remaining, "%sBroadcast",
+				   first ? "" : "+");
+		if (written > 0 && written < remaining) {
+			pos += written;
+			remaining -= written;
+			first = false;
+		}
+	}
+	if (mask & SECY_RULE_MASK_TCI) {
+		written = snprintf(pos, remaining, "%sTCI", first ? "" : "+");
+		if (written > 0 && written < remaining) {
+			pos += written;
+			remaining -= written;
+			first = false;
+		}
+	}
+	if (mask & SECY_RULE_MASK_SCI) {
+		written = snprintf(pos, remaining, "%sSCI", first ? "" : "+");
+		if (written > 0 && written < remaining) {
+			pos += written;
+			remaining -= written;
+			first = false;
+		}
+	}
+
+	if (first) {
+		snprintf(buf, buf_size, "none");
+	}
+}
+
+/* Helper function to get control filter match type string */
+static const char *get_ctl_match_type_string(enum secy_ctl_match_type_t type)
+{
+	switch (type) {
+	case SECY_CTL_COMPARE_NO:
+		return "NO";
+	case SECY_CTL_COMPARE_DA:
+		return "DA";
+	case SECY_CTL_COMPARE_SA:
+		return "SA";
+	case SECY_CTL_COMPARE_HALF_DA_SA:
+		return "HALF_DA_SA";
+	case SECY_CTL_COMPARE_ETHER_TYPE:
+		return "ETHER_TYPE";
+	case SECY_CTL_COMPARE_DA_ETHER_TYPE:
+		return "DA_ETHER_TYPE";
+	case SECY_CTL_COMPARE_SA_ETHER_TYPE:
+		return "SA_ETHER_TYPE";
+	case SECY_CTL_COMPARE_DA_RANGE:
+		return "DA_RANGE";
+	default:
+		return "unknown";
+	}
+}
+
+/* Display SSCI table information */
+static void show_ssci_table(struct seq_file *m,
+			    struct qca_macsec_device_t *device)
+{
+	int i, configured_count = 0;
+
+	seq_printf(m, "SSCI Table:\n");
+
+	for (i = 0; i < SECY_LUT_MAX; i++) {
+		if (device->rx_ssci[i] != 0 || device->tx_ssci[i] != 0) {
+			configured_count++;
+			seq_printf(m, "    SC%d:", i);
+			if (device->rx_ssci[i] != 0) {
+				seq_printf(m, " RX=0x%08x",
+					   device->rx_ssci[i]);
+			}
+			if (device->tx_ssci[i] != 0) {
+				seq_printf(m, " TX=0x%08x",
+					   device->tx_ssci[i]);
+			}
+			seq_printf(m, "\n");
+		}
+	}
+	seq_printf(m, "    Total: %d/%d configured\n",
+		   configured_count, SECY_LUT_MAX);
+}
+
+/* Display LUT table information */
+static void show_lut_table(struct seq_file *m,
+			   struct qca_macsec_device_t *device)
+{
+	int i, configured_count = 0;
+	char sci_str[32];
+	char mask_str[128];
+
+	seq_printf(m, "LUT Table:\n");
+
+	for (i = 0; i < SECY_LUT_MAX; i++) {
+		if (device->rx_lut[i].valid || device->tx_lut[i].valid) {
+			configured_count++;
+			seq_printf(m, "    SC%-2d:", i);
+
+			if (device->tx_lut[i].valid) {
+				format_rule_mask_string(mask_str,
+					sizeof(mask_str),
+					device->tx_lut[i].rule_mask);
+				format_sci_string(sci_str, sizeof(sci_str),
+					device->tx_lut[i].sci);
+				seq_printf(m, " TX=mask:0x%02x(%s),"
+					      "offset:%d,tci:0x%02x,sci:%s",
+					device->tx_lut[i].rule_mask,
+					mask_str, device->tx_lut[i].offset,
+					device->tx_lut[i].tci, sci_str);
+			}
+
+			if (device->rx_lut[i].valid) {
+				format_rule_mask_string(mask_str,
+					sizeof(mask_str),
+					device->rx_lut[i].rule_mask);
+				format_sci_string(sci_str, sizeof(sci_str),
+					device->rx_lut[i].sci);
+				if (device->tx_lut[i].valid) {
+					seq_printf(m, "\n         ");
+				}
+				seq_printf(m, " RX=mask:0x%02x(%s),"
+					      "offset:%d,tci:0x%02x,sci:%s",
+					device->rx_lut[i].rule_mask,
+					mask_str, device->rx_lut[i].offset,
+					device->rx_lut[i].tci, sci_str);
+			}
+			seq_printf(m, "\n");
+		}
+	}
+	seq_printf(m, "    Total: %d/%d configured\n",
+		   configured_count, SECY_LUT_MAX);
+}
+
+/* Helper function to display single control filter */
+static void show_single_control_filter(struct seq_file *m,
+					const char *direction,
+					const struct secy_ctl_filt_t *filter)
+{
+	bool skip;
+
+	if (filter->match_type == SECY_CTL_COMPARE_NO)
+		return;
+
+	seq_printf(m, "    %s: %s=", direction,
+		   get_ctl_match_type_string(filter->match_type));
+
+	skip = false;
+	switch (filter->match_type) {
+	case SECY_CTL_COMPARE_DA_ETHER_TYPE:
+	case SECY_CTL_COMPARE_SA_ETHER_TYPE:
+	case SECY_CTL_COMPARE_DA_RANGE:
+		skip = true;
+		fallthrough;
+	case SECY_CTL_COMPARE_DA:
+	case SECY_CTL_COMPARE_SA:
+	case SECY_CTL_COMPARE_HALF_DA_SA:
+		seq_printf(m, " %02x:%02x:%02x:%02x:%02x:%02x",
+			   filter->sa_da_addr[0], filter->sa_da_addr[1],
+			   filter->sa_da_addr[2], filter->sa_da_addr[3],
+			   filter->sa_da_addr[4], filter->sa_da_addr[5]);
+		if (!skip)
+			break;
+		/* fall through */
+		fallthrough;
+	case SECY_CTL_COMPARE_ETHER_TYPE:
+		seq_printf(m, " 0x%04x", filter->ether_type_da_range);
+		break;
+	default:
+		break;
+	}
+
+	seq_printf(m, ", mask= 0x%04x", filter->match_mask);
+
+	/* Show bypass status only when disabled */
+	if (!filter->bypass)
+		seq_printf(m, ", bypass= disabled");
+
+	seq_printf(m, "\n");
+}
+
+/* Display control filter information */
+static void show_control_filters(struct seq_file *m,
+				 struct qca_macsec_device_t *device)
+{
+	seq_printf(m, "Filter:\n");
+
+	/* TX Control Filter */
+	show_single_control_filter(m, "TX", &device->tx_ctl_filt);
+
+	/* RX Control Filter */
+	show_single_control_filter(m, "RX", &device->rx_ctl_filt);
+}
+
+/*
+ * Per-device config_data show function - displays device configuration only
+ */
+static int nss_macsec_device_config_show(struct seq_file *m, void *v)
+{
+	u32 dev_id = (u32)(long)m->private;
+	struct qca_macsec_device_t *local_device;
+	struct macsec_device_debug *dev_debug;
+
+	/* Validate device ID */
+	if (dev_id >= MACSEC_DEVICE_MAXNUM)
+		return -EINVAL;
+
+	dev_debug = &macsec_device_debug[dev_id];
+
+	/* Check if device exists and is in success state */
+	if (dev_debug->device_state != MACSEC_SUCCESS) {
+		/* Empty output for non-success devices */
+		return 0;
+	}
+
+	/* Allocate temporary memory for device data */
+	local_device = kmalloc(sizeof(struct qca_macsec_device_t), GFP_KERNEL);
+	if (!local_device)
+		return -ENOMEM;
+
+	/* Get device data using safe encapsulated access */
+	if (qca_macsec_get_device_data(dev_id, local_device) != 0) {
+		kfree(local_device);
+		return 0;  /* Empty output if device data unavailable */
+	}
+
+	/* Section 1: SC-SA Mapping Mode */
+	seq_printf(m, "SC-SA Mapping Mode: %s\n",
+		  get_sc_sa_mapping_string(local_device->sc_sa_mapping_mode));
+
+	/* Section 2: SSCI Table */
+	show_ssci_table(m, local_device);
+
+	/* Section 3: LUT Table */
+	show_lut_table(m, local_device);
+
+	/* Section 4: Control Filter */
+	show_control_filters(m, local_device);
+
+	/* Free temporary memory */
+	kfree(local_device);
+
+	return 0;
+}
+
+/*
+ * Per-device api_stats show function - displays API statistics only
+ */
+static int nss_macsec_device_api_stats_show(struct seq_file *m, void *v)
+{
+	u32 dev_id = (u32)(long)m->private;
+	struct macsec_device_debug *dev_debug;
+
+	/* Validate device ID */
+	if (dev_id >= MACSEC_DEVICE_MAXNUM)
+		return -EINVAL;
+
+	dev_debug = &macsec_device_debug[dev_id];
+
+	/* Display API statistics with four-way aligned vertical format */
+	
+	/* Device Query section */
+	seq_printf(m, "%-16s : %-20s = %u\n", "Device Query",
+		   "ifname_to_device_get", dev_debug->api_stats.ifname_to_devid_calls);
+	
+	/* Control section */
+	seq_printf(m, "%-16s : %-20s = %u\n", "Control",
+		   "secy", dev_debug->api_stats.macsec_en_set_calls);
+	seq_printf(m, "%-16s   %-20s = %u\n", "",
+		   "controlled_port", dev_debug->api_stats.controlled_port_en_calls);
+	
+	/* SC Management section */
+	seq_printf(m, "%-16s : %-20s = %u\n", "SC Management",
+		   "rx_create", dev_debug->api_stats.rx_sc_create_calls);
+	seq_printf(m, "%-16s   %-20s = %u\n", "",
+		   "tx_create", dev_debug->api_stats.tx_sc_create_calls);
+	seq_printf(m, "%-16s   %-20s = %u\n", "",
+		   "rx_del", dev_debug->api_stats.rx_sc_del_calls);
+	seq_printf(m, "%-16s   %-20s = %u\n", "",
+		   "tx_del", dev_debug->api_stats.tx_sc_del_calls);
+	
+	/* PN/Key Updates section */
+	seq_printf(m, "%-16s : %-20s = %u\n", "PN/Key Updates",
+		   "rx_pn", dev_debug->api_stats.rx_sa_npn_set_calls);
+	seq_printf(m, "%-16s   %-20s = %u\n", "",
+		   "tx_pn", dev_debug->api_stats.tx_sa_npn_set_calls);
+	seq_printf(m, "%-16s   %-20s = %u\n", "",
+		   "rx_sak", dev_debug->api_stats.rx_sak_set_calls);
+	seq_printf(m, "%-16s   %-20s = %u\n", "",
+		   "tx_sak", dev_debug->api_stats.tx_sak_set_calls);
+
+	return 0;
+}
+
+/*
+ * Per-device api_stats write function - handles reset command
+ */
+static ssize_t nss_macsec_device_api_stats_write(struct file *file,
+						  const char __user *buf,
+						  size_t count, loff_t *ppos)
+{
+	struct seq_file *m = file->private_data;
+	u32 dev_id = (u32)(long)m->private;
+	char input[16];
+
+	/* Validate device ID */
+	if (dev_id >= MACSEC_DEVICE_MAXNUM)
+		return -EINVAL;
+
+	/* Input validation */
+	if (count >= sizeof(input))
+		return -EINVAL;
+
+	if (copy_from_user(input, buf, count))
+		return -EFAULT;
+
+	input[count] = '\0';
+
+	/* Remove trailing newline if present */
+	if (count > 0 && input[count - 1] == '\n')
+		input[count - 1] = '\0';
+
+	/* Check for reset command */
+	if (strcasecmp(input, "reset") == 0) {
+		/* Reset API statistics for this device */
+		memset(&macsec_device_debug[dev_id].api_stats,
+			0, sizeof(struct macsec_api_stats));
+		return count;
+	}
+
+	return -EINVAL;  /* Only reset command supported */
+}
+
+/*
+ * Per-device config_data file operations
+ */
+static int nss_macsec_device_config_open(struct inode *inode, struct file *file)
+{
+	return single_open(file,
+			nss_macsec_device_config_show, inode->i_private);
+}
+
+static const struct file_operations device_config_data_fops = {
+	.owner = THIS_MODULE,
+	.open = nss_macsec_device_config_open,
+	.read = seq_read,
+	.llseek = seq_lseek,
+	.release = single_release,
+};
+
+/*
+ * Per-device api_stats file operations
+ */
+static int nss_macsec_device_api_stats_open(struct inode *inode,
+					struct file *file)
+{
+	return single_open(file,
+			nss_macsec_device_api_stats_show, inode->i_private);
+}
+
+static const struct file_operations device_api_stats_fops = {
+	.owner = THIS_MODULE,
+	.open = nss_macsec_device_api_stats_open,
+	.read = seq_read,
+	.write = nss_macsec_device_api_stats_write,
+	.llseek = seq_lseek,
+	.release = single_release,
+};
+
+/*
+ * Create per-device debugfs directory and files
+ */
+static int nss_macsec_create_device_debugfs(u32 dev_id)
+{
+	char dirname[32];
+	struct dentry *device_dir;
+
+	if (dev_id >= MACSEC_DEVICE_MAXNUM)
+		return -EINVAL;
+
+	/* Check if debugfs root directory exists */
+	if (!macsec_debugfs_root) {
+		osal_print("DebugFS dev%d root directory not available!\n",
+				dev_id);
+		return -ENOENT;
+	}
+
+	snprintf(dirname, sizeof(dirname), "device%d", dev_id);
+	device_dir = debugfs_create_dir(dirname, macsec_debugfs_root);
+	if (!device_dir) {
+		osal_print("Failed to create device%d directory\n", dev_id);
+		return -ENOMEM;
+	}
+
+	/* Create config_data file (read-only) */
+	if (!debugfs_create_file("config_data", 0444, device_dir,
+				(void *)(long)dev_id,
+				&device_config_data_fops)) {
+		osal_print("Failed to create dev%d/config_data file\n", dev_id);
+		return -ENOMEM;
+	}
+
+	/* Create api_stats file (read-write, supports reset) */
+	if (!debugfs_create_file("api_stats", 0644, device_dir,
+				(void *)(long)dev_id, &device_api_stats_fops)) {
+		osal_print("Failed to create dev%d/api_stats file\n", dev_id);
+		return -ENOMEM;
+	}
+
+	return 0;
+}
+
 static int nss_macsec_debugfs_init(void)
 {
 	macsec_debugfs_root = debugfs_create_dir("qca-nss-macsec", NULL);
@@ -227,6 +719,7 @@ static int nss_macsec_dev_event(struct notifier_block  *nb,
 	struct net_device *event_dev = netdev_notifier_info_to_dev(info);
 	int ret = 0;
 	u32 phyid = 0;
+	u32 dev_id = 0;
 
 	/* Defensive check for event_dev */
 	if (unlikely(!event_dev))
@@ -251,6 +744,13 @@ static int nss_macsec_dev_event(struct notifier_block  *nb,
 	case NETDEV_REGISTER:
 		atomic_inc(&macsec_stats.register_count);
 		ret = qca_macsec_device_attach(event_dev);
+		if (ret == 0) {
+			/* Create debugfs if in success state */
+			dev_id = macsec_get_device_id(event_dev->phydev);
+			if (dev_id < MACSEC_DEVICE_MAXNUM) {
+				nss_macsec_create_device_debugfs(dev_id);
+			}
+		}
 		ret = ret ? NOTIFY_DONE : NOTIFY_OK;
 		break;
 	case NETDEV_UNREGISTER:

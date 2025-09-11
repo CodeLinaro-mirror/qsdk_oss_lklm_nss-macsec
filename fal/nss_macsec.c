@@ -10,6 +10,7 @@
 #include <linux/netdevice.h>
 #include "nss_macsec_types.h"
 #include "nss_macsec.h"
+#include "nss_macsec_utility.h"
 #include "qca808x_macsec.h"
 
 
@@ -23,6 +24,7 @@ static u32 macsec_device_register(struct phy_device *phydev)
 	u32 dev_id = 0;
 	u32 assign_id = INVALID_DEVICE_ID;
 
+	nss_macsec_mutex_lock();
 	for (dev_id = 0; dev_id < MACSEC_DEVICE_MAXNUM; dev_id++) {
 		if (p_macsec_device_cfg[dev_id] != NULL) {
 			if (phydev == p_macsec_device_cfg[dev_id]->port.phydev) {
@@ -35,6 +37,7 @@ static u32 macsec_device_register(struct phy_device *phydev)
 				assign_id = dev_id;
 		}
 	}
+	nss_macsec_mutex_unlock();
 	return assign_id;
 }
 
@@ -354,7 +357,7 @@ struct macsec_port *macsec_port_get_by_device_id(u32 dev_id)
 {
 	struct macsec_port *port = NULL;
 
-	if (dev_id >= MACSEC_DEVICE_MAXNUM) {
+	if (unlikely(dev_id >= MACSEC_DEVICE_MAXNUM)) {
 		osal_print("%s: Wrong dev_id %d! \n", __func__, dev_id);
 		return port;
 	}
@@ -403,7 +406,7 @@ g_error_t qca_macsec_sc_sa_mapping_mode_set(struct macsec_port *port,
 	SHR_PARAM_CHECK(port != NULL);
 
 	dev_id = macsec_get_device_id(port->phydev);
-	if (INVALID_DEVICE_ID == dev_id) {
+	if (unlikely(dev_id >= MACSEC_DEVICE_MAXNUM)) {
 		osal_print("%s: fail to find dev_id! \n", __func__);
 		return ERROR_NOT_FOUND;
 	}
@@ -420,11 +423,10 @@ g_error_t qca_macsec_sc_sa_mapping_mode_get(struct macsec_port *port,
 			(pmode != NULL));
 
 	dev_id = macsec_get_device_id(port->phydev);
-	if (INVALID_DEVICE_ID == dev_id) {
+	if (unlikely(dev_id >= MACSEC_DEVICE_MAXNUM)) {
 		osal_print("%s: fail to find dev_id! \n", __func__);
 		return ERROR_NOT_FOUND;
 	}
-
 	*pmode = p_macsec_device_cfg[dev_id]->sc_sa_mapping_mode;
 
 	return ERROR_OK;
@@ -519,8 +521,17 @@ g_error_t qca_macsec_flow_control_en_get(struct macsec_port *port, bool *enable)
 g_error_t qca_macsec_en_set(struct macsec_port *port, bool enable)
 {
 	enum secy_loopback_type_t type;
+	u32 dev_id;
 
 	SHR_PARAM_CHECK(port != NULL);
+
+	dev_id = macsec_get_device_id(port->phydev);
+	if (unlikely(dev_id >= MACSEC_DEVICE_MAXNUM)) {
+		osal_print("%s: fail to find dev_id! \n", __func__);
+		return ERROR_NOT_FOUND;
+	}
+	/* Update API statistics */
+	macsec_device_debug[dev_id].api_stats.macsec_en_set_calls++;
 
 	if (enable == TRUE)
 		type = MACSEC_NORMAL;
@@ -552,9 +563,20 @@ g_error_t qca_macsec_en_get(struct macsec_port *port, bool *enable)
 
 g_error_t qca_macsec_controlled_port_en_set(struct macsec_port *port, bool enable)
 {
+	u32 dev_id;
+
 	SHR_PARAM_CHECK(port != NULL);
 
+	dev_id = macsec_get_device_id(port->phydev);
+	if (unlikely(dev_id >= MACSEC_DEVICE_MAXNUM)) {
+		osal_print("%s: fail to find dev_id! \n", __func__);
+		return ERROR_NOT_FOUND;
+	}
+	/* Update API statistics */
+	macsec_device_debug[dev_id].api_stats.controlled_port_en_calls++;
+
 	SHR_RET_ON_ERR(qca808x_secy_controlled_port_en_set(port, enable));
+
 	return ERROR_OK;
 }
 
@@ -580,8 +602,11 @@ g_error_t qca_macsec_rx_sa_xpn_set(struct macsec_port *port, u32 sc_index,
 
 	pn_index = (sc_index * 4 + an);
 	dev_id = macsec_get_device_id(port->phydev);
-	if (dev_id != INVALID_DEVICE_ID)
-		p_macsec_device_cfg[dev_id]->secy_pn_table[pn_index].rx_sa_xpn = next_xpn;
+	if (unlikely(dev_id >= MACSEC_DEVICE_MAXNUM)) {
+		osal_print("%s: fail to find dev_id! \n", __func__);
+		return ERROR_NOT_FOUND;
+	}
+	p_macsec_device_cfg[dev_id]->secy_pn_table[pn_index].rx_sa_xpn = next_xpn;
 	return ERROR_OK;
 }
 
@@ -598,8 +623,10 @@ g_error_t qca_macsec_rx_sa_xpn_get(struct macsec_port *port, u32 sc_index,
 
 	pn_index = (sc_index * 4 + an);
 	dev_id = macsec_get_device_id(port->phydev);
-	if (dev_id == INVALID_DEVICE_ID)
+	if (unlikely(dev_id >= MACSEC_DEVICE_MAXNUM)) {
+		osal_print("%s: fail to find dev_id! \n", __func__);
 		return ERROR_NOT_FOUND;
+	}
 
 	for (i = 0; i < SECY_PN_QUERY_TIMES; i++) {
 		SHR_RET_ON_ERR(qca808x_secy_rx_sa_xpn_get(port, sc_index, an, &npn));
@@ -625,12 +652,18 @@ g_error_t qca_macsec_rx_sa_npn_set(struct macsec_port *port, u32 sc_index,
 			(sc_index <= SECY_SC_IDX_MAX) &&
 			(an <= SECY_AN_IDX_MAX));
 
+	dev_id = macsec_get_device_id(port->phydev);
+	if (unlikely(dev_id >= MACSEC_DEVICE_MAXNUM)) {
+		osal_print("%s: fail to find dev_id! \n", __func__);
+		return ERROR_NOT_FOUND;
+	}
+	/* Update API statistics */
+	macsec_device_debug[dev_id].api_stats.rx_sa_npn_set_calls++;
+
 	SHR_RET_ON_ERR(qca808x_secy_rx_sa_npn_set(port, sc_index, an, next_pn));
 
 	pn_index = (sc_index * 4 + an);
-	dev_id = macsec_get_device_id(port->phydev);
-	if (dev_id != INVALID_DEVICE_ID)
-		p_macsec_device_cfg[dev_id]->secy_pn_table[pn_index].rx_sa_pn = next_pn;
+	p_macsec_device_cfg[dev_id]->secy_pn_table[pn_index].rx_sa_pn = next_pn;
 	return ERROR_OK;
 }
 
@@ -647,8 +680,10 @@ g_error_t qca_macsec_rx_sa_npn_get(struct macsec_port *port, u32 sc_index,
 
 	pn_index = (sc_index * 4 + an);
 	dev_id = macsec_get_device_id(port->phydev);
-	if (dev_id == INVALID_DEVICE_ID)
+	if (unlikely(dev_id >= MACSEC_DEVICE_MAXNUM)) {
+		osal_print("%s: fail to find dev_id! \n", __func__);
 		return ERROR_NOT_FOUND;
+	}
 
 	for (i = 0; i < SECY_PN_QUERY_TIMES; i++) {
 		SHR_RET_ON_ERR(qca808x_secy_rx_sa_npn_get(port, sc_index, an, &npn));
@@ -745,6 +780,7 @@ g_error_t qca_macsec_rx_sak_set(struct macsec_port *port, u32 sc_index,
 {
 	bool enable = FALSE;
 	u16 xorkey = 0;
+	u32 dev_id;
 
 	SHR_PARAM_CHECK((port != NULL) &&
 			(sc_index <= SECY_SC_IDX_MAX) &&
@@ -756,6 +792,14 @@ g_error_t qca_macsec_rx_sak_set(struct macsec_port *port, u32 sc_index,
 		(key->len != SAK_LEN_LEGACY))
 		return ERROR_PARAM;
 
+	dev_id = macsec_get_device_id(port->phydev);
+	if (unlikely(dev_id >= MACSEC_DEVICE_MAXNUM)) {
+		osal_print("%s: fail to find dev_id! \n", __func__);
+		return ERROR_NOT_FOUND;
+	}
+	/* Update API statistics */
+	macsec_device_debug[dev_id].api_stats.rx_sak_set_calls++;
+
 	if (macsec_get_phyid(port->phydev) == QCA8111_PHY) {
 		SHR_RET_ON_ERR(qca81xx_secy_xor_key_get(port,
 							&enable, &xorkey));
@@ -764,6 +808,7 @@ g_error_t qca_macsec_rx_sak_set(struct macsec_port *port, u32 sc_index,
 	}
 
 	SHR_RET_ON_ERR(qca808x_secy_rx_sak_set(port, sc_index, an, key));
+
 	return ERROR_OK;
 }
 
@@ -817,8 +862,10 @@ g_error_t qca_macsec_rx_sc_ssci_set(struct macsec_port *port, u32 sc_index, u32 
 	SHR_RET_ON_ERR(qca808x_secy_rx_sc_ssci_set(port, sc_index, ssci));
 
 	dev_id = macsec_get_device_id(port->phydev);
-	if (dev_id == INVALID_DEVICE_ID)
+	if (unlikely(dev_id >= MACSEC_DEVICE_MAXNUM)) {
+		osal_print("%s: fail to find dev_id! \n", __func__);
 		return ERROR_NOT_FOUND;
+	}
 	p_macsec_device_cfg[dev_id]->rx_ssci[sc_index] = ssci;
 	return ERROR_OK;
 }
@@ -837,8 +884,10 @@ g_error_t qca_macsec_rx_sc_ssci_get(struct macsec_port *port, u32 sc_index, u32 
 		SHR_RET_ON_ERR(qca808x_secy_rx_sc_ssci_get(port, sc_index, ssci));
 	} else {
 		dev_id = macsec_get_device_id(port->phydev);
-		if (dev_id == INVALID_DEVICE_ID)
+		if (unlikely(dev_id >= MACSEC_DEVICE_MAXNUM)) {
+			osal_print("%s: fail to find dev_id! \n", __func__);
 			return ERROR_NOT_FOUND;
+		}
 		*ssci = p_macsec_device_cfg[dev_id]->rx_ssci[sc_index];
 	}
 	return ERROR_OK;
@@ -879,8 +928,11 @@ g_error_t qca_macsec_rx_prc_lut_set(struct macsec_port *port, u32 sc_index,
 	SHR_RET_ON_ERR(qca808x_secy_rx_sc_policy_set(port, sc_index, &rule));
 
 	dev_id = macsec_get_device_id(port->phydev);
-	if (dev_id != INVALID_DEVICE_ID)
-		memcpy(&(p_macsec_device_cfg[dev_id]->rx_lut[sc_index]), pentry,
+	if (unlikely(dev_id >= MACSEC_DEVICE_MAXNUM)) {
+		osal_print("%s: fail to find dev_id! \n", __func__);
+		return ERROR_NOT_FOUND;
+	}
+	memcpy(&(p_macsec_device_cfg[dev_id]->rx_lut[sc_index]), pentry,
 			sizeof(struct secy_rx_prc_lut_t));
 
 	return ERROR_OK;
@@ -922,9 +974,11 @@ g_error_t qca_macsec_rx_prc_lut_get(struct macsec_port *port, u32 sc_index,
 		pentry->rule_mask = rule.rule_mask;
 	} else {
 		dev_id = macsec_get_device_id(port->phydev);
-		if (dev_id == INVALID_DEVICE_ID)
+		if (unlikely(dev_id >= MACSEC_DEVICE_MAXNUM)) {
+			osal_print("%s: fail to find dev_id! \n", __func__);
 			return ERROR_NOT_FOUND;
-		 memcpy(pentry, &(p_macsec_device_cfg[dev_id]->rx_lut[sc_index]),
+		}
+		memcpy(pentry, &(p_macsec_device_cfg[dev_id]->rx_lut[sc_index]),
 			sizeof(struct secy_rx_prc_lut_t));
 	}
 	return ERROR_OK;
@@ -947,8 +1001,10 @@ g_error_t qca_macsec_rx_sc_in_used_get(struct macsec_port *port, u32 sc_index,
 		SHR_RET_ON_ERR(qca808x_secy_rx_sc_en_get(port, sc_index, &sc_enable));
 	} else {
 		dev_id = macsec_get_device_id(port->phydev);
-		if (dev_id == INVALID_DEVICE_ID)
+		if (unlikely(dev_id >= MACSEC_DEVICE_MAXNUM)) {
+			osal_print("%s: fail to find dev_id! \n", __func__);
 			return ERROR_NOT_FOUND;
+		}
 		sc_enable = p_macsec_device_cfg[dev_id]->rx_lut[sc_index].valid;
 	}
 
@@ -964,8 +1020,10 @@ g_error_t qca_macsec_rx_sc_en_set(struct macsec_port *port, u32 sc_index,
 	SHR_PARAM_CHECK((port != NULL) && (sc_index <= SECY_SC_IDX_MAX));
 
 	dev_id = macsec_get_device_id(port->phydev);
-	if (dev_id == INVALID_DEVICE_ID)
+	if (unlikely(dev_id >= MACSEC_DEVICE_MAXNUM)) {
+		osal_print("%s: fail to find dev_id! \n", __func__);
 		return ERROR_NOT_FOUND;
+	}
 
 	SHR_RET_ON_ERR(qca808x_secy_rx_sc_en_zone_set(port, sc_index, enable,
 		p_macsec_device_cfg[dev_id]->rx_lut[sc_index].rule_mask));
@@ -988,8 +1046,17 @@ g_error_t qca_macsec_rx_sc_en_get(struct macsec_port *port, u32 sc_index, bool *
 g_error_t qca_macsec_rx_sc_create(struct macsec_port *port, u32 sc_index)
 {
 	struct secy_rx_prc_lut_t rule;
+	u32 dev_id;
 
 	SHR_PARAM_CHECK((port != NULL) && (sc_index <= SECY_SC_IDX_MAX));
+
+	dev_id = macsec_get_device_id(port->phydev);
+	if (unlikely(dev_id >= MACSEC_DEVICE_MAXNUM)) {
+		osal_print("%s: fail to find dev_id! \n", __func__);
+		return ERROR_NOT_FOUND;
+	}
+	/* Update API statistics */
+	macsec_device_debug[dev_id].api_stats.rx_sc_create_calls++;
 
 	memset(&rule, 0, sizeof(rule));
 	SHR_RET_ON_ERR(qca_macsec_rx_prc_lut_get(port, sc_index, &rule));
@@ -1003,8 +1070,17 @@ g_error_t qca_macsec_rx_sc_create(struct macsec_port *port, u32 sc_index)
 g_error_t qca_macsec_rx_sc_del(struct macsec_port *port, u32 sc_index)
 {
 	struct secy_rx_prc_lut_t rule;
+	u32 dev_id;
 
 	SHR_PARAM_CHECK((port != NULL) && (sc_index <= SECY_SC_IDX_MAX));
+
+	dev_id = macsec_get_device_id(port->phydev);
+	if (unlikely(dev_id >= MACSEC_DEVICE_MAXNUM)) {
+		osal_print("%s: fail to find dev_id! \n", __func__);
+		return ERROR_NOT_FOUND;
+	}
+	/* Update API statistics */
+	macsec_device_debug[dev_id].api_stats.rx_sc_del_calls++;
 
 	memset(&rule, 0, sizeof(rule));
 
@@ -1231,8 +1307,11 @@ g_error_t qca_macsec_rx_ctl_filt_set(struct macsec_port *port, u32 index,
 	SHR_RET_ON_ERR(qca808x_secy_rx_ctl_filt_en_set(port, secy_filt->bypass));
 
 	dev_id = macsec_get_device_id(port->phydev);
-	if (dev_id != INVALID_DEVICE_ID)
-		memcpy(&(p_macsec_device_cfg[dev_id]->rx_ctl_filt), secy_filt,
+	if (unlikely(dev_id >= MACSEC_DEVICE_MAXNUM)) {
+		osal_print("%s: fail to find dev_id! \n", __func__);
+		return ERROR_NOT_FOUND;
+	}
+	memcpy(&(p_macsec_device_cfg[dev_id]->rx_ctl_filt), secy_filt,
 			sizeof(struct secy_ctl_filt_t));
 
 	return ERROR_OK;
@@ -1248,8 +1327,10 @@ g_error_t qca_macsec_rx_ctl_filt_get(struct macsec_port *port, u32 index,
 			(secy_filt != NULL));
 
 	dev_id = macsec_get_device_id(port->phydev);
-	if (dev_id == INVALID_DEVICE_ID)
+	if (unlikely(dev_id >= MACSEC_DEVICE_MAXNUM)) {
+		osal_print("%s: fail to find dev_id! \n", __func__);
 		return ERROR_NOT_FOUND;
+	}
 	memcpy(secy_filt, &(p_macsec_device_cfg[dev_id]->rx_ctl_filt),
 		sizeof(struct secy_ctl_filt_t));
 	return ERROR_OK;
@@ -1272,8 +1353,11 @@ g_error_t qca_macsec_rx_ctl_filt_clear(struct macsec_port *port, u32 index)
 				&filter));
 
 	dev_id = macsec_get_device_id(port->phydev);
-	if (dev_id != INVALID_DEVICE_ID)
-		memset(&(p_macsec_device_cfg[dev_id]->rx_ctl_filt), 0,
+	if (unlikely(dev_id >= MACSEC_DEVICE_MAXNUM)) {
+		osal_print("%s: fail to find dev_id! \n", __func__);
+		return ERROR_NOT_FOUND;
+	}
+	memset(&(p_macsec_device_cfg[dev_id]->rx_ctl_filt), 0,
 			sizeof(struct secy_ctl_filt_t));
 
 	return ERROR_OK;
@@ -1334,8 +1418,11 @@ g_error_t qca_macsec_tx_sa_xpn_set(struct macsec_port *port, u32 sc_index,
 
 	pn_index = (sc_index * 4 + an);
 	dev_id = macsec_get_device_id(port->phydev);
-	if (dev_id != INVALID_DEVICE_ID)
-		p_macsec_device_cfg[dev_id]->secy_pn_table[pn_index].tx_sa_xpn = next_xpn;
+	if (unlikely(dev_id >= MACSEC_DEVICE_MAXNUM)) {
+		osal_print("%s: fail to find dev_id! \n", __func__);
+		return ERROR_NOT_FOUND;
+	}
+	p_macsec_device_cfg[dev_id]->secy_pn_table[pn_index].tx_sa_xpn = next_xpn;
 	return ERROR_OK;
 }
 
@@ -1352,8 +1439,10 @@ g_error_t qca_macsec_tx_sa_xpn_get(struct macsec_port *port, u32 sc_index,
 
 	pn_index = (sc_index * 4 + an);
 	dev_id = macsec_get_device_id(port->phydev);
-	if (dev_id == INVALID_DEVICE_ID)
+	if (unlikely(dev_id >= MACSEC_DEVICE_MAXNUM)) {
+		osal_print("%s: fail to find dev_id! \n", __func__);
 		return ERROR_NOT_FOUND;
+	}
 
 	for (i = 0; i < SECY_PN_QUERY_TIMES; i++) {
 		SHR_RET_ON_ERR(qca808x_secy_tx_sa_xpn_get(port, sc_index, an, &npn));
@@ -1379,12 +1468,18 @@ g_error_t qca_macsec_tx_sa_npn_set(struct macsec_port *port, u32 sc_index,
 			(sc_index <= SECY_SC_IDX_MAX) &&
 			(an <= SECY_AN_IDX_MAX));
 
+	dev_id = macsec_get_device_id(port->phydev);
+	if (unlikely(dev_id >= MACSEC_DEVICE_MAXNUM)) {
+		osal_print("%s: fail to find dev_id! \n", __func__);
+		return ERROR_NOT_FOUND;
+	}
+	/* Update API statistics */
+	macsec_device_debug[dev_id].api_stats.tx_sa_npn_set_calls++;
+
 	SHR_RET_ON_ERR(qca808x_secy_tx_sa_npn_set(port, sc_index, an, next_pn));
 
 	pn_index = (sc_index * 4 + an);
-	dev_id = macsec_get_device_id(port->phydev);
-	if (dev_id != INVALID_DEVICE_ID)
-		p_macsec_device_cfg[dev_id]->secy_pn_table[pn_index].tx_sa_pn = next_pn;
+	p_macsec_device_cfg[dev_id]->secy_pn_table[pn_index].tx_sa_pn = next_pn;
 	return ERROR_OK;
 }
 
@@ -1401,8 +1496,10 @@ g_error_t qca_macsec_tx_sa_npn_get(struct macsec_port *port, u32 sc_index,
 
 	pn_index = (sc_index * 4 + an);
 	dev_id = macsec_get_device_id(port->phydev);
-	if (dev_id == INVALID_DEVICE_ID)
+	if (unlikely(dev_id >= MACSEC_DEVICE_MAXNUM)) {
+		osal_print("%s: fail to find dev_id! \n", __func__);
 		return ERROR_NOT_FOUND;
+	}
 
 	for (i = 0; i < SECY_PN_QUERY_TIMES; i++) {
 		SHR_RET_ON_ERR(qca808x_secy_tx_sa_npn_get(port, sc_index, an, &npn));
@@ -1492,6 +1589,7 @@ g_error_t qca_macsec_tx_sak_set(struct macsec_port *port, u32 sc_index,
 {
 	bool enable = FALSE;
 	u16 xorkey = 0;
+	u32 dev_id;
 
 	SHR_PARAM_CHECK((port != NULL) &&
 			(sc_index <= SECY_SC_IDX_MAX) &&
@@ -1503,6 +1601,14 @@ g_error_t qca_macsec_tx_sak_set(struct macsec_port *port, u32 sc_index,
 		(key->len != SAK_LEN_LEGACY))
 		return ERROR_PARAM;
 
+	dev_id = macsec_get_device_id(port->phydev);
+	if (unlikely(dev_id >= MACSEC_DEVICE_MAXNUM)) {
+		osal_print("%s: fail to find dev_id! \n", __func__);
+		return ERROR_NOT_FOUND;
+	}
+	/* Update API statistics */
+	macsec_device_debug[dev_id].api_stats.tx_sak_set_calls++;
+
 	if (macsec_get_phyid(port->phydev) == QCA8111_PHY) {
 		SHR_RET_ON_ERR(qca81xx_secy_xor_key_get(port,
 							&enable, &xorkey));
@@ -1511,6 +1617,7 @@ g_error_t qca_macsec_tx_sak_set(struct macsec_port *port, u32 sc_index,
 	}
 
 	SHR_RET_ON_ERR(qca808x_secy_tx_sak_set(port, sc_index, an, key));
+
 	return ERROR_OK;
 }
 
@@ -1584,8 +1691,11 @@ g_error_t qca_macsec_tx_sc_ssci_set(struct macsec_port *port, u32 sc_index, u32 
 	SHR_RET_ON_ERR(qca808x_secy_tx_sc_ssci_set(port, sc_index, ssci));
 
 	dev_id = macsec_get_device_id(port->phydev);
-	if (dev_id != INVALID_DEVICE_ID)
-		p_macsec_device_cfg[dev_id]->tx_ssci[sc_index] = ssci;
+	if (unlikely(dev_id >= MACSEC_DEVICE_MAXNUM)) {
+		osal_print("%s: fail to find dev_id! \n", __func__);
+		return ERROR_NOT_FOUND;
+	}
+	p_macsec_device_cfg[dev_id]->tx_ssci[sc_index] = ssci;
 	return ERROR_OK;
 }
 
@@ -1603,8 +1713,10 @@ g_error_t qca_macsec_tx_sc_ssci_get(struct macsec_port *port, u32 sc_index, u32 
 		SHR_RET_ON_ERR(qca808x_secy_tx_sc_ssci_get(port, sc_index, ssci));
 	} else {
 		dev_id = macsec_get_device_id(port->phydev);
-		if (dev_id == INVALID_DEVICE_ID)
+		if (unlikely(dev_id >= MACSEC_DEVICE_MAXNUM)) {
+			osal_print("%s: fail to find dev_id! \n", __func__);
 			return ERROR_NOT_FOUND;
+		}
 		*ssci = p_macsec_device_cfg[dev_id]->tx_ssci[sc_index];
 	}
 	return ERROR_OK;
@@ -1668,8 +1780,11 @@ g_error_t qca_macsec_tx_class_lut_set(struct macsec_port *port, u32 sc_index,
 	SHR_RET_ON_ERR(qca808x_secy_use_es_en_set(port, enable));
 
 	dev_id = macsec_get_device_id(port->phydev);
-	if (dev_id != INVALID_DEVICE_ID)
-		memcpy(&(p_macsec_device_cfg[dev_id]->tx_lut[sc_index]), pentry,
+	if (unlikely(dev_id >= MACSEC_DEVICE_MAXNUM)) {
+		osal_print("%s: fail to find dev_id! \n", __func__);
+		return ERROR_NOT_FOUND;
+	}
+	memcpy(&(p_macsec_device_cfg[dev_id]->tx_lut[sc_index]), pentry,
 			sizeof(struct secy_tx_class_lut_t));
 
 	return ERROR_OK;
@@ -1713,9 +1828,11 @@ g_error_t qca_macsec_tx_class_lut_get(struct macsec_port *port, u32 sc_index,
 		pentry->rule_mask = rule.rule_mask;
 	} else {
 		dev_id = macsec_get_device_id(port->phydev);
-		if (dev_id == INVALID_DEVICE_ID)
+		if (unlikely(dev_id >= MACSEC_DEVICE_MAXNUM)) {
+			osal_print("%s: fail to find dev_id! \n", __func__);
 			return ERROR_NOT_FOUND;
-		 memcpy(pentry, &(p_macsec_device_cfg[dev_id]->tx_lut[sc_index]),
+		}
+		memcpy(pentry, &(p_macsec_device_cfg[dev_id]->tx_lut[sc_index]),
 			sizeof(struct secy_tx_class_lut_t));
 	}
 
@@ -1739,8 +1856,10 @@ g_error_t qca_macsec_tx_sc_in_used_get(struct macsec_port *port, u32 sc_index,
 		SHR_RET_ON_ERR(qca808x_secy_tx_sc_en_get(port, sc_index, &sc_enable));
 	} else {
 		dev_id = macsec_get_device_id(port->phydev);
-		if (dev_id == INVALID_DEVICE_ID)
+		if (unlikely(dev_id >= MACSEC_DEVICE_MAXNUM)) {
+			osal_print("%s: fail to find dev_id! \n", __func__);
 			return ERROR_NOT_FOUND;
+		}
 		sc_enable = p_macsec_device_cfg[dev_id]->tx_lut[sc_index].valid;
 	}
 
@@ -1755,8 +1874,10 @@ g_error_t qca_macsec_tx_sc_en_set(struct macsec_port *port, u32 sc_index, bool e
 	SHR_PARAM_CHECK((port != NULL) && (sc_index <= SECY_SC_IDX_MAX));
 
 	dev_id = macsec_get_device_id(port->phydev);
-	if (dev_id == INVALID_DEVICE_ID)
+	if (unlikely(dev_id >= MACSEC_DEVICE_MAXNUM)) {
+		osal_print("%s: fail to find dev_id! \n", __func__);
 		return ERROR_NOT_FOUND;
+	}
 
 	SHR_RET_ON_ERR(qca808x_secy_tx_sc_en_zone_set(port, sc_index, enable,
 			p_macsec_device_cfg[dev_id]->tx_lut[sc_index].rule_mask));
@@ -1787,6 +1908,14 @@ g_error_t qca_macsec_tx_sc_create(struct macsec_port *port, u32 sc_index,
 			(sc_index <= SECY_SC_IDX_MAX) &&
 			(sci != NULL));
 
+	dev_id = macsec_get_device_id(port->phydev);
+	if (unlikely(dev_id >= MACSEC_DEVICE_MAXNUM)) {
+		osal_print("%s: fail to find dev_id! \n", __func__);
+		return ERROR_NOT_FOUND;
+	}
+	/* Update API statistics */
+	macsec_device_debug[dev_id].api_stats.tx_sc_create_calls++;
+
 	memset(&tx_sci, 0, sizeof(tx_sci));
 
 	for (i = 0; i < 6; i++)
@@ -1796,9 +1925,7 @@ g_error_t qca_macsec_tx_sc_create(struct macsec_port *port, u32 sc_index,
 
 	SHR_RET_ON_ERR(qca808x_secy_tx_sci_set(port, sc_index, &tx_sci));
 
-	dev_id = macsec_get_device_id(port->phydev);
-	if (dev_id != INVALID_DEVICE_ID)
-		memcpy(&(p_macsec_device_cfg[dev_id]->tx_lut[sc_index].sci[0]), sci, 8);
+	memcpy(&(p_macsec_device_cfg[dev_id]->tx_lut[sc_index].sci[0]), sci, 8);
 
 	return ERROR_OK;
 }
@@ -1806,8 +1933,17 @@ g_error_t qca_macsec_tx_sc_create(struct macsec_port *port, u32 sc_index,
 g_error_t qca_macsec_tx_sc_del(struct macsec_port *port, u32 sc_index)
 {
 	struct secy_tx_class_lut_t rule;
+	u32 dev_id;
 
 	SHR_PARAM_CHECK((port != NULL) && (sc_index <= SECY_SC_IDX_MAX));
+
+	dev_id = macsec_get_device_id(port->phydev);
+	if (unlikely(dev_id >= MACSEC_DEVICE_MAXNUM)) {
+		osal_print("%s: fail to find dev_id! \n", __func__);
+		return ERROR_NOT_FOUND;
+	}
+	/* Update API statistics */
+	macsec_device_debug[dev_id].api_stats.tx_sc_del_calls++;
 
 	memset(&rule, 0, sizeof(rule));
 
@@ -1880,8 +2016,10 @@ g_error_t qca_macsec_tx_sc_confidentiality_offset_set(struct macsec_port *port, 
 	SHR_PARAM_CHECK((port != NULL) && (sc_index <= SECY_SC_IDX_MAX));
 
 	dev_id = macsec_get_device_id(port->phydev);
-	if (dev_id == INVALID_DEVICE_ID)
+	if (unlikely(dev_id >= MACSEC_DEVICE_MAXNUM)) {
+		osal_print("%s: fail to find dev_id! \n", __func__);
 		return ERROR_NOT_FOUND;
+	}
 
 	if (offset == SECY_CONFIDENTIALITY_OFFSET_50)
 		encryption_offset = 50;
@@ -1916,8 +2054,10 @@ g_error_t qca_macsec_tx_sc_confidentiality_offset_get(struct macsec_port *port, 
 			sc_index, &encryption_offset));
 	} else {
 		dev_id = macsec_get_device_id(port->phydev);
-		if (dev_id == INVALID_DEVICE_ID)
+		if (unlikely(dev_id >= MACSEC_DEVICE_MAXNUM)) {
+			osal_print("%s: fail to find dev_id! \n", __func__);
 			return ERROR_NOT_FOUND;
+		}
 		encryption_offset = p_macsec_device_cfg[dev_id]->tx_lut[sc_index].offset;
 	}
 
@@ -1940,8 +2080,10 @@ g_error_t qca_macsec_tx_sc_tci_7_2_set(struct macsec_port *port, u32 sc_index, u
 	SHR_PARAM_CHECK((port != NULL) && (sc_index <= SECY_SC_IDX_MAX));
 
 	dev_id = macsec_get_device_id(port->phydev);
-	if (dev_id == INVALID_DEVICE_ID)
+	if (unlikely(dev_id >= MACSEC_DEVICE_MAXNUM)) {
+		osal_print("%s: fail to find dev_id! \n", __func__);
 		return ERROR_NOT_FOUND;
+	}
 
 	rule_tci = (tci << 0x2);
 	SHR_RET_ON_ERR(qca808x_secy_tx_tci_offset_zone_set(port, sc_index,
@@ -1989,8 +2131,10 @@ g_error_t qca_macsec_tx_sc_tci_7_2_get(struct macsec_port *port, u32 sc_index, u
 		SHR_RET_ON_ERR(qca808x_secy_tx_tci_get(port, sc_index, &rule_tci));
 	} else {
 		dev_id = macsec_get_device_id(port->phydev);
-		if (dev_id == INVALID_DEVICE_ID)
+		if (unlikely(dev_id >= MACSEC_DEVICE_MAXNUM)) {
+			osal_print("%s: fail to find dev_id! \n", __func__);
 			return ERROR_NOT_FOUND;
+		}
 		rule_tci = p_macsec_device_cfg[dev_id]->tx_lut[sc_index].tci;
 	}
 
@@ -2126,8 +2270,11 @@ g_error_t qca_macsec_tx_ctl_filt_set(struct macsec_port *port, u32 index,
 	SHR_RET_ON_ERR(qca808x_secy_tx_ctl_filt_en_set(port, secy_filt->bypass));
 
 	dev_id = macsec_get_device_id(port->phydev);
-	if (dev_id != INVALID_DEVICE_ID)
-		memcpy(&(p_macsec_device_cfg[dev_id]->tx_ctl_filt), secy_filt,
+	if (unlikely(dev_id >= MACSEC_DEVICE_MAXNUM)) {
+		osal_print("%s: fail to find dev_id! \n", __func__);
+		return ERROR_NOT_FOUND;
+	}
+	memcpy(&(p_macsec_device_cfg[dev_id]->tx_ctl_filt), secy_filt,
 			sizeof(struct secy_ctl_filt_t));
 	return ERROR_OK;
 }
@@ -2142,8 +2289,10 @@ g_error_t qca_macsec_tx_ctl_filt_get(struct macsec_port *port, u32 index,
 			(secy_filt != NULL));
 
 	dev_id = macsec_get_device_id(port->phydev);
-	if (dev_id == INVALID_DEVICE_ID)
+	if (unlikely(dev_id >= MACSEC_DEVICE_MAXNUM)) {
+		osal_print("%s: fail to find dev_id! \n", __func__);
 		return ERROR_NOT_FOUND;
+	}
 	memcpy(secy_filt, &(p_macsec_device_cfg[dev_id]->tx_ctl_filt),
 		sizeof(struct secy_ctl_filt_t));
 	return ERROR_OK;
@@ -2165,8 +2314,11 @@ g_error_t qca_macsec_tx_ctl_filt_clear(struct macsec_port *port, u32 index)
 		SHR_RET_ON_ERR(qca808x_secy_tx_udf_filt_set(port, i, &filter));
 
 	dev_id = macsec_get_device_id(port->phydev);
-	if (dev_id != INVALID_DEVICE_ID)
-		memset(&(p_macsec_device_cfg[dev_id]->tx_ctl_filt), 0,
+	if (unlikely(dev_id >= MACSEC_DEVICE_MAXNUM)) {
+		osal_print("%s: fail to find dev_id! \n", __func__);
+		return ERROR_NOT_FOUND;
+	}
+	memset(&(p_macsec_device_cfg[dev_id]->tx_ctl_filt), 0,
 			sizeof(struct secy_ctl_filt_t));
 
 	return ERROR_OK;
@@ -2362,8 +2514,10 @@ int qca_macsec_device_attach(void *dev)
 	strlcpy(macsec_device_debug[dev_id].drv_name, drv_name,
 		sizeof(macsec_device_debug[dev_id].drv_name));
 
+	nss_macsec_mutex_lock();
 	p_macsec_device_cfg[dev_id] = devm_kzalloc(&(phydev->mdio.dev),
-						   sizeof(struct qca_macsec_device_t), GFP_KERNEL);
+				sizeof(struct qca_macsec_device_t), GFP_KERNEL);
+	nss_macsec_mutex_unlock();
 	if (!p_macsec_device_cfg[dev_id]) {
 		macsec_device_debug[dev_id].device_state =
 						MACSEC_MEMORY_ALLOC_FAILURE;
@@ -2406,7 +2560,7 @@ int qca_macsec_device_detach(void *dev)
 	phydev = netdev->phydev;
 
 	dev_id = macsec_get_device_id(phydev);
-	if (INVALID_DEVICE_ID == dev_id) {
+	if (unlikely(dev_id >= MACSEC_DEVICE_MAXNUM)) {
 		osal_print("%s: fail to find dev_id for device:%p! \n",
 			   __func__, phydev);
 		return -ENODEV;
@@ -2426,8 +2580,13 @@ int qca_macsec_device_detach(void *dev)
 						MACSEC_UNREGISTER_FAILURE;
 		return ret;
 	}
+
+	/* Critical section: protect device pointer modification */
+	nss_macsec_mutex_lock();
 	devm_kfree(&(phydev->mdio.dev), p_macsec_device_cfg[dev_id]);
 	p_macsec_device_cfg[dev_id] = NULL;
+	nss_macsec_mutex_unlock();
+
 	/* Device detach successful */
 	macsec_device_debug[dev_id].device_state = MACSEC_DETACHED;
 
@@ -2462,3 +2621,31 @@ void qca_macsec_device_cleanup(void)
 	}
 }
 
+/**
+ * qca_macsec_get_device_data - Get device configuration data safely
+ * @dev_id: Device ID to query
+ * @device_copy: Pointer to buffer for device data copy
+ *
+ * This function provides safe access to device configuration data by
+ * creating a copy under mutex protection. This eliminates the need for
+ * extern declarations in other files.
+ *
+ * Return: 0 on success, negative error code on failure
+ */
+int qca_macsec_get_device_data(u32 dev_id,
+				struct qca_macsec_device_t *device_copy)
+{
+	if (dev_id >= MACSEC_DEVICE_MAXNUM || !device_copy)
+		return -EINVAL;
+
+	nss_macsec_mutex_lock();
+	if (p_macsec_device_cfg[dev_id] == NULL) {
+		nss_macsec_mutex_unlock();
+		return -ENODEV;
+	}
+
+	memcpy(device_copy, p_macsec_device_cfg[dev_id],
+	       sizeof(struct qca_macsec_device_t));
+	nss_macsec_mutex_unlock();
+	return 0;
+}

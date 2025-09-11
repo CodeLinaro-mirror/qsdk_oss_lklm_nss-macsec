@@ -56,6 +56,16 @@ struct macsec_port {
 	enum macsec_type type;
 };
 
+/* Rule mask bit definitions for LUT table matching */
+#define SECY_RULE_MASK_DA           0x00000001  /* Destination Address */
+#define SECY_RULE_MASK_SA           0x00000002  /* Source Address */
+#define SECY_RULE_MASK_ETHTYPE      0x00000004  /* Ethernet Type */
+#define SECY_RULE_MASK_OUTER_VLAN   0x00000008  /* Outer VLAN */
+#define SECY_RULE_MASK_INNER_VLAN   0x00000010  /* Inner VLAN */
+#define SECY_RULE_MASK_BROADCAST    0x00000020  /* Broadcast Flag */
+#define SECY_RULE_MASK_TCI          0x00000040  /* Tag Control Information */
+#define SECY_RULE_MASK_SCI          0x00000080  /* Secure Channel Identifier */
+
 enum secy_rx_prc_lut_action_t {
 	SECY_RX_PRC_ACTION_PROCESS,
 	SECY_RX_PRC_ACTION_PROCESS_WITH_SECTAG,
@@ -294,21 +304,40 @@ struct macsec_module_stats {
 	atomic_t unregister_count;	/* NETDEV_UNREGISTER event count */
 };
 
+/* API call statistics structure */
+struct macsec_api_stats {
+	u32 ifname_to_devid_calls;	/* Get device ID by ifname */
+	u32 macsec_en_set_calls;	/* MACsec ena/dis */
+	u32 controlled_port_en_calls;	/* Controlled port ena/dis */
+	u32 rx_sc_create_calls;		/* RX SC creation */
+	u32 rx_sc_del_calls;		/* RX SC deletion */
+	u32 tx_sc_create_calls;		/* TX SC creation */
+	u32 tx_sc_del_calls;		/* TX SC deletion */
+	u32 rx_sa_npn_set_calls;	/* RX SA npn setting */
+	u32 tx_sa_npn_set_calls;	/* TX SA npn setting */
+	u32 rx_sak_set_calls;		/* RX key setting */
+	u32 tx_sak_set_calls;		/* TX key setting */
+};
+
 /* Device debug info - preserves information even after device removal */
 struct macsec_device_debug {
 	u32 device_state;		/* Current state, 0 means unused */
 	char interface_name[16];	/* Network interface name */
 	char drv_name[32];		/* Driver name copy for safety */
+
+	/* API call statistics */
+	struct macsec_api_stats api_stats;
 };
 
 /* External declaration for debug array (used across files) */
 extern struct macsec_device_debug macsec_device_debug[MACSEC_DEVICE_MAXNUM];
 
-
 void qca_macsec_device_cleanup(void);
 int qca_macsec_device_attach(void *dev);
 int qca_macsec_device_detach(void *dev);
 int qca_macsec_get_device_count(void);
+int qca_macsec_get_device_data(u32 dev_id,
+			struct qca_macsec_device_t *device_copy);
 u32 macsec_get_phyid(struct phy_device *phydev);
 u32 macsec_get_device_id(struct phy_device *phydev);
 struct macsec_port *macsec_port_get_by_device_id(u32 dev_id);
