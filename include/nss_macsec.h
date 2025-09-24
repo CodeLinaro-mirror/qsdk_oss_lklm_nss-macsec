@@ -1,28 +1,18 @@
 /*
  * Copyright (c) 2014, The Linux Foundation. All rights reserved.
- * Copyright (c) 2022-2024 Qualcomm Innovation Center, Inc. All rights reserved.
- *
- * Permission to use, copy, modify, and/or distribute this software for any
- * purpose with or without fee is hereby granted, provided that the above
- * copyright notice and this permission notice appear in all copies.
- *
- * THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
- * WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
- * MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
- * ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
- * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
- * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
- * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
+ * Copyright (c) Qualcomm Technologies, Inc. and/or its subsidiaries.
+ * SPDX-License-Identifier: ISC
  */
+
 
 #ifndef _NSS_MACSEC_MACSEC_H_
 #define _NSS_MACSEC_MACSEC_H_
 
 
-#define QCA8081_PHY      0x004DD100
-#define QCA8081_PHY_V1_1 0x004DD101
-#define QCA8084_PHY      0x004DD180
-#define QCA8111_PHY      0x004DD1C0
+#define QCA8081_PHY	0x004DD101
+#define QCA8084_PHY	0x004DD180
+#define QCA8111_PHY	0x004DD1C0
+#define QCE1204_PHY	0x004DD190
 
 
 #define MACSEC_DEVICE_MAXNUM 10
