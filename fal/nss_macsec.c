@@ -1921,7 +1921,8 @@ g_error_t qca_macsec_tx_sc_create(struct macsec_port *port, u32 sc_index,
 
 	SHR_PARAM_CHECK((port != NULL) &&
 			(sc_index <= SECY_SC_IDX_MAX) &&
-			(sci != NULL));
+			(sci != NULL) &&
+			(len == 8));
 
 	dev_id = macsec_get_device_id(port->phydev);
 	if (unlikely(dev_id >= MACSEC_DEVICE_MAXNUM)) {
