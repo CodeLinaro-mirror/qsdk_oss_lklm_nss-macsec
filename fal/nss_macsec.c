@@ -539,9 +539,9 @@ g_error_t qca_macsec_en_set(struct macsec_port *port, bool enable)
 		type = MACSEC_BYPASS;
 
 	SHR_RET_ON_ERR(qca808x_secy_loopback_set(port, type));
-
-	SHR_RET_ON_ERR(qca808x_secy_shadow_register_en_set(port, enable));
-
+	if (macsec_get_phyid(port->phydev) == QCA8081_PHY) {
+		SHR_RET_ON_ERR(qca808x_secy_shadow_register_en_set(port, enable));
+	}
 	return ERROR_OK;
 }
 
