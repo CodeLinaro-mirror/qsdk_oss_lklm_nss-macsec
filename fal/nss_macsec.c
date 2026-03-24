@@ -325,6 +325,21 @@ static g_error_t macsec_tx_ctl_filt_half_da_sa_set(struct macsec_port *port, u32
 	return ERROR_OK;
 }
 
+static bool macsec_mib_saturate_supported(u32 phyid)
+{
+	return phyid == QCA8111_PHY ||
+	       phyid == QCE1204_PHY ||
+	       phyid == IPQ52XX_PHY;
+}
+
+static bool macsec_az_pattern_supported_phy(u32 phyid)
+{
+	return phyid == QCA8081_PHY ||
+	       phyid == QCA8084_PHY ||
+	       phyid == QCE1204_PHY ||
+	       phyid == IPQ52XX_PHY;
+}
+
 u32 macsec_get_phyid(struct phy_device *phydev)
 {
 	u32 phyid = 0;
@@ -1906,7 +1921,8 @@ g_error_t qca_macsec_tx_sc_create(struct macsec_port *port, u32 sc_index,
 
 	SHR_PARAM_CHECK((port != NULL) &&
 			(sc_index <= SECY_SC_IDX_MAX) &&
-			(sci != NULL));
+			(sci != NULL) &&
+			(len == 8));
 
 	dev_id = macsec_get_device_id(port->phydev);
 	if (unlikely(dev_id >= MACSEC_DEVICE_MAXNUM)) {
@@ -2394,7 +2410,7 @@ g_error_t qca_macsec_mib_saturate_en_set(struct macsec_port *port, bool enable)
 
 	phyid = macsec_get_phyid(port->phydev);
 
-	if (phyid != QCA8111_PHY && phyid != QCE1204_PHY)
+	if (!macsec_mib_saturate_supported(phyid))
 		return ERROR_NOT_SUPPORT;
 
 	SHR_RET_ON_ERR(qca81xx_secy_mib_saturate_en_set(port, enable));
@@ -2410,7 +2426,7 @@ g_error_t qca_macsec_mib_saturate_en_get(struct macsec_port *port, bool *enable)
 
 	phyid = macsec_get_phyid(port->phydev);
 
-	if (phyid != QCA8111_PHY && phyid != QCE1204_PHY)
+	if (!macsec_mib_saturate_supported(phyid))
 		return ERROR_NOT_SUPPORT;
 
 	SHR_RET_ON_ERR(qca81xx_secy_mib_saturate_en_get(port, enable));
@@ -2449,8 +2465,7 @@ int qca_macsec_secy_init(struct macsec_port *port)
 
 	qca_macsec_tx_mib_clear(port);
 	qca_macsec_rx_mib_clear(port);
-	if ((phyid == QCA8081_PHY) || (phyid == QCA8084_PHY) ||
-		(phyid == QCE1204_PHY))
+	if (macsec_az_pattern_supported_phy(phyid))
 		qca808x_secy_forward_az_pattern_en_set(port, TRUE);
 	for (sc = 0; sc < SECY_SC_IDX_MAX + 1; sc++) {
 		qca_macsec_tx_sc_mib_clear(port, sc);

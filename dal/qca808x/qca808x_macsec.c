@@ -1427,7 +1427,9 @@ static g_error_t qca808x_secy_mib_read(struct macsec_port *port, u32 reg_addr, u
 
 static bool is_high_mib_supported_phy(u32 phyid)
 {
-    return (phyid == QCA8111_PHY || phyid == QCE1204_PHY) ? TRUE : FALSE;
+	return phyid == QCA8111_PHY ||
+	       phyid == QCE1204_PHY ||
+	       phyid == IPQ52XX_PHY;
 }
 
 g_error_t qca808x_secy_tx_sa_mib_get(struct macsec_port *port, u32 sc_index,

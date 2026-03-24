@@ -1,18 +1,7 @@
 /*
  * Copyright (c) 2014, 2016, 2018-2019, The Linux Foundation. All rights reserved.
- * Copyright (c) 2023-2024 Qualcomm Innovation Center, Inc. All rights reserved.
- *
- * Permission to use, copy, modify, and/or distribute this software for any
- * purpose with or without fee is hereby granted, provided that the above
- * copyright notice and this permission notice appear in all copies.
- *
- * THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
- * WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
- * MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
- * ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
- * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
- * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
- * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
+ * Copyright (c) Qualcomm Technologies, Inc. and/or its subsidiaries.
+ * SPDX-License-Identifier: ISC
  */
 
 
@@ -1934,6 +1923,11 @@ DEFCMD(nss_macsec_secy_tx_sc_create_func,
 	cli_str_2_sci(argv[4], sci);
 	cli_str_2_hex(argv[5], (u32 *) (&sci_len));
 
+	if (sci_len != 8) {
+		vty_print("Error: sci_len must be 8\n");
+		return CLI_FAIL;
+	}
+
 	CLI_EXEC_API(nss_macsec_secy_tx_sc_create
 		     (secy_id, channel, sci, sci_len));
 
@@ -2932,7 +2926,6 @@ DEFCMD(nss_macsec_secy_rx_sa_next_pn_get_func,
 	cli_str_2_hex(argv[2], (u32 *) (&secy_id));
 	cli_str_2_hex(argv[3], (u32 *) (&channel));
 	cli_str_2_hex(argv[4], (u32 *) (&an));
-	cli_str_2_hex(argv[5], (u32 *) (&pnpn));
 
 	CLI_EXEC_API(nss_macsec_secy_rx_sa_next_pn_get
 		     (secy_id, channel, an, &pnpn));
@@ -3491,7 +3484,6 @@ DEFCMD(nss_macsec_secy_rx_sa_next_xpn_get_func,
 	cli_str_2_hex(argv[2], (u32 *) (&secy_id));
 	cli_str_2_hex(argv[3], (u32 *) (&channel));
 	cli_str_2_hex(argv[4], (u32 *) (&an));
-	cli_str_2_hex(argv[5], (u32 *) (&pnpn));
 
 	CLI_EXEC_API(nss_macsec_secy_rx_sa_next_xpn_get
 		     (secy_id, channel, an, &pnpn));
@@ -3535,7 +3527,6 @@ DEFCMD(nss_macsec_secy_tx_sa_next_xpn_get_func,
 	cli_str_2_hex(argv[2], (u32 *) (&secy_id));
 	cli_str_2_hex(argv[3], (u32 *) (&channel));
 	cli_str_2_hex(argv[4], (u32 *) (&an));
-	cli_str_2_hex(argv[5], (u32 *) (&pnpn));
 
 	CLI_EXEC_API(nss_macsec_secy_tx_sa_next_xpn_get
 		     (secy_id, channel, an, &pnpn));

@@ -735,6 +735,7 @@ static int nss_macsec_dev_event(struct notifier_block  *nb,
 	case QCA8084_PHY:
 	case QCA8111_PHY:
 	case QCE1204_PHY:
+	case IPQ52XX_PHY:
 		break;
 	default:
 		return NOTIFY_DONE;
