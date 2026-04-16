@@ -67,6 +67,20 @@ g_error_t qca808x_secy_clock_en_set(struct macsec_port *port, bool enable)
 			       SYS_SECY_SOFTWARE_EN, val);
 }
 
+g_error_t qca808x_secy_clock_en_get(struct macsec_port *port, bool *enable)
+{
+	u16 val = 0;
+
+	SHR_RET_ON_ERR(REG_FIELD_READ(port, PHY_MMD3, MACSEC_SOFTWARE_EN_CTRL,
+					SYS_SECY_SOFTWARE_EN, &val));
+	if (val == SOFTWARE_EN)
+		*enable = TRUE;
+	else
+		*enable = FALSE;
+
+	return ERROR_OK;
+}
+
 g_error_t qca808x_secy_loopback_set(struct macsec_port *port,
 				    enum secy_loopback_type_t type)
 {

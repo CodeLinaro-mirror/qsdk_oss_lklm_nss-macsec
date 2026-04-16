@@ -325,6 +325,16 @@ static g_error_t macsec_tx_ctl_filt_half_da_sa_set(struct macsec_port *port, u32
 	return ERROR_OK;
 }
 
+static inline bool macsec_guard_clk_skip(struct macsec_port *port)
+{
+	bool clk_en = false;
+
+	if (qca808x_secy_clock_en_get(port, &clk_en) != ERROR_OK)
+		return true;
+
+	return !clk_en;
+}
+
 static bool macsec_mib_saturate_supported(u32 phyid)
 {
 	return phyid == QCA8111_PHY ||
@@ -548,14 +558,23 @@ g_error_t qca_macsec_en_set(struct macsec_port *port, bool enable)
 	/* Update API statistics */
 	macsec_device_debug[dev_id].api_stats.macsec_en_set_calls++;
 
-	if (enable == TRUE)
-		type = MACSEC_NORMAL;
-	else
-		type = MACSEC_BYPASS;
+	/* If disabling and clock is already off, MACsec is already disabled */
+	if (!enable && macsec_guard_clk_skip(port))
+		return ERROR_OK;
 
+	if (enable) {
+		/* Registers accessible only with MACsec clock enabled */
+		SHR_RET_ON_ERR(qca808x_secy_clock_en_set(port, TRUE));
+	}
+	type = enable ? MACSEC_NORMAL : MACSEC_BYPASS;
 	SHR_RET_ON_ERR(qca808x_secy_loopback_set(port, type));
 	if (macsec_get_phyid(port->phydev) == QCA8081_PHY) {
 		SHR_RET_ON_ERR(qca808x_secy_shadow_register_en_set(port, enable));
+	}
+	if (!enable) {
+		SHR_RET_ON_ERR(qca_macsec_rx_sc_del_all(port));
+		SHR_RET_ON_ERR(qca_macsec_tx_sc_del_all(port));
+		SHR_RET_ON_ERR(qca808x_secy_clock_en_set(port, FALSE));
 	}
 	return ERROR_OK;
 }
@@ -563,16 +582,18 @@ g_error_t qca_macsec_en_set(struct macsec_port *port, bool enable)
 g_error_t qca_macsec_en_get(struct macsec_port *port, bool *enable)
 {
 	enum secy_loopback_type_t type;
+	bool clk_en;
 
 	SHR_PARAM_CHECK((port != NULL) && (enable != NULL));
 
-	qca808x_secy_loopback_get(port, &type);
-
-	if (type == MACSEC_NORMAL)
-		*enable = TRUE;
-	else
+	SHR_RET_ON_ERR(qca808x_secy_clock_en_get(port, &clk_en));
+	if (!clk_en) {
 		*enable = FALSE;
+		return ERROR_OK;
+	}
 
+	SHR_RET_ON_ERR(qca808x_secy_loopback_get(port, &type));
+	*enable = (type == MACSEC_NORMAL);
 	return ERROR_OK;
 }
 
@@ -612,6 +633,9 @@ g_error_t qca_macsec_rx_sa_xpn_set(struct macsec_port *port, u32 sc_index,
 	SHR_PARAM_CHECK((port != NULL) &&
 			(sc_index <= SECY_SC_IDX_MAX) &&
 			(an <= SECY_AN_IDX_MAX));
+
+	if (macsec_guard_clk_skip(port))
+		return ERROR_OK;
 
 	SHR_RET_ON_ERR(qca808x_secy_rx_sa_xpn_set(port, sc_index, an, next_xpn));
 
@@ -674,6 +698,9 @@ g_error_t qca_macsec_rx_sa_npn_set(struct macsec_port *port, u32 sc_index,
 	}
 	/* Update API statistics */
 	macsec_device_debug[dev_id].api_stats.rx_sa_npn_set_calls++;
+
+	if (macsec_guard_clk_skip(port))
+		return ERROR_OK;
 
 	SHR_RET_ON_ERR(qca808x_secy_rx_sa_npn_set(port, sc_index, an, next_pn));
 
@@ -874,6 +901,9 @@ g_error_t qca_macsec_rx_sc_ssci_set(struct macsec_port *port, u32 sc_index, u32 
 
 	SHR_PARAM_CHECK((port != NULL) && (sc_index <= SECY_SC_IDX_MAX));
 
+	if (macsec_guard_clk_skip(port))
+		return ERROR_OK;
+
 	SHR_RET_ON_ERR(qca808x_secy_rx_sc_ssci_set(port, sc_index, ssci));
 
 	dev_id = macsec_get_device_id(port->phydev);
@@ -918,6 +948,9 @@ g_error_t qca_macsec_rx_prc_lut_set(struct macsec_port *port, u32 sc_index,
 	SHR_PARAM_CHECK((port != NULL) &&
 			(sc_index <= SECY_SC_IDX_MAX) &&
 			(pentry != NULL));
+
+	if (macsec_guard_clk_skip(port))
+		return ERROR_OK;
 
 	memset(&rule, 0, sizeof(rule));
 
@@ -1039,6 +1072,9 @@ g_error_t qca_macsec_rx_sc_en_set(struct macsec_port *port, u32 sc_index,
 		osal_print("%s: fail to find dev_id! \n", __func__);
 		return ERROR_NOT_FOUND;
 	}
+
+	if (macsec_guard_clk_skip(port))
+		return ERROR_OK;
 
 	SHR_RET_ON_ERR(qca808x_secy_rx_sc_en_zone_set(port, sc_index, enable,
 		p_macsec_device_cfg[dev_id]->rx_lut[sc_index].rule_mask));
@@ -1294,6 +1330,9 @@ g_error_t qca_macsec_rx_ctl_filt_set(struct macsec_port *port, u32 index,
 			(index == 0) &&
 			(secy_filt != NULL));
 
+	if (macsec_guard_clk_skip(port))
+		return ERROR_OK;
+
 	switch (secy_filt->match_type) {
 	case SECY_CTL_COMPARE_DA:
 		rv = macsec_rx_ctl_filt_da_mac_set(port, index, secy_filt);
@@ -1358,6 +1397,9 @@ g_error_t qca_macsec_rx_ctl_filt_clear(struct macsec_port *port, u32 index)
 	struct secy_udf_filt_t filter;
 
 	SHR_PARAM_CHECK((port != NULL) && (index == 0));
+
+	if (macsec_guard_clk_skip(port))
+		return ERROR_OK;
 
 	memset(&filter, 0, sizeof(filter));
 
@@ -1429,6 +1471,9 @@ g_error_t qca_macsec_tx_sa_xpn_set(struct macsec_port *port, u32 sc_index,
 			(sc_index <= SECY_SC_IDX_MAX) &&
 			(an <= SECY_AN_IDX_MAX));
 
+	if (macsec_guard_clk_skip(port))
+		return ERROR_OK;
+
 	SHR_RET_ON_ERR(qca808x_secy_tx_sa_xpn_set(port, sc_index, an, next_xpn));
 
 	pn_index = (sc_index * 4 + an);
@@ -1490,6 +1535,9 @@ g_error_t qca_macsec_tx_sa_npn_set(struct macsec_port *port, u32 sc_index,
 	}
 	/* Update API statistics */
 	macsec_device_debug[dev_id].api_stats.tx_sa_npn_set_calls++;
+
+	if (macsec_guard_clk_skip(port))
+		return ERROR_OK;
 
 	SHR_RET_ON_ERR(qca808x_secy_tx_sa_npn_set(port, sc_index, an, next_pn));
 
@@ -1703,6 +1751,9 @@ g_error_t qca_macsec_tx_sc_ssci_set(struct macsec_port *port, u32 sc_index, u32 
 
 	SHR_PARAM_CHECK((port != NULL) && (sc_index <= SECY_SC_IDX_MAX));
 
+	if (macsec_guard_clk_skip(port))
+		return ERROR_OK;
+
 	SHR_RET_ON_ERR(qca808x_secy_tx_sc_ssci_set(port, sc_index, ssci));
 
 	dev_id = macsec_get_device_id(port->phydev);
@@ -1748,6 +1799,9 @@ g_error_t qca_macsec_tx_class_lut_set(struct macsec_port *port, u32 sc_index,
 	SHR_PARAM_CHECK((port != NULL) &&
 			(sc_index <= SECY_SC_IDX_MAX) &&
 			(pentry != NULL));
+
+	if (macsec_guard_clk_skip(port))
+		return ERROR_OK;
 
 	memset(&rule, 0, sizeof(rule));
 
@@ -1894,6 +1948,9 @@ g_error_t qca_macsec_tx_sc_en_set(struct macsec_port *port, u32 sc_index, bool e
 		return ERROR_NOT_FOUND;
 	}
 
+	if (macsec_guard_clk_skip(port))
+		return ERROR_OK;
+
 	SHR_RET_ON_ERR(qca808x_secy_tx_sc_en_zone_set(port, sc_index, enable,
 			p_macsec_device_cfg[dev_id]->tx_lut[sc_index].rule_mask));
 
@@ -1931,6 +1988,9 @@ g_error_t qca_macsec_tx_sc_create(struct macsec_port *port, u32 sc_index,
 	}
 	/* Update API statistics */
 	macsec_device_debug[dev_id].api_stats.tx_sc_create_calls++;
+
+	if (macsec_guard_clk_skip(port))
+		return ERROR_OK;
 
 	memset(&tx_sci, 0, sizeof(tx_sci));
 
@@ -2037,6 +2097,9 @@ g_error_t qca_macsec_tx_sc_confidentiality_offset_set(struct macsec_port *port, 
 		return ERROR_NOT_FOUND;
 	}
 
+	if (macsec_guard_clk_skip(port))
+		return ERROR_OK;
+
 	if (offset == SECY_CONFIDENTIALITY_OFFSET_50)
 		encryption_offset = 50;
 	else if (offset == SECY_CONFIDENTIALITY_OFFSET_30)
@@ -2100,6 +2163,9 @@ g_error_t qca_macsec_tx_sc_tci_7_2_set(struct macsec_port *port, u32 sc_index, u
 		osal_print("%s: fail to find dev_id! \n", __func__);
 		return ERROR_NOT_FOUND;
 	}
+
+	if (macsec_guard_clk_skip(port))
+		return ERROR_OK;
 
 	rule_tci = (tci << 0x2);
 	SHR_RET_ON_ERR(qca808x_secy_tx_tci_offset_zone_set(port, sc_index,
@@ -2258,6 +2324,9 @@ g_error_t qca_macsec_tx_ctl_filt_set(struct macsec_port *port, u32 index,
 			(index == 0) &&
 			(secy_filt != NULL));
 
+	if (macsec_guard_clk_skip(port))
+		return ERROR_OK;
+
 	switch (secy_filt->match_type) {
 	case SECY_CTL_COMPARE_DA:
 		rv = macsec_tx_ctl_filt_da_mac_set(port, index, secy_filt);
@@ -2321,6 +2390,9 @@ g_error_t qca_macsec_tx_ctl_filt_clear(struct macsec_port *port, u32 index)
 	struct secy_udf_filt_t filter;
 
 	SHR_PARAM_CHECK((port != NULL) && (index == 0));
+
+	if (macsec_guard_clk_skip(port))
+		return ERROR_OK;
 
 	memset(&filter, 0, sizeof(filter));
 
@@ -2488,6 +2560,11 @@ int qca_macsec_secy_init(struct macsec_port *port)
 			qca808x_secy_rx_sa_xpn_set(port, sc,
 				sa, pn);
 		}
+	}
+	ret = qca808x_secy_clock_en_set(port, FALSE);
+	if (ret != ERROR_OK) {
+		osal_print("Failed to disable secy clock, error=%d\n", ret);
+		return -EIO;
 	}
 	return 0;
 }
