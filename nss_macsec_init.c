@@ -20,6 +20,21 @@
 #include "nss_macsec.h"
 #include "nss_macsec_utility.h"
 
+/*
+ * SKU shadow: mirrors the first member of qca81xx_private (phydev->priv)
+ * and qce1204_shared_priv (phydev->shared->priv). Layout enforced by
+ * static_assert in each chip header.
+ */
+struct qca_sku_info {
+	const char *name;
+	bool ptp;
+	bool macsec;
+};
+
+struct qca_common_private {
+	struct qca_sku_info sku; /* MUST match first member of chip priv */
+};
+
 /* DebugFS root directory */
 static struct dentry *macsec_debugfs_root;
 
@@ -538,17 +553,17 @@ static int nss_macsec_device_api_stats_show(struct seq_file *m, void *v)
 	dev_debug = &macsec_device_debug[dev_id];
 
 	/* Display API statistics with four-way aligned vertical format */
-	
+
 	/* Device Query section */
 	seq_printf(m, "%-16s : %-20s = %u\n", "Device Query",
 		   "ifname_to_device_get", dev_debug->api_stats.ifname_to_devid_calls);
-	
+
 	/* Control section */
 	seq_printf(m, "%-16s : %-20s = %u\n", "Control",
 		   "secy", dev_debug->api_stats.macsec_en_set_calls);
 	seq_printf(m, "%-16s   %-20s = %u\n", "",
 		   "controlled_port", dev_debug->api_stats.controlled_port_en_calls);
-	
+
 	/* SC Management section */
 	seq_printf(m, "%-16s : %-20s = %u\n", "SC Management",
 		   "rx_create", dev_debug->api_stats.rx_sc_create_calls);
@@ -558,7 +573,7 @@ static int nss_macsec_device_api_stats_show(struct seq_file *m, void *v)
 		   "rx_del", dev_debug->api_stats.rx_sc_del_calls);
 	seq_printf(m, "%-16s   %-20s = %u\n", "",
 		   "tx_del", dev_debug->api_stats.tx_sc_del_calls);
-	
+
 	/* PN/Key Updates section */
 	seq_printf(m, "%-16s : %-20s = %u\n", "PN/Key Updates",
 		   "rx_pn", dev_debug->api_stats.rx_sa_npn_set_calls);
@@ -717,6 +732,9 @@ static int nss_macsec_dev_event(struct notifier_block  *nb,
 				 unsigned long event, void  *info)
 {
 	struct net_device *event_dev = netdev_notifier_info_to_dev(info);
+	struct phy_device *phydev;
+	struct qca_common_private *cpriv;
+	const char *sku_name;
 	int ret = 0;
 	u32 phyid = 0;
 	u32 dev_id = 0;
@@ -728,7 +746,8 @@ static int nss_macsec_dev_event(struct notifier_block  *nb,
 	if (NULL == event_dev->phydev)
 		return NOTIFY_DONE;
 
-	phyid = macsec_get_phyid(event_dev->phydev);
+	phydev = event_dev->phydev;
+	phyid = macsec_get_phyid(phydev);
 
 	switch (phyid) {
 	case QCA8081_PHY:
@@ -739,6 +758,27 @@ static int nss_macsec_dev_event(struct notifier_block  *nb,
 		break;
 	default:
 		return NOTIFY_DONE;
+	}
+
+	/* Gate by SKU */
+	cpriv = NULL;
+	if (phyid == QCA8111_PHY)
+		cpriv = (struct qca_common_private *)phydev->priv;
+	else if (phyid == QCE1204_PHY)
+		cpriv = phydev->shared ?
+			(struct qca_common_private *)phydev->shared->priv : NULL;
+
+	if (phyid == QCA8111_PHY || phyid == QCE1204_PHY) {
+		sku_name = (cpriv && cpriv->sku.name) ? cpriv->sku.name : NULL;
+
+		if (!cpriv || !cpriv->sku.macsec) {
+			phydev_info(phydev,
+				    "MACsec disabled by SKU%s%s%s, skip attach\n",
+				    sku_name ? " (" : "",
+				    sku_name ? sku_name : "",
+				    sku_name ? ")" : "");
+			return NOTIFY_DONE;
+		}
 	}
 
 	switch (event) {
