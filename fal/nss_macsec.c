@@ -404,6 +404,39 @@ g_error_t qca_macsec_channel_number_get(struct macsec_port *port, u32 *number)
 	return ERROR_OK;
 }
 
+static g_error_t qca_macsec_secy_init(struct macsec_port *port)
+{
+	u32 sc, sa;
+	u32 pn = 1;
+	u32 phyid = 0;
+
+	SHR_PARAM_CHECK(port != NULL);
+
+	phyid = macsec_get_phyid(port->phydev);
+
+	SHR_RET_ON_ERR(qca_macsec_tx_mib_clear(port));
+	SHR_RET_ON_ERR(qca_macsec_rx_mib_clear(port));
+	if (macsec_az_pattern_supported_phy(phyid))
+		SHR_RET_ON_ERR(qca808x_secy_forward_az_pattern_en_set(port, TRUE));
+	for (sc = 0; sc < SECY_SC_IDX_MAX + 1; sc++) {
+		SHR_RET_ON_ERR(qca_macsec_tx_sc_mib_clear(port, sc));
+		SHR_RET_ON_ERR(qca_macsec_rx_sc_mib_clear(port, sc));
+		/*SRAM bind table init*/
+		SHR_RET_ON_ERR(qca808x_secy_tx_sc_en_zone_set(port, sc, FALSE, 0));
+		SHR_RET_ON_ERR(qca808x_secy_rx_sc_en_zone_set(port, sc, FALSE, 0));
+		for (sa = 0; sa < SECY_SA_IDX_MAX + 1; sa++) {
+			SHR_RET_ON_ERR(qca_macsec_tx_sa_mib_clear(port, sc, sa));
+			SHR_RET_ON_ERR(qca_macsec_rx_sa_mib_clear(port, sc, sa));
+			/*init next pn*/
+			SHR_RET_ON_ERR(qca808x_secy_tx_sa_npn_set(port, sc, sa, pn));
+			SHR_RET_ON_ERR(qca808x_secy_rx_sa_npn_set(port, sc, sa, pn));
+			SHR_RET_ON_ERR(qca808x_secy_tx_sa_xpn_set(port, sc, sa, pn));
+			SHR_RET_ON_ERR(qca808x_secy_rx_sa_xpn_set(port, sc, sa, pn));
+		}
+	}
+	return ERROR_OK;
+}
+
 g_error_t qca_macsec_cipher_suite_set(struct macsec_port *port,
 				      enum secy_cipher_suite_t cipher_suite)
 {
@@ -547,6 +580,7 @@ g_error_t qca_macsec_en_set(struct macsec_port *port, bool enable)
 {
 	enum secy_loopback_type_t type;
 	u32 dev_id;
+	g_error_t ret;
 
 	SHR_PARAM_CHECK(port != NULL);
 
@@ -562,10 +596,34 @@ g_error_t qca_macsec_en_set(struct macsec_port *port, bool enable)
 	if (!enable && macsec_guard_clk_skip(port))
 		return ERROR_OK;
 
+	/* If enabling and clock is already on, MACsec is already enabled */
+	if (enable && !macsec_guard_clk_skip(port))
+		return ERROR_OK;
+
 	if (enable) {
 		/* Registers accessible only with MACsec clock enabled */
-		SHR_RET_ON_ERR(qca808x_secy_clock_en_set(port, TRUE));
+		ret = qca808x_secy_clock_en_set(port, TRUE);
+		if (ret) {
+			macsec_device_debug[dev_id].device_state =
+						MACSEC_SECY_INIT_FAILURE;
+			return ret;
+		}
 	}
+
+	/* Restore SecY configurations to default. Deferred hardware init is
+	 * performed here instead of at device attach time, so the MACsec
+	 * clock stays off (power saving) until MACsec is actually used.
+	 */
+	ret = qca_macsec_secy_init(port);
+	if (ret) {
+		if (enable) {
+			macsec_device_debug[dev_id].device_state =
+						MACSEC_SECY_INIT_FAILURE;
+		}
+		/* No cleanup - preserve state for hardware failure analysis */
+		return ret;
+	}
+
 	type = enable ? MACSEC_NORMAL : MACSEC_BYPASS;
 	SHR_RET_ON_ERR(qca808x_secy_loopback_set(port, type));
 	if (macsec_get_phyid(port->phydev) == QCA8081_PHY) {
@@ -2517,62 +2575,9 @@ g_error_t qca_macsec_xor_key_set(struct macsec_port *port,
 	return ERROR_OK;
 }
 
-int qca_macsec_secy_init(struct macsec_port *port)
-{
-	u32 sc, sa;
-	u32 pn = 1;
-	u32 phyid = 0;
-	g_error_t ret;
-
-	if (port == NULL)
-		return -EINVAL;
-
-	phyid = macsec_get_phyid(port->phydev);
-
-	ret = qca808x_secy_clock_en_set(port, TRUE);
-	if (ret != ERROR_OK) {
-		osal_print("Failed to enable secy clock, error=%d\n", ret);
-		return -EIO;
-	}
-
-	qca_macsec_tx_mib_clear(port);
-	qca_macsec_rx_mib_clear(port);
-	if (macsec_az_pattern_supported_phy(phyid))
-		qca808x_secy_forward_az_pattern_en_set(port, TRUE);
-	for (sc = 0; sc < SECY_SC_IDX_MAX + 1; sc++) {
-		qca_macsec_tx_sc_mib_clear(port, sc);
-		qca_macsec_rx_sc_mib_clear(port, sc);
-		/*SRAM bind table init*/
-		qca808x_secy_tx_sc_en_zone_set(port, sc, FALSE, 0);
-		qca808x_secy_rx_sc_en_zone_set(port, sc, FALSE, 0);
-		for (sa = 0; sa < SECY_SA_IDX_MAX + 1; sa++) {
-			qca_macsec_tx_sa_mib_clear(port,
-				sc, sa);
-			qca_macsec_rx_sa_mib_clear(port,
-				sc, sa);
-			/*init next pn*/
-			qca808x_secy_tx_sa_npn_set(port, sc,
-				sa, pn);
-			qca808x_secy_rx_sa_npn_set(port, sc,
-				sa, pn);
-			qca808x_secy_tx_sa_xpn_set(port, sc,
-				sa, pn);
-			qca808x_secy_rx_sa_xpn_set(port, sc,
-				sa, pn);
-		}
-	}
-	ret = qca808x_secy_clock_en_set(port, FALSE);
-	if (ret != ERROR_OK) {
-		osal_print("Failed to disable secy clock, error=%d\n", ret);
-		return -EIO;
-	}
-	return 0;
-}
-
 int qca_macsec_device_attach(void *dev)
 {
 	u32 dev_id = 0;
-	int ret = 0;
 	struct net_device *netdev;
 	struct phy_device *phydev;
 	const char *drv_name = "unknown";
@@ -2619,16 +2624,7 @@ int qca_macsec_device_attach(void *dev)
 	p_macsec_device_cfg[dev_id]->port.phydev = phydev;
 	p_macsec_device_cfg[dev_id]->port.type = MACSEC_IN_PHY;
 
-	/* SecY initialization */
-	ret = qca_macsec_secy_init(&(p_macsec_device_cfg[dev_id]->port));
-	if (ret) {
-		macsec_device_debug[dev_id].device_state =
-						MACSEC_SECY_INIT_FAILURE;
-		/* No cleanup - preserve state for hardware failure analysis */
-		return ret;
-	}
-
-	/* Device attach successful */
+	/* Hardware init is deferred to the first MACsec enable. */
 	macsec_device_debug[dev_id].device_state = MACSEC_SUCCESS;
 
 	return 0;
