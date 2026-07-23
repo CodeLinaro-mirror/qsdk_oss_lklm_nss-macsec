@@ -746,6 +746,19 @@ static int nss_macsec_dev_event(struct notifier_block  *nb,
 	if (NULL == event_dev->phydev)
 		return NOTIFY_DONE;
 
+	/*
+	 * Early filter: only handle netdev events we actually care about.
+	 * Add new cases here (kept in sync with the dispatch switch below)
+	 * when new events need to be supported.
+	 */
+	switch (event) {
+	case NETDEV_REGISTER:
+	case NETDEV_UNREGISTER:
+		break;
+	default:
+		return NOTIFY_DONE;
+	}
+
 	phydev = event_dev->phydev;
 	phyid = macsec_get_phyid(phydev);
 
