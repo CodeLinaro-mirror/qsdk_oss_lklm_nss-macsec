@@ -580,6 +580,7 @@ g_error_t qca_macsec_en_set(struct macsec_port *port, bool enable)
 {
 	enum secy_loopback_type_t type;
 	u32 dev_id;
+	u32 phyid = 0;
 	g_error_t ret;
 
 	SHR_PARAM_CHECK(port != NULL);
@@ -626,8 +627,12 @@ g_error_t qca_macsec_en_set(struct macsec_port *port, bool enable)
 
 	type = enable ? MACSEC_NORMAL : MACSEC_BYPASS;
 	SHR_RET_ON_ERR(qca808x_secy_loopback_set(port, type));
-	if (macsec_get_phyid(port->phydev) == QCA8081_PHY) {
+	phyid = macsec_get_phyid(port->phydev);
+	if (phyid == QCA8081_PHY) {
 		SHR_RET_ON_ERR(qca808x_secy_shadow_register_en_set(port, enable));
+	} else if (phyid == QCA8111_PHY) {
+		/* WAR: sequence order forward must be off in MACsec mode */
+		SHR_RET_ON_ERR(qca81xx_secy_seq_fwd_en_set(port, !enable));
 	}
 	if (!enable) {
 		SHR_RET_ON_ERR(qca_macsec_rx_sc_del_all(port));

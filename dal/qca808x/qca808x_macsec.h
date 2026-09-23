@@ -196,6 +196,8 @@ g_error_t qca81xx_secy_xor_key_set(struct macsec_port *port,
 					bool enable, u16 key);
 g_error_t qca81xx_secy_xor_key_get(struct macsec_port *port,
 					bool *enable, u16 *key);
+g_error_t qca81xx_secy_seq_fwd_en_set(struct macsec_port *port,
+					bool enable);
 
 
 #endif /* __QCA808X_MACSECY_H */
