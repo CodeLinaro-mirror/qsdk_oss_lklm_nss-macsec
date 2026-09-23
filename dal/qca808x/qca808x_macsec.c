@@ -2765,3 +2765,11 @@ g_error_t qca81xx_secy_xor_key_get(struct macsec_port *port,
 	return ERROR_OK;
 }
 
+g_error_t qca81xx_secy_seq_fwd_en_set(struct macsec_port *port,
+					bool enable)
+{
+	SHR_RET_ON_ERR(REG_FIELD_WRITE(port, PHY_MMD3,
+		       MACSEC_INGRESS_CTRL0, I_SEQ_FWD_EN, enable));
+	return ERROR_OK;
+}
+
